@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+	<feature id="org.structs4java.feature" version="0.0.0">
+		<category name="main"/>
+	</feature>
+	<feature id="org.structs4java.feature.source" version="0.0.0">
+		<category name="main.source"/>
+	</feature>
+	<category-def name="main" label="Structs4JavaDsl"/>
+	<category-def name="main.source" label="Structs4JavaDsl (Sources)"/>
+</site>

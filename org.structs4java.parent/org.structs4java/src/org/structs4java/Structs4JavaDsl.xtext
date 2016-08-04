@@ -1,0 +1,9 @@
+grammar org.structs4java.Structs4JavaDsl with org.eclipse.xtext.common.Terminals
+
+generate structs4JavaDsl "http://www.structs4java.org/Structs4JavaDsl"
+
+Model:
+	greetings+=Greeting*;
+	
+Greeting:
+	'Hello' name=ID '!';
