@@ -10,21 +10,137 @@ import org.eclipse.xtext.junit4.util.ParseHelper
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.structs4java.structs4JavaDsl.Model
+import org.structs4java.structs4JavaDsl.EnumMember
+import org.structs4java.structs4JavaDsl.IntegerMember
+import org.structs4java.structs4JavaDsl.Package
 
 @RunWith(XtextRunner)
 @InjectWith(Structs4JavaDslInjectorProvider)
 class Structs4JavaDslParsingTest{
 
 	@Inject
-	ParseHelper<Model> parseHelper
+	ParseHelper<Package> parseHelper
 
 	@Test 
-	def void loadModel() {
-		val result = parseHelper.parse('''
-			Hello Xtext!
+	def void simpleStruct() {
+		val pkg = parseHelper.parse('''
+			struct A {
+				int8_t myInt;
+			}
 		''')
-		Assert.assertNotNull(result)
+		Assert.assertNotNull(pkg)
+		val struct = pkg.structs.get(0)
+		Assert.assertNotNull(struct)
+		Assert.assertEquals("A", struct.name)
+		val member = struct.members.get(0) as IntegerMember
+		Assert.assertEquals("myInt", member.name)
+		Assert.assertEquals("int8_t", member.typename)
 	}
-
+	
+	@Test 
+	def void structWithPackage() {
+		val pkg = parseHelper.parse('''
+			package x.y.z;
+			struct A {
+				int8_t myInt;
+			}
+		''')
+		Assert.assertNotNull(pkg)
+		Assert.assertNotNull("x.y.z", pkg.name)
+		val struct = pkg.structs.get(0)
+		Assert.assertNotNull(struct)
+		Assert.assertEquals("A", struct.name)
+		val member = struct.members.get(0) as IntegerMember
+		Assert.assertEquals("myInt", member.name)
+		Assert.assertEquals("int8_t", member.typename)
+	}
+	
+	@Test 
+	def void simpleEnum() {
+		val pkg = parseHelper.parse('''
+			enum E : int16_t {
+				A = 15,
+				B = 18,
+				C = 0xFffF
+			}
+		''')
+		Assert.assertNotNull(pkg)
+		val enum = pkg.enums.get(0)
+		Assert.assertNotNull(enum)
+		Assert.assertEquals("E", enum.name)
+		Assert.assertEquals("int16_t", enum.typename)
+		Assert.assertEquals(3, enum.items.size)
+		Assert.assertEquals("A", enum.items.get(0).name)
+		Assert.assertEquals("B", enum.items.get(1).name)
+		Assert.assertEquals("C", enum.items.get(2).name)
+		
+		Assert.assertEquals("15", enum.items.get(0).value)
+		Assert.assertEquals("18", enum.items.get(1).value)
+		Assert.assertEquals("0xFffF", enum.items.get(2).value)
+	}
+	
+	@Test 
+	def void structWithEnum() {
+		val pkg = parseHelper.parse('''
+			enum E : uint16_t {
+				B = 0xCafe;
+			}
+			
+			struct A {
+				int8_t myInt;
+				E myEnum;
+			}
+		''')
+		
+		Assert.assertNotNull(pkg)
+		val struct = pkg.structs.get(0)
+		Assert.assertEquals(2, struct.members.size)
+		
+		Assert.assertNotNull(struct)
+		Assert.assertEquals("A", struct.name)
+		
+		val intMember = struct.members.get(0) as IntegerMember
+		Assert.assertEquals("myInt", intMember.name)
+		Assert.assertEquals("int8_t", intMember.typename)
+		
+		val enumMember = struct.members.get(1) as EnumMember
+		Assert.assertEquals("myEnum", enumMember.name)
+		
+		Assert.assertEquals("E", enumMember.type.name)
+		Assert.assertEquals("uint16_t", enumMember.type.typename)
+	}
+	
+	@Test 
+	def void structWithQualifiedEnum() {
+		val pkg = parseHelper.parse('''
+			package x.y.z;
+			
+			enum E : uint16_t {
+				B = 0xCafe;
+			}
+			
+			struct A {
+				int8_t myInt;
+				x.y.z.E myEnum;
+			}
+		''')
+		
+		Assert.assertNotNull(pkg)
+		Assert.assertNotNull("x.y.z", pkg.name)
+		val struct = pkg.structs.get(0)
+		Assert.assertEquals(2, struct.members.size)
+		
+		Assert.assertNotNull(struct)
+		Assert.assertEquals("A", struct.name)
+		
+		val intMember = struct.members.get(0) as IntegerMember
+		Assert.assertEquals("myInt", intMember.name)
+		Assert.assertEquals("int8_t", intMember.typename)
+		
+		val enumMember = struct.members.get(1) as EnumMember
+		Assert.assertEquals("myEnum", enumMember.name)
+		
+		Assert.assertEquals("E", enumMember.type.name)
+		Assert.assertEquals("uint16_t", enumMember.type.typename)
+	}
 }

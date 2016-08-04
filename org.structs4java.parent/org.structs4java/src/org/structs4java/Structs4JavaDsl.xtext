@@ -2,8 +2,98 @@ grammar org.structs4java.Structs4JavaDsl with org.eclipse.xtext.common.Terminals
 
 generate structs4JavaDsl "http://www.structs4java.org/Structs4JavaDsl"
 
-Model:
-	greetings+=Greeting*;
+Package:
+	('package' name=QualifiedName ';')?
 	
-Greeting:
-	'Hello' name=ID '!';
+	(imports += Import)*
+	
+	(structs += Struct | enums += Enum)*
+;
+
+Import:
+    'import' importedNamespace=QualifiedNameWithWildcard
+;
+	
+QualifiedNameWithWildcard:
+    QualifiedName '.*'?
+;
+	
+Struct:
+	'struct' name=ID '{'
+		(members += Member)*
+	'}'
+;
+
+Member:
+	IntegerMember | FloatMember | StringMember | EnumMember
+;
+
+Enum:
+	'enum' name=ID ':' typename=INTEGER_TYPE '{'
+		items += Item
+		(',' items += Item)*
+	'}'
+;
+
+Item:
+	name=ID '=' value=INT_OR_HEX_INT
+;
+
+EnumMember:
+	type=[Enum|QualifiedName] name=ID
+	('align' '(' align=INT ')')?
+	';'
+;
+
+IntegerMember:
+	typename=INTEGER_TYPE name=ID 
+	(
+		('sizeof' '(' sizeof=[Member] ')') &
+		('countof' '(' countof=[Member] ')') &
+		('align' '(' align=INT ')') 
+	)
+	';'
+;
+
+FloatMember:
+	typename=FLOAT_TYPE name=ID 
+	('align' '(' align=INT ')')?
+	';'
+;
+
+StringMember:
+	typename=STRING_TYPE name=ID 
+	(
+		('size' '(' size=INT ')') &
+		('align' '(' align=INT ')') &
+		('encoding' '(' encoding=STRING ')') &
+		(nullTerminated ?= 'null-terminated')
+	)
+	';'
+;
+
+QualifiedName:
+    ID ('.' ID)*
+;
+
+terminal INTEGER_TYPE:
+	'uint8_t' | 'uint16_t' | 'uint32_t' | 'uint64_t' |
+	'int8_t' | 'int16_t' | 'int32_t' | 'int64_t'
+;
+	
+terminal FLOAT_TYPE:
+	'float' | 'double'
+;
+
+terminal STRING_TYPE:
+	'string'
+;
+
+terminal INT_OR_HEX_INT:
+	INT | HEX_INT
+;
+
+terminal HEX_INT:
+	'0x' ('0'..'9' | 'A'..'F' | 'a'..'f')+
+;
+
