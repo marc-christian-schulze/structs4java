@@ -1,8 +1,11 @@
-grammar org.structs4java.Structs4JavaDsl with org.eclipse.xtext.common.Terminals
-
+grammar org.structs4java.Structs4JavaDsl hidden(WS, ML_COMMENT, SL_COMMENT)
 generate structs4JavaDsl "http://www.structs4java.org/Structs4JavaDsl"
 
+import "http://www.eclipse.org/emf/2002/Ecore" as ecore
+
 Package:
+	{Package}
+	
 	('package' name=QualifiedName ';')?
 	
 	(imports += Import)*
@@ -36,64 +39,73 @@ Member:
 
 EnumDeclaration:
 	'enum' name=ID ':' typename=INTEGER_TYPE '{'
-		items += Item
-		(',' items += Item)*
+		(items += Item)*
 	'}'
 ;
 
 Item:
-	name=ID '=' value=INT_OR_HEX_INT
+	name=ID '=' value=INT ','?
 ;
 
 ComplexTypeMember:
 	type=[ComplexTypeDeclaration|QualifiedName] name=ID
-	(array=Array)?
+	(array=ArrayDimension)?
 	('align' '(' align=INT ')')?
 	';'
 ;
 
 IntegerMember:
 	typename=INTEGER_TYPE name=ID 
-	(array=Array)?
+	(array=ArrayDimension)?
 	(
 		('sizeof' '(' sizeof+=[Member] ')')* &
-		('sizeof' '(' sizeofThis?='this' ')') &
+		('sizeof' '(' sizeofThis?='this' ')')? &
 		('countof' '(' countof+=[Member] ')')* &
-		('align' '(' align=INT ')') 
+		('align' '(' align=INT ')')? 
 	)
 	';'
 ;
 
 FloatMember:
 	typename=FLOAT_TYPE name=ID 
-	(array=Array)?
+	(array=ArrayDimension)?
 	('align' '(' align=INT ')')?
 	';'
 ;
 
 StringMember:
 	typename=STRING_TYPE name=ID 
-	(array=Array)?
+	(array=ArrayDimension)?
 	(
-		('size' '(' size=INT ')') &
-		('align' '(' align=INT ')') &
-		('encoding' '(' encoding=STRING ')') &
-		(nullTerminated ?= 'null-terminated')
+		('size' '(' size=INT ')')? &
+		('align' '(' align=INT ')')? &
+		('encoding' '(' encoding=STRING ')')? &
+		(nullTerminated ?= 'null-terminated')?
 	)
 	';'
 ;
 
-Array:
-	{Array} '[' (elements=INT)? ']'
+ArrayDimension:
+	{Array} '[' (dimension=INT)? ']'
 ;
 
 QualifiedName:
     ID ('.' ID)*
 ;
 
+terminal INT returns ecore::EInt: ('0'..'9')+ | '0x' ('0'..'9' | 'A'..'F' | 'a'..'f')+;
+terminal STRING	: 
+			'"' ( '\\' . /* 'b'|'t'|'n'|'f'|'r'|'u'|'"'|"'"|'\\' */ | !('\\'|'"') )* '"' |
+			"'" ( '\\' . /* 'b'|'t'|'n'|'f'|'r'|'u'|'"'|"'"|'\\' */ | !('\\'|"'") )* "'"
+		; 
+terminal ML_COMMENT	: '/*' -> '*/';
+terminal SL_COMMENT 	: '//' !('\n'|'\r')* ('\r'? '\n')?;
+
+terminal WS			: (' '|'\t'|'\r'|'\n')+;
+
 terminal INTEGER_TYPE:
 	'uint8_t' | 'uint16_t' | 'uint32_t' | 'uint64_t' |
-	'int8_t' | 'int16_t' | 'int32_t' | 'int64_t'
+	 'int8_t' | 'int16_t'  | 'int32_t'  | 'int64_t'
 ;
 	
 terminal FLOAT_TYPE:
@@ -104,11 +116,4 @@ terminal STRING_TYPE:
 	'string'
 ;
 
-terminal INT_OR_HEX_INT:
-	INT | HEX_INT
-;
-
-terminal HEX_INT:
-	'0x' ('0'..'9' | 'A'..'F' | 'a'..'f')+
-;
-
+terminal ID: ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*;

@@ -3,9 +3,15 @@
  */
 package org.structs4java
 
+import org.structs4java.converter.Structs4JavaDslValueConverter
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
  */
 class Structs4JavaDslRuntimeModule extends AbstractStructs4JavaDslRuntimeModule {
+	
+	override bindIValueConverterService() {
+		return Structs4JavaDslValueConverter;
+	}
+	
 }

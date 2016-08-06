@@ -12,7 +12,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.structs4java.structs4JavaDsl.IntegerMember
 import org.structs4java.structs4JavaDsl.ComplexTypeMember
-import org.structs4java.structs4JavaDsl.Package
 import org.structs4java.structs4JavaDsl.EnumDeclaration
 
 @RunWith(XtextRunner)
@@ -20,40 +19,48 @@ import org.structs4java.structs4JavaDsl.EnumDeclaration
 class Structs4JavaDslParsingTest{
 
 	@Inject
-	ParseHelper<Package> parseHelper
+	ParseHelper<org.structs4java.structs4JavaDsl.Package> parseHelper
 
 	@Test 
-	def void simpleStruct() {
+	def void globalAlignment() {
 		val pkg = parseHelper.parse('''
+			package Hans;
+
+			alignment(4);
+			
 			struct A {
 				int8_t myInt;
 			}
 		''')
 		Assert.assertNotNull(pkg)
-		val struct = pkg.structs.get(0)
-		Assert.assertNotNull(struct)
-		Assert.assertEquals("A", struct.name)
-		val member = struct.members.get(0) as IntegerMember
-		Assert.assertEquals("myInt", member.name)
-		Assert.assertEquals("int8_t", member.typename)
+		Assert.assertEquals(4, pkg.alignment)
 	}
-	
+
 	@Test 
-	def void structWithPackage() {
+	def void structWithAlignment() {
 		val pkg = parseHelper.parse('''
-			package x.y.z;
 			struct A {
-				int8_t myInt;
+				int8_t  a align(4);
+				int16_t b align(4);
+				int32_t c align(4);
+				int64_t d align(4);
+				
+				uint8_t  e align(4);
+				uint16_t f align(4);
+				uint32_t g align(4);
+				uint64_t h align(4);
+				
+				bool i align(4);
+				float j align(4);
+				double k align(4);
+				string l size(1) align(4);
 			}
 		''')
 		Assert.assertNotNull(pkg)
-		Assert.assertNotNull("x.y.z", pkg.name)
-		val struct = pkg.structs.get(0)
-		Assert.assertNotNull(struct)
-		Assert.assertEquals("A", struct.name)
-		val member = struct.members.get(0) as IntegerMember
-		Assert.assertEquals("myInt", member.name)
-		Assert.assertEquals("int8_t", member.typename)
+		val members = pkg.structs.get(0).members
+		members.forEach[
+			Assert.assertEquals(4, it.align)
+		]
 	}
 	
 	@Test 
@@ -75,16 +82,16 @@ class Structs4JavaDslParsingTest{
 		Assert.assertEquals("B", enum.items.get(1).name)
 		Assert.assertEquals("C", enum.items.get(2).name)
 		
-		Assert.assertEquals("15", enum.items.get(0).value)
-		Assert.assertEquals("18", enum.items.get(1).value)
-		Assert.assertEquals("0xFffF", enum.items.get(2).value)
+		Assert.assertEquals(15, enum.items.get(0).value)
+		Assert.assertEquals(18, enum.items.get(1).value)
+		Assert.assertEquals(0xFffF, enum.items.get(2).value)
 	}
 	
 	@Test 
 	def void structWithEnum() {
 		val pkg = parseHelper.parse('''
 			enum E : uint16_t {
-				B = 0xCafe;
+				B = 0xCafe
 			}
 			
 			struct A {
@@ -109,6 +116,10 @@ class Structs4JavaDslParsingTest{
 		
 		Assert.assertEquals("E", enumMember.type.name)
 		Assert.assertEquals("uint16_t", (enumMember.type as EnumDeclaration).typename)
+		
+		val items = (enumMember.type as EnumDeclaration).items
+		Assert.assertEquals("B", items.get(0).name)
+		Assert.assertEquals(0xCafe, items.get(0).value)
 	}
 	
 	@Test 
@@ -117,7 +128,7 @@ class Structs4JavaDslParsingTest{
 			package x.y.z;
 			
 			enum E : uint16_t {
-				B = 0xCafe;
+				B = 0xCafe
 			}
 			
 			struct A {
@@ -143,5 +154,75 @@ class Structs4JavaDslParsingTest{
 		
 		Assert.assertEquals("E", enumMember.type.name)
 		Assert.assertEquals("uint16_t", (enumMember.type as EnumDeclaration).typename)
+		
+		val items = (enumMember.type as EnumDeclaration).items
+		Assert.assertEquals("B", items.get(0).name)
+		Assert.assertEquals(0xCafe, items.get(0).value)
+	}
+	
+	@Test 
+	def void structWithPackage() {
+		val pkg = parseHelper.parse('''
+			package x.y.z;
+			struct A {
+				int8_t myInt;
+			}
+		''')
+		Assert.assertNotNull(pkg)
+		Assert.assertNotNull("x.y.z", pkg.name)
+		val struct = pkg.structs.get(0)
+		Assert.assertNotNull(struct)
+		Assert.assertEquals("A", struct.name)
+		val member = struct.members.get(0) as IntegerMember
+		Assert.assertEquals("myInt", member.name)
+		Assert.assertEquals("int8_t", member.typename)
+	}
+
+	@Test 
+	def void simpleStruct() {
+		val pkg = parseHelper.parse('''
+			struct A {
+				int8_t myInt;
+			}
+		''')
+		Assert.assertNotNull(pkg)
+		val struct = pkg.structs.get(0)
+		Assert.assertNotNull(struct)
+		Assert.assertEquals("A", struct.name)
+		val member = struct.members.get(0) as IntegerMember
+		Assert.assertEquals("myInt", member.name)
+		Assert.assertEquals("int8_t", member.typename)
+	}
+	
+	@Test 
+	def void nestedStruct() {
+		val pkg = parseHelper.parse('''
+			struct A {
+				int8_t myInt;
+			}
+			
+			struct B {
+				int16_t anotherInt;
+				A 		nested;
+			}
+		''')
+		Assert.assertNotNull(pkg)
+		
+		val structA = pkg.structs.get(0)
+		Assert.assertNotNull(structA)
+		Assert.assertEquals("A", structA.name)
+		val memberA = structA.members.get(0) as IntegerMember
+		Assert.assertEquals("myInt", memberA.name)
+		Assert.assertEquals("int8_t", memberA.typename)
+		
+		val structB = pkg.structs.get(1)
+		Assert.assertNotNull(structB)
+		Assert.assertEquals("B", structB.name)
+		val member1 = structB.members.get(0) as IntegerMember
+		Assert.assertEquals("anotherInt", member1.name)
+		Assert.assertEquals("int16_t", member1.typename)
+		val member2 = structB.members.get(1) as ComplexTypeMember
+		Assert.assertEquals("nested", member2.name)
+		Assert.assertEquals("A", member2.type.name)
 	}
 }
