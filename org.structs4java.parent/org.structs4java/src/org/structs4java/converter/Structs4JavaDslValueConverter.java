@@ -6,6 +6,7 @@ import org.eclipse.xtext.conversion.ValueConverter;
 import org.eclipse.xtext.conversion.ValueConverterException;
 import org.eclipse.xtext.conversion.impl.INTValueConverter;
 import org.eclipse.xtext.nodemodel.INode;
+import org.eclipse.xtext.util.Strings;
 
 public class Structs4JavaDslValueConverter extends DefaultTerminalConverters {
 
@@ -18,6 +19,8 @@ public class Structs4JavaDslValueConverter extends DefaultTerminalConverters {
 	private static final class HexINTValueConverter extends INTValueConverter {
 		@Override
 		public Integer toValue(String string, INode node) {
+			if (Strings.isEmpty(string))
+				throw new ValueConverterException("Couldn't convert empty string to an int value.", node, null);
 			if (string.startsWith("0x")) {
 				try {
 					int intValue = Integer.parseInt(string.substring(2), 16);

@@ -7,6 +7,15 @@ import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
+import org.structs4java.structs4JavaDsl.ComplexTypeDeclaration
+import org.structs4java.structs4JavaDsl.ComplexTypeMember
+import org.structs4java.structs4JavaDsl.FloatMember
+import org.structs4java.structs4JavaDsl.IntegerMember
+import org.structs4java.structs4JavaDsl.Member
+import org.structs4java.structs4JavaDsl.Package
+import org.structs4java.structs4JavaDsl.StringMember
+import org.structs4java.structs4JavaDsl.StructDeclaration
+import org.structs4java.structs4JavaDsl.EnumDeclaration
 
 /**
  * Generates code from your model files on save.
@@ -16,10 +25,322 @@ import org.eclipse.xtext.generator.IGeneratorContext
 class Structs4JavaDslGenerator extends AbstractGenerator {
 
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
-//		fsa.generateFile('greetings.txt', 'People to greet: ' + 
-//			resource.allContents
-//				.filter(typeof(Greeting))
-//				.map[name]
-//				.join(', '))
+		for (pkg : resource.allContents.toIterable.filter(Package)) {
+			for (struct : pkg.structs) {
+				fsa.generateFile(fqn(pkg, struct).replace('.', '/') + ".java", compile(pkg, struct))
+			}
+
+			for (enumDecl : pkg.enums) {
+				fsa.generateFile(fqn(pkg, enumDecl).replace('.', '/') + ".java", compile(pkg, enumDecl))
+			}
+		}
+	}
+
+	def fqn(Package pkg, ComplexTypeDeclaration decl) {
+		if (pkg.name != null && !pkg.name.empty) {
+			return pkg.name + "." + decl.name;
+		}
+		return decl.name;
+	}
+
+	def compile(Package pkg, EnumDeclaration enumDecl) '''
+		«packageDeclaration(pkg)»
+		
+		public enum «enumDecl.name» {
+			
+			«items(enumDecl)»
+			
+			«reader(enumDecl)»
+			«writer(enumDecl)»
+			
+			private «enumDecl.name»(long value) {
+				this.value = value;
+			}
+			
+			private long value;
+		}
+	'''
+
+	def items(EnumDeclaration enumDecl) '''
+		«FOR i : enumDecl.items SEPARATOR "," AFTER ";"»
+			«i.name»(«i.value»)
+		«ENDFOR»
+	'''
+
+	def reader(EnumDeclaration enumDecl) '''
+		public static «enumDecl.name» read(java.nio.ByteBuffer buf) throws java.io.IOException {
+			«read(enumDecl)»
+			switch(value) {
+				«FOR f : enumDecl.items»
+					case «f.value»: return «f.name»;
+				«ENDFOR»
+				default: throw new java.io.IOException(String.format("Unknown enum value: 0x%X", value));
+			}
+		}
+	'''
+
+	def read(EnumDeclaration enumDecl) {
+		switch (enumDecl.typename) {
+			case "int8_t": '''long value = buf.get();'''
+			case "uint8_t": '''long value = buf.get() & 0xFF;'''
+			case "int16_t": '''long value = buf.getShort();'''
+			case "uint16_t": '''long value = buf.getShort() & 0xFFFF;'''
+			case "int32_t": '''long value = buf.getInt();'''
+			case "uint32_t": '''long value = buf.getInt() & 0xFFFFFFFF;'''
+			case "int64_t": '''long value = buf.getLong();'''
+			case "uint64_t": '''long value = buf.getLong() & 0xFFFFFFFFFFFFFFFF;'''
+		}
+	}
+
+	def writer(EnumDeclaration enumDecl) '''
+		public void write(java.nio.ByteBuffer buf) throws java.io.IOException {
+			«write(enumDecl)»
+		}
+	'''
+
+	def write(EnumDeclaration enumDecl) {
+		switch (enumDecl.typename) {
+			case "int8_t": '''buf.put(this.value & 0xFF);'''
+			case "uint8_t": '''buf.put(this.value & 0xFF);'''
+			case "int16_t": '''buf.putShort(this.value & 0xFFFF);'''
+			case "uint16_t": '''buf.putShort(this.value & 0xFFFF);'''
+			case "int32_t": '''buf.putInt(this.value & 0xFFFFFFFF);'''
+			case "uint32_t": '''buf.putInt(this.value & 0xFFFFFFFF);'''
+			case "int64_t": '''buf.putLong(this.value);'''
+			case "uint64_t": '''buf.putLong(this.value);'''
+		}
+	}
+
+	def compile(Package pkg, StructDeclaration struct) '''
+		«packageDeclaration(pkg)»
+		
+		public class «struct.name» {
+			
+			«fields(struct)»
+			
+			public «struct.name»() {
+			}
+			
+			«getters(struct)»
+			«setters(struct)»
+			
+			«reader(struct)»
+			«writer(struct)»
+		}
+	'''
+
+	def reader(StructDeclaration struct) '''
+		public static «struct.name» read(java.nio.ByteBuffer buf) throws java.io.IOException {
+			«struct.name» obj = new «struct.name»();
+			«FOR f : struct.members»
+				«alignField(f)»
+				«readField(f)»
+			«ENDFOR»
+			return obj;
+		}
+	'''
+
+	def readField(Member m) {
+		switch (m) {
+			ComplexTypeMember: readField(m as ComplexTypeMember)
+			IntegerMember: readField(m as IntegerMember)
+			FloatMember: readField(m as FloatMember)
+			StringMember: readField(m as StringMember)
+		}
+	}
+
+	def readField(ComplexTypeMember m) '''
+		obj.«m.name» = «javaType(m)».read(buf);
+	'''
+
+	def readField(IntegerMember m) {
+		switch (m.typename) {
+			case "int8_t": '''obj.«m.name» = buf.get();'''
+			case "uint8_t": '''obj.«m.name» = buf.get() & 0xFF;'''
+			case "int16_t": '''obj.«m.name» = buf.getShort();'''
+			case "uint16_t": '''obj.«m.name» = buf.getShort() & 0xFFFF;'''
+			case "int32_t": '''obj.«m.name» = buf.getInt();'''
+			case "uint32_t": '''obj.«m.name» = buf.getInt() & 0xFFFFFFFF;'''
+			case "int64_t": '''obj.«m.name» = buf.getLong();'''
+			case "uint64_t": '''obj.«m.name» = buf.getLong() & 0xFFFFFFFFFFFFFFFF;'''
+		}
+	}
+
+	def readField(FloatMember m) {
+		switch (m.typename) {
+			case "float": '''obj.«m.name» = buf.getFloat();'''
+			case "double": '''obj.«m.name» = buf.getDouble();'''
+		}
+	}
+
+	def readField(StringMember m) '''
+		{
+			«IF m.nullTerminated»
+				int terminatingZeros = "\0".getBytes("«m.encoding»").length();
+				java.io.ByteArrayOutputStream tmp = new java.io.ByteArrayOutputStream();
+				int zerosRead = 0;
+				while(zerosRead < terminatingZeros) {
+					int b = buf.get();
+					tmp.write(b);
+					if(b == 0) {
+						zerosRead++;
+					} else {
+						zerosRead = 0;
+					}
+				}
+				obj.«m.name» = tmp.toString("«m.encoding»");
+			«ELSE»
+				byte[] tmp = new byte[«m.size»];
+				buf.get(tmp);
+				obj.«m.name» = new String(tmp, "«m.encoding»");
+			«ENDIF»
+		}
+	'''
+
+	def writer(StructDeclaration struct) '''
+		public void write(java.nio.ByteBuffer buf) throws java.io.IOException {
+			«FOR f : struct.members»
+				«alignField(f)»
+				«writeField(f)»
+			«ENDFOR»
+		}
+	'''
+
+	def writeField(Member m) {
+		switch (m) {
+			ComplexTypeMember: writeField(m as ComplexTypeMember)
+			IntegerMember: writeField(m as IntegerMember)
+			FloatMember: writeField(m as FloatMember)
+			StringMember: writeField(m as StringMember)
+		}
+	}
+
+	def writeField(ComplexTypeMember m) '''
+		this.«m.name».write(buf);
+	'''
+
+	def alignField(Member m) '''
+		«IF m.align > 1»
+			{
+				int pos = buf.position();
+				int gap = «m.align» - (pos % «m.align»);
+				if(gap > 0 && gap != «m.align») {
+					buf.position(pos + gap);	
+				}
+			}
+		«ENDIF»
+	'''
+
+	def writeField(IntegerMember m) {
+		switch (m.typename) {
+			case "int8_t": '''buf.put(this.«m.name»);'''
+			case "uint8_t": '''buf.put(this.«m.name»);'''
+			case "int16_t": '''buf.putShort(this.«m.name»);'''
+			case "uint16_t": '''buf.putShort(this.«m.name»);'''
+			case "int32_t": '''buf.putInt(this.«m.name»);'''
+			case "uint32_t": '''buf.putInt(this.«m.name»);'''
+			case "int64_t": '''buf.putLong(this.«m.name»);'''
+			case "uint64_t": '''buf.putLong(this.«m.name»);'''
+		}
+	}
+
+	def writeField(FloatMember m) {
+		switch (m.typename) {
+			case "float": '''buf.putFloat(this.«m.name»);'''
+			case "double": '''buf.putDouble(this.«m.name»);'''
+		}
+	}
+
+	def writeField(StringMember m) '''
+		{
+			byte[] encoded = this.«m.name».getBytes("«m.encoding»");
+			«IF m.nullTerminated»
+				buf.put(encoded);
+				buf.put("\0".getBytes("«m.encoding»"));
+			«ELSE»
+				int len = encoded.length();
+				int pad = «m.size» - len;
+				buf.put(encoded, 0, len);
+				if(pad > 0) {
+					for(int i = 0; i < pad; ++i) {
+						buf.put((byte)0);	
+					}
+				}
+			«ENDIF»
+		}
+	'''
+
+	def packageDeclaration(Package pkg) '''
+		«IF !pkg.name.empty»
+			package «pkg.name»
+		«ENDIF»
+	'''
+
+	def fields(StructDeclaration struct) '''
+		«FOR f : struct.members»
+			«field(f)»
+		«ENDFOR»
+	'''
+
+	def getters(StructDeclaration struct) '''
+		«FOR f : struct.members»
+			«getter(f)»
+		«ENDFOR»
+	'''
+
+	def setters(StructDeclaration struct) '''
+		«FOR f : struct.members»
+			«setter(f)»
+		«ENDFOR»
+	'''
+
+	def field(Member m) '''
+		private «javaType(m)» «m.name»;
+	'''
+
+	def getter(Member m) '''
+		public «javaType(m)» get«m.name.toFirstUpper()»() {
+			return this.«m.name»;
+		}
+	'''
+
+	def setter(Member m) '''
+		public void set«m.name.toFirstUpper()»(«javaType(m)» «m.name») {
+			this.«m.name» = «m.name»;
+		}
+	'''
+
+	def javaType(Member m) {
+		switch (m) {
+			ComplexTypeMember: javaType((m as ComplexTypeMember).type)
+			IntegerMember: javaType((m as IntegerMember).typename)
+			FloatMember: javaType((m as FloatMember).typename)
+			StringMember: javaType((m as StringMember).typename)
+			default: ""
+		}
+	}
+
+	def javaType(String type) {
+		switch (type) {
+			case "uint8_t": "int"
+			case "int8_t": "int"
+			case "uint16_t": "int"
+			case "int16_t": "int"
+			case "int32_t": "int"
+			case "uint32_t": "int"
+			case "int64_t": "long"
+			case "uint64_t": "long"
+			case "string": "String"
+			case "bool": "boolean"
+			default: type
+		}
+	}
+
+	def javaType(ComplexTypeDeclaration type) {
+		val pkg = type.eContainer as Package
+		if (pkg != null && !pkg.name.empty) {
+			return pkg.name + "." + type.name
+		}
+		return type.name
 	}
 }
