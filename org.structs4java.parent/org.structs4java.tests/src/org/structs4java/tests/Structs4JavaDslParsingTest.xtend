@@ -10,9 +10,10 @@ import org.eclipse.xtext.junit4.util.ParseHelper
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.structs4java.structs4JavaDsl.EnumMember
 import org.structs4java.structs4JavaDsl.IntegerMember
+import org.structs4java.structs4JavaDsl.ComplexTypeMember
 import org.structs4java.structs4JavaDsl.Package
+import org.structs4java.structs4JavaDsl.EnumDeclaration
 
 @RunWith(XtextRunner)
 @InjectWith(Structs4JavaDslInjectorProvider)
@@ -103,11 +104,11 @@ class Structs4JavaDslParsingTest{
 		Assert.assertEquals("myInt", intMember.name)
 		Assert.assertEquals("int8_t", intMember.typename)
 		
-		val enumMember = struct.members.get(1) as EnumMember
+		val enumMember = struct.members.get(1) as ComplexTypeMember
 		Assert.assertEquals("myEnum", enumMember.name)
 		
 		Assert.assertEquals("E", enumMember.type.name)
-		Assert.assertEquals("uint16_t", enumMember.type.typename)
+		Assert.assertEquals("uint16_t", (enumMember.type as EnumDeclaration).typename)
 	}
 	
 	@Test 
@@ -137,10 +138,10 @@ class Structs4JavaDslParsingTest{
 		Assert.assertEquals("myInt", intMember.name)
 		Assert.assertEquals("int8_t", intMember.typename)
 		
-		val enumMember = struct.members.get(1) as EnumMember
+		val enumMember = struct.members.get(1) as ComplexTypeMember
 		Assert.assertEquals("myEnum", enumMember.name)
 		
 		Assert.assertEquals("E", enumMember.type.name)
-		Assert.assertEquals("uint16_t", enumMember.type.typename)
+		Assert.assertEquals("uint16_t", (enumMember.type as EnumDeclaration).typename)
 	}
 }

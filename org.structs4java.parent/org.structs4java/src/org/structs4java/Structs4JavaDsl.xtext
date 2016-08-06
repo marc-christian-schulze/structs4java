@@ -7,7 +7,9 @@ Package:
 	
 	(imports += Import)*
 	
-	(structs += Struct | enums += Enum)*
+	('alignment' '(' alignment=INT ')' ';')?
+	
+	(structs += StructDeclaration | enums += EnumDeclaration)*
 ;
 
 Import:
@@ -17,18 +19,22 @@ Import:
 QualifiedNameWithWildcard:
     QualifiedName '.*'?
 ;
+
+ComplexTypeDeclaration:
+	StructDeclaration | EnumDeclaration
+;
 	
-Struct:
+StructDeclaration:
 	'struct' name=ID '{'
 		(members += Member)*
 	'}'
 ;
 
 Member:
-	IntegerMember | FloatMember | StringMember | EnumMember
+	IntegerMember | FloatMember | StringMember | ComplexTypeMember
 ;
 
-Enum:
+EnumDeclaration:
 	'enum' name=ID ':' typename=INTEGER_TYPE '{'
 		items += Item
 		(',' items += Item)*
@@ -39,17 +45,20 @@ Item:
 	name=ID '=' value=INT_OR_HEX_INT
 ;
 
-EnumMember:
-	type=[Enum|QualifiedName] name=ID
+ComplexTypeMember:
+	type=[ComplexTypeDeclaration|QualifiedName] name=ID
+	(array=Array)?
 	('align' '(' align=INT ')')?
 	';'
 ;
 
 IntegerMember:
 	typename=INTEGER_TYPE name=ID 
+	(array=Array)?
 	(
-		('sizeof' '(' sizeof=[Member] ')') &
-		('countof' '(' countof=[Member] ')') &
+		('sizeof' '(' sizeof+=[Member] ')')* &
+		('sizeof' '(' sizeofThis?='this' ')') &
+		('countof' '(' countof+=[Member] ')')* &
 		('align' '(' align=INT ')') 
 	)
 	';'
@@ -57,12 +66,14 @@ IntegerMember:
 
 FloatMember:
 	typename=FLOAT_TYPE name=ID 
+	(array=Array)?
 	('align' '(' align=INT ')')?
 	';'
 ;
 
 StringMember:
 	typename=STRING_TYPE name=ID 
+	(array=Array)?
 	(
 		('size' '(' size=INT ')') &
 		('align' '(' align=INT ')') &
@@ -70,6 +81,10 @@ StringMember:
 		(nullTerminated ?= 'null-terminated')
 	)
 	';'
+;
+
+Array:
+	{Array} '[' (elements=INT)? ']'
 ;
 
 QualifiedName:
