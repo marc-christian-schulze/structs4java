@@ -86,7 +86,7 @@ StringMember:
 ;
 
 ArrayDimension:
-	{Array} '[' (dimension=INT)? ']'
+	{ArrayDimension} '[' (dimension=INT)? ']'
 ;
 
 QualifiedName:

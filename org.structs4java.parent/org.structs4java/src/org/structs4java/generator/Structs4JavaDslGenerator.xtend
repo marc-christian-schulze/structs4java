@@ -88,7 +88,7 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 			case "int32_t": '''long value = buf.getInt();'''
 			case "uint32_t": '''long value = buf.getInt() & 0xFFFFFFFF;'''
 			case "int64_t": '''long value = buf.getLong();'''
-			case "uint64_t": '''long value = buf.getLong() & 0xFFFFFFFFFFFFFFFF;'''
+			case "uint64_t": '''long value = buf.getLong() & 0xFFFFFFFFFFFFFFFFL;'''
 		}
 	}
 
@@ -126,6 +126,10 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 			
 			«reader(struct)»
 			«writer(struct)»
+			
+			«IF hasAtLeastOneStringMember(struct)»
+				«stringReader()»
+			«ENDIF»
 		}
 	'''
 
@@ -134,10 +138,65 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 			«struct.name» obj = new «struct.name»();
 			«FOR f : struct.members»
 				«alignField(f)»
-				«readField(f)»
+				«IF isArray(f)»
+					«readArray(f)»
+				«ELSE»
+					«setField("obj", f, readField(f))»
+				«ENDIF»
 			«ENDFOR»
 			return obj;
 		}
+	'''
+
+	def isArray(Member m) {
+		return m.array != null
+	}
+
+	def readArray(Member m) {
+		if (m.array.dimension > 0) {
+			return readStaticArray(m)
+		} else {
+			return readDynamicArray(m)
+		}
+	}
+
+	def readStaticArray(Member m) '''
+		{
+			«javaType(m)» lst = new «javaType(m)»();
+		«FOR i : 0 ..< m.array.dimension»
+			«alignField(m)»
+			lst.add(«readField(m)»);
+		«ENDFOR»
+			«setField("obj", m, "lst")»
+		}
+	'''
+
+	def readDynamicArray(Member m) '''
+		{
+			int arrayLength = this.get«sizeMember(m.eContainer as StructDeclaration, m).name.toFirstUpper()»();
+			«javaType(m)» lst = new «javaType(m)»();
+			for(int i = 0; i < arrayLength; ++i) {
+				«alignField(m)»
+				lst.add(«readField(m)»);
+			}
+			«setField("obj", m, "lst")»
+		}
+	'''
+
+	def sizeMember(StructDeclaration struct, Member m) {
+		for (member : struct.members) {
+			if (member instanceof IntegerMember) {
+				val imem = member as IntegerMember
+				if (imem.sizeof.contains(m)) {
+					return imem
+				}
+			}
+		}
+		return null
+	}
+
+	def setField(String variable, Member m, CharSequence expr) '''
+		«variable».set«m.name.toFirstUpper()»(«expr»);
 	'''
 
 	def readField(Member m) {
@@ -150,33 +209,37 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 	}
 
 	def readField(ComplexTypeMember m) '''
-		obj.«m.name» = «javaType(m)».read(buf);
+		«javaType(m)».read(buf)
 	'''
 
 	def readField(IntegerMember m) {
 		switch (m.typename) {
-			case "int8_t": '''obj.«m.name» = buf.get();'''
-			case "uint8_t": '''obj.«m.name» = buf.get() & 0xFF;'''
-			case "int16_t": '''obj.«m.name» = buf.getShort();'''
-			case "uint16_t": '''obj.«m.name» = buf.getShort() & 0xFFFF;'''
-			case "int32_t": '''obj.«m.name» = buf.getInt();'''
-			case "uint32_t": '''obj.«m.name» = buf.getInt() & 0xFFFFFFFF;'''
-			case "int64_t": '''obj.«m.name» = buf.getLong();'''
-			case "uint64_t": '''obj.«m.name» = buf.getLong() & 0xFFFFFFFFFFFFFFFF;'''
+			case "int8_t": '''buf.get()'''
+			case "uint8_t": '''buf.get() & 0xFF'''
+			case "int16_t": '''buf.getShort()'''
+			case "uint16_t": '''buf.getShort() & 0xFFFF'''
+			case "int32_t": '''buf.getInt()'''
+			case "uint32_t": '''buf.getInt() & 0xFFFFFFFF'''
+			case "int64_t": '''buf.getLong()'''
+			case "uint64_t": '''buf.getLong() & 0xFFFFFFFFFFFFFFFFL'''
 		}
 	}
 
 	def readField(FloatMember m) {
 		switch (m.typename) {
-			case "float": '''obj.«m.name» = buf.getFloat();'''
-			case "double": '''obj.«m.name» = buf.getDouble();'''
+			case "float": '''buf.getFloat()'''
+			case "double": '''buf.getDouble()'''
 		}
 	}
 
 	def readField(StringMember m) '''
-		{
-			«IF m.nullTerminated»
-				int terminatingZeros = "\0".getBytes("«m.encoding»").length();
+		readString(buf, "«m.encoding»", «m.size»)
+	'''
+
+	def stringReader() '''
+		private static String readString(java.nio.ByteBuffer buf, String encoding, int size) {
+			if(size == 0) {
+				int terminatingZeros = "\0".getBytes(encoding).length;
 				java.io.ByteArrayOutputStream tmp = new java.io.ByteArrayOutputStream();
 				int zerosRead = 0;
 				while(zerosRead < terminatingZeros) {
@@ -188,12 +251,12 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 						zerosRead = 0;
 					}
 				}
-				obj.«m.name» = tmp.toString("«m.encoding»");
-			«ELSE»
-				byte[] tmp = new byte[«m.size»];
+				return tmp.toString(encoding);
+			} else {
+				byte[] tmp = new byte[size];
 				buf.get(tmp);
-				obj.«m.name» = new String(tmp, "«m.encoding»");
-			«ENDIF»
+				return new String(tmp, encoding);
+			}
 		}
 	'''
 
@@ -218,6 +281,15 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 	def writeField(ComplexTypeMember m) '''
 		this.«m.name».write(buf);
 	'''
+
+	def hasAtLeastOneStringMember(StructDeclaration struct) {
+		for (m : struct.members) {
+			if (m instanceof StringMember) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	def alignField(Member m) '''
 		«IF m.align > 1»
@@ -272,7 +344,7 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 
 	def packageDeclaration(Package pkg) '''
 		«IF !pkg.name.empty»
-			package «pkg.name»
+			package «pkg.name»;
 		«ENDIF»
 	'''
 
@@ -311,12 +383,38 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 	'''
 
 	def javaType(Member m) {
-		switch (m) {
-			ComplexTypeMember: javaType((m as ComplexTypeMember).type)
-			IntegerMember: javaType((m as IntegerMember).typename)
-			FloatMember: javaType((m as FloatMember).typename)
-			StringMember: javaType((m as StringMember).typename)
-			default: ""
+		if (isArray(m)) {
+			switch (m) {
+				ComplexTypeMember: "java.util.ArrayList<" + javaType((m as ComplexTypeMember).type) + ">"
+				IntegerMember: "java.util.ArrayList<" + boxedJavaType((m as IntegerMember).typename) + ">"
+				FloatMember: "java.util.ArrayList<" + boxedJavaType((m as FloatMember).typename) + ">"
+				StringMember: "java.util.ArrayList<" + boxedJavaType((m as StringMember).typename) + ">"
+				default: ""
+			}
+		} else {
+			switch (m) {
+				ComplexTypeMember: javaType((m as ComplexTypeMember).type)
+				IntegerMember: javaType((m as IntegerMember).typename)
+				FloatMember: javaType((m as FloatMember).typename)
+				StringMember: javaType((m as StringMember).typename)
+				default: ""
+			}
+		}
+	}
+
+	def boxedJavaType(String type) {
+		switch (type) {
+			case "uint8_t": "Integer"
+			case "int8_t": "Integer"
+			case "uint16_t": "Integer"
+			case "int16_t": "Integer"
+			case "int32_t": "Integer"
+			case "uint32_t": "Integer"
+			case "int64_t": "Long"
+			case "uint64_t": "Long"
+			case "string": "String"
+			case "bool": "Boolean"
+			default: type
 		}
 	}
 
