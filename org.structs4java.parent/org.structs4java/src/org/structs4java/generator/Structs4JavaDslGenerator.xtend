@@ -162,7 +162,7 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 
 	def readStaticArray(Member m) '''
 		{
-			«javaType(m)» lst = new «javaType(m)»();
+			«native2JavaType(m)» lst = new «native2JavaType(m)»();
 		«FOR i : 0 ..< m.array.dimension»
 			«alignField(m)»
 			lst.add(«readField(m)»);
@@ -173,8 +173,8 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 
 	def readDynamicArray(Member m) '''
 		{
-			int arrayLength = this.get«sizeMember(m.eContainer as StructDeclaration, m).name.toFirstUpper()»();
-			«javaType(m)» lst = new «javaType(m)»();
+			int arrayLength = this.«getterName(sizeMember(m.eContainer as StructDeclaration, m))»();
+			«native2JavaType(m)» lst = new «native2JavaType(m)»();
 			for(int i = 0; i < arrayLength; ++i) {
 				«alignField(m)»
 				lst.add(«readField(m)»);
@@ -196,8 +196,20 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 	}
 
 	def setField(String variable, Member m, CharSequence expr) '''
-		«variable».set«m.name.toFirstUpper()»(«expr»);
+		«variable».«setterName(m)»(«expr»);
 	'''
+
+	def setterName(Member m) {
+		return "set" + attributeName(m).toFirstUpper();
+	}
+
+	def getterName(Member m) {
+		return "get" + attributeName(m).toFirstUpper();
+	}
+
+	def attributeName(Member m) {
+		return m.name;
+	}
 
 	def readField(Member m) {
 		switch (m) {
@@ -208,9 +220,11 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 		}
 	}
 
-	def readField(ComplexTypeMember m) '''
-		«javaType(m)».read(buf)
-	'''
+	def readField(ComplexTypeMember m) {
+		val nativeType = nativeTypeName(m)
+		val javaType = native2JavaType(nativeType)
+		return javaType + ".read(buf)";	
+	}
 
 	def readField(IntegerMember m) {
 		switch (m.typename) {
@@ -222,6 +236,8 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 			case "uint32_t": '''buf.getInt() & 0xFFFFFFFF'''
 			case "int64_t": '''buf.getLong()'''
 			case "uint64_t": '''buf.getLong() & 0xFFFFFFFFFFFFFFFFL'''
+			default:
+				throw new RuntimeException("Unsupported type: " + m.typename)
 		}
 	}
 
@@ -264,22 +280,60 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 		public void write(java.nio.ByteBuffer buf) throws java.io.IOException {
 			«FOR f : struct.members»
 				«alignField(f)»
-				«writeField(f)»
+				«IF isArray(f)»
+					«writeArray(f)»
+				«ELSE»
+					«writeField(f, "this." + getterName(f) + "()")»
+				«ENDIF»
 			«ENDFOR»
 		}
 	'''
 
-	def writeField(Member m) {
-		switch (m) {
-			ComplexTypeMember: writeField(m as ComplexTypeMember)
-			IntegerMember: writeField(m as IntegerMember)
-			FloatMember: writeField(m as FloatMember)
-			StringMember: writeField(m as StringMember)
+	def writeArray(Member m) {
+		if (m.array.dimension > 0) {
+			return writeStaticArray(m)
+		} else {
+			return writeDynamicArray(m)
 		}
 	}
 
-	def writeField(ComplexTypeMember m) '''
-		this.«m.name».write(buf);
+	def writeStaticArray(Member m) '''
+		«FOR i : 0 ..< m.array.dimension»
+			«alignField(m)»
+			«writeField(m, downcastIfNecessarry(m) + "this." + getterName(m) + "().get(" + i + ")")»
+		«ENDFOR»
+	'''
+
+	def writeDynamicArray(
+		Member m) '''
+		{
+			int arrayLength = this.«getterName(m)»().length();
+			for(int i = 0; i < arrayLength; ++i) {
+				«alignField(m)»
+				«writeField(m, downcastIfNecessarry(m) + "this." + getterName(m) + "().get(i)")»
+			}
+		}
+	''' 
+	
+	def downcastIfNecessarry(Member m) {
+		if(m instanceof ComplexTypeMember) {
+			return ""
+		}
+		return "("+native2JavaType(nativeTypeName(m))+")";
+	}
+
+	def writeField(Member m, CharSequence expr) {
+		switch (m) {
+			ComplexTypeMember: writeField(m as ComplexTypeMember, expr)
+			IntegerMember: writeField(m as IntegerMember, expr)
+			FloatMember: writeField(m as FloatMember, expr)
+			StringMember: writeField(m as StringMember, expr)
+			default: throw new RuntimeException("Unsupported member type: " + m)
+		}
+	}
+
+	def writeField(ComplexTypeMember m, CharSequence expr) '''
+		«expr».write(buf);
 	'''
 
 	def hasAtLeastOneStringMember(StructDeclaration struct) {
@@ -303,29 +357,29 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 		«ENDIF»
 	'''
 
-	def writeField(IntegerMember m) {
+	def writeField(IntegerMember m, CharSequence expr) {
 		switch (m.typename) {
-			case "int8_t": '''buf.put(this.«m.name»);'''
-			case "uint8_t": '''buf.put(this.«m.name»);'''
-			case "int16_t": '''buf.putShort(this.«m.name»);'''
-			case "uint16_t": '''buf.putShort(this.«m.name»);'''
-			case "int32_t": '''buf.putInt(this.«m.name»);'''
-			case "uint32_t": '''buf.putInt(this.«m.name»);'''
-			case "int64_t": '''buf.putLong(this.«m.name»);'''
-			case "uint64_t": '''buf.putLong(this.«m.name»);'''
+			case "int8_t": '''buf.put((byte)«expr»);'''
+			case "uint8_t": '''buf.put((byte)«expr»);'''
+			case "int16_t": '''buf.putShort((short)«expr»);'''
+			case "uint16_t": '''buf.putShort((short)«expr»);'''
+			case "int32_t": '''buf.putInt(«expr»);'''
+			case "uint32_t": '''buf.putInt(«expr»);'''
+			case "int64_t": '''buf.putLong(«expr»);'''
+			case "uint64_t": '''buf.putLong(«expr»);'''
 		}
 	}
 
 	def writeField(FloatMember m) {
 		switch (m.typename) {
-			case "float": '''buf.putFloat(this.«m.name»);'''
-			case "double": '''buf.putDouble(this.«m.name»);'''
+			case "float": '''buf.putFloat(this.«attributeName(m)»);'''
+			case "double": '''buf.putDouble(this.«attributeName(m)»);'''
 		}
 	}
 
 	def writeField(StringMember m) '''
 		{
-			byte[] encoded = this.«m.name».getBytes("«m.encoding»");
+			byte[] encoded = this.«attributeName(m)».getBytes("«m.encoding»");
 			«IF m.nullTerminated»
 				buf.put(encoded);
 				buf.put("\0".getBytes("«m.encoding»"));
@@ -367,58 +421,67 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 	'''
 
 	def field(Member m) '''
-		private «javaType(m)» «m.name»;
+		private «native2JavaType(m)» «attributeName(m)»;
 	'''
 
 	def getter(Member m) '''
-		public «javaType(m)» get«m.name.toFirstUpper()»() {
-			return this.«m.name»;
+		public «native2JavaType(m)» «getterName(m)»() {
+			return this.«attributeName(m)»;
 		}
 	'''
 
 	def setter(Member m) '''
-		public void set«m.name.toFirstUpper()»(«javaType(m)» «m.name») {
-			this.«m.name» = «m.name»;
+		public void «setterName(m)»(«native2JavaType(m)» «attributeName(m)») {
+			this.«attributeName(m)» = «attributeName(m)»;
 		}
 	'''
 
-	def javaType(Member m) {
+	def native2JavaType(Member m) {
+		val nativeType = nativeTypeName(m)
+		val javaType = native2JavaType(nativeType)
+
 		if (isArray(m)) {
-			switch (m) {
-				ComplexTypeMember: "java.util.ArrayList<" + javaType((m as ComplexTypeMember).type) + ">"
-				IntegerMember: "java.util.ArrayList<" + boxedJavaType((m as IntegerMember).typename) + ">"
-				FloatMember: "java.util.ArrayList<" + boxedJavaType((m as FloatMember).typename) + ">"
-				StringMember: "java.util.ArrayList<" + boxedJavaType((m as StringMember).typename) + ">"
-				default: ""
-			}
+			return "java.util.ArrayList<" + box(javaType) + ">"
 		} else {
-			switch (m) {
-				ComplexTypeMember: javaType((m as ComplexTypeMember).type)
-				IntegerMember: javaType((m as IntegerMember).typename)
-				FloatMember: javaType((m as FloatMember).typename)
-				StringMember: javaType((m as StringMember).typename)
-				default: ""
-			}
+			return javaType
 		}
 	}
 
-	def boxedJavaType(String type) {
+	def box(String type) {
 		switch (type) {
-			case "uint8_t": "Integer"
-			case "int8_t": "Integer"
-			case "uint16_t": "Integer"
-			case "int16_t": "Integer"
-			case "int32_t": "Integer"
-			case "uint32_t": "Integer"
-			case "int64_t": "Long"
-			case "uint64_t": "Long"
-			case "string": "String"
-			case "bool": "Boolean"
+			case "byte": "Byte"
+			case "short": "Short"
+			case "int": "Integer"
+			case "long": "Long"
+			case "float": "Float"
+			case "double": "Double"
+			case "boolean": "Boolean"
 			default: type
 		}
 	}
 
-	def javaType(String type) {
+	def unbox(String type) {
+		switch (type) {
+			case "Short": return "short"
+			case "Int": return "int"
+			case "Long": return "long"
+			case "Float": return "float"
+			case "Double": return "double"
+			default: return type
+		}
+	}
+
+	def nativeTypeName(Member m) {
+		switch (m) {
+			ComplexTypeMember: javaType((m as ComplexTypeMember).type)
+			IntegerMember: (m as IntegerMember).typename
+			FloatMember: (m as FloatMember).typename
+			StringMember: (m as StringMember).typename
+			default: throw new RuntimeException("Unsupported member type: " + m)
+		}
+	}
+
+	def native2JavaType(String type) {
 		switch (type) {
 			case "uint8_t": "int"
 			case "int8_t": "int"
