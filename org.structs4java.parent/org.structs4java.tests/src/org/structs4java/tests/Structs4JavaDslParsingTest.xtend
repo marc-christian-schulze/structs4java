@@ -53,7 +53,7 @@ class Structs4JavaDslParsingTest{
 				bool i align(4);
 				float j align(4);
 				double k align(4);
-				string l size(1) align(4);
+				char l[5] align(4);
 			}
 		''')
 		Assert.assertNotNull(pkg)

@@ -77,7 +77,6 @@ StringMember:
 	typename=STRING_TYPE name=ID 
 	(array=ArrayDimension)?
 	(
-		('size' '(' size=INT ')')? &
 		('align' '(' align=INT ')')? &
 		('encoding' '(' encoding=STRING ')')? &
 		(nullTerminated ?= 'null-terminated')?
@@ -113,7 +112,7 @@ terminal FLOAT_TYPE:
 ;
 
 terminal STRING_TYPE:
-	'string'
+	'char'
 ;
 
 terminal ID: ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*;

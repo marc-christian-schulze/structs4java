@@ -16,6 +16,7 @@ import org.structs4java.structs4JavaDsl.Package
 import org.structs4java.structs4JavaDsl.StringMember
 import org.structs4java.structs4JavaDsl.StructDeclaration
 import org.structs4java.structs4JavaDsl.EnumDeclaration
+import java.io.UnsupportedEncodingException
 
 /**
  * Generates code from your model files on save.
@@ -27,20 +28,13 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
 		for (pkg : resource.allContents.toIterable.filter(Package)) {
 			for (struct : pkg.structs) {
-				fsa.generateFile(fqn(pkg, struct).replace('.', '/') + ".java", compile(pkg, struct))
+				fsa.generateFile(javaType(struct).replace('.', '/') + ".java", compile(pkg, struct))
 			}
 
 			for (enumDecl : pkg.enums) {
-				fsa.generateFile(fqn(pkg, enumDecl).replace('.', '/') + ".java", compile(pkg, enumDecl))
+				fsa.generateFile(javaType(enumDecl).replace('.', '/') + ".java", compile(pkg, enumDecl))
 			}
 		}
-	}
-
-	def fqn(Package pkg, ComplexTypeDeclaration decl) {
-		if (pkg.name != null && !pkg.name.empty) {
-			return pkg.name + "." + decl.name;
-		}
-		return decl.name;
 	}
 
 	def compile(Package pkg, EnumDeclaration enumDecl) '''
@@ -53,11 +47,11 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 			«reader(enumDecl)»
 			«writer(enumDecl)»
 			
-			private «enumDecl.name»(long value) {
+			private «enumDecl.name»(int value) {
 				this.value = value;
 			}
 			
-			private long value;
+			private int value;
 		}
 	'''
 
@@ -81,14 +75,14 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 
 	def read(EnumDeclaration enumDecl) {
 		switch (enumDecl.typename) {
-			case "int8_t": '''long value = buf.get();'''
-			case "uint8_t": '''long value = buf.get() & 0xFF;'''
-			case "int16_t": '''long value = buf.getShort();'''
-			case "uint16_t": '''long value = buf.getShort() & 0xFFFF;'''
-			case "int32_t": '''long value = buf.getInt();'''
-			case "uint32_t": '''long value = buf.getInt() & 0xFFFFFFFF;'''
-			case "int64_t": '''long value = buf.getLong();'''
-			case "uint64_t": '''long value = buf.getLong() & 0xFFFFFFFFFFFFFFFFL;'''
+			case "int8_t": '''int value = buf.get();'''
+			case "uint8_t": '''int value = buf.get() & 0xFF;'''
+			case "int16_t": '''int value = buf.getShort();'''
+			case "uint16_t": '''int value = buf.getShort() & 0xFFFF;'''
+			case "int32_t": '''int value = buf.getInt();'''
+			case "uint32_t": '''int value = buf.getInt() & 0xFFFFFFFF;'''
+			case "int64_t": throw new RuntimeException("64bit enums not supported")
+			case "uint64_t": throw new RuntimeException("64bit enums not supported")
 		}
 	}
 
@@ -106,8 +100,8 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 			case "uint16_t": '''buf.putShort(this.value & 0xFFFF);'''
 			case "int32_t": '''buf.putInt(this.value & 0xFFFFFFFF);'''
 			case "uint32_t": '''buf.putInt(this.value & 0xFFFFFFFF);'''
-			case "int64_t": '''buf.putLong(this.value);'''
-			case "uint64_t": '''buf.putLong(this.value);'''
+			case "int64_t": throw new RuntimeException("64bit enums not supported")
+			case "uint64_t": throw new RuntimeException("64bit enums not supported")
 		}
 	}
 
@@ -249,29 +243,40 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 	}
 
 	def readField(StringMember m) '''
-		readString(buf, "«m.encoding»", «m.size»)
+		readString(buf, "«encodingOf(m)»", «dimensionOf(m)»)
 	'''
+	
+	def dimensionOf(StringMember m) {
+		if(m.array != null) {
+			return m.array.dimension
+		}
+		return 0
+	}
 
 	def stringReader() '''
-		private static String readString(java.nio.ByteBuffer buf, String encoding, int size) {
-			if(size == 0) {
-				int terminatingZeros = "\0".getBytes(encoding).length;
-				java.io.ByteArrayOutputStream tmp = new java.io.ByteArrayOutputStream();
-				int zerosRead = 0;
-				while(zerosRead < terminatingZeros) {
-					int b = buf.get();
-					tmp.write(b);
-					if(b == 0) {
-						zerosRead++;
-					} else {
-						zerosRead = 0;
+		private static String readString(java.nio.ByteBuffer buf, String encoding, int size) throws java.io.IOException {
+			try {
+				if(size == 0) {
+					int terminatingZeros = "\0".getBytes(encoding).length;
+					java.io.ByteArrayOutputStream tmp = new java.io.ByteArrayOutputStream();
+					int zerosRead = 0;
+					while(zerosRead < terminatingZeros) {
+						int b = buf.get();
+						tmp.write(b);
+						if(b == 0) {
+							zerosRead++;
+						} else {
+							zerosRead = 0;
+						}
 					}
+					return tmp.toString(encoding);
+				} else {
+					byte[] tmp = new byte[size];
+					buf.get(tmp);
+					return new String(tmp, encoding);
 				}
-				return tmp.toString(encoding);
-			} else {
-				byte[] tmp = new byte[size];
-				buf.get(tmp);
-				return new String(tmp, encoding);
+			} catch(java.io.UnsupportedEncodingException e) {
+				throw new java.io.IOException(e);
 			}
 		}
 	'''
@@ -304,8 +309,7 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 		«ENDFOR»
 	'''
 
-	def writeDynamicArray(
-		Member m) '''
+	def writeDynamicArray(Member m) '''
 		{
 			int arrayLength = this.«getterName(m)»().length();
 			for(int i = 0; i < arrayLength; ++i) {
@@ -370,22 +374,23 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 		}
 	}
 
-	def writeField(FloatMember m) {
+	def writeField(FloatMember m, CharSequence expr) {
 		switch (m.typename) {
 			case "float": '''buf.putFloat(this.«attributeName(m)»);'''
 			case "double": '''buf.putDouble(this.«attributeName(m)»);'''
 		}
 	}
 
-	def writeField(StringMember m) '''
-		{
-			byte[] encoded = this.«attributeName(m)».getBytes("«m.encoding»");
+	def writeField(StringMember m, CharSequence expr) '''
+		try {
+			String str = «expr»;
+			byte[] encoded = str.getBytes("«encodingOf(m)»");
 			«IF m.nullTerminated»
 				buf.put(encoded);
-				buf.put("\0".getBytes("«m.encoding»"));
+				buf.put("\0".getBytes("«encodingOf(m)»"));
 			«ELSE»
-				int len = encoded.length();
-				int pad = «m.size» - len;
+				int len = encoded.length;
+				int pad = «dimensionOf(m)» - len;
 				buf.put(encoded, 0, len);
 				if(pad > 0) {
 					for(int i = 0; i < pad; ++i) {
@@ -393,8 +398,19 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 					}
 				}
 			«ENDIF»
+		} catch(java.io.UnsupportedEncodingException e) {
+			throw new java.io.IOException(e);
 		}
 	'''
+	
+	
+	def encodingOf(StringMember m) {
+		if(m.encoding != null) {
+			return m.encoding;
+		}
+		
+		return "UTF-8";
+	}
 
 	def packageDeclaration(Package pkg) '''
 		«IF !pkg.name.empty»
@@ -441,10 +457,20 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 		val javaType = native2JavaType(nativeType)
 
 		if (isArray(m)) {
-			return "java.util.ArrayList<" + box(javaType) + ">"
+			return mapArrayToType(m, javaType)
 		} else {
 			return javaType
 		}
+	}
+	
+	def mapArrayToType(Member m, String elementType) {
+		if(m instanceof StringMember) {
+			return "String"
+		}
+		if(elementType.equalsIgnoreCase("Byte")) {
+			return "java.nio.ByteBuffer"
+		}
+		return "java.util.ArrayList<" + box(elementType) + ">"
 	}
 
 	def box(String type) {
@@ -462,12 +488,12 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 
 	def unbox(String type) {
 		switch (type) {
-			case "Short": return "short"
-			case "Int": return "int"
-			case "Long": return "long"
-			case "Float": return "float"
-			case "Double": return "double"
-			default: return type
+			case "Short": "short"
+			case "Int": "int"
+			case "Long": "long"
+			case "Float": "float"
+			case "Double": "double"
+			default: type
 		}
 	}
 
@@ -491,7 +517,7 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 			case "uint32_t": "int"
 			case "int64_t": "long"
 			case "uint64_t": "long"
-			case "string": "String"
+			case "char": "String"
 			case "bool": "boolean"
 			default: type
 		}
