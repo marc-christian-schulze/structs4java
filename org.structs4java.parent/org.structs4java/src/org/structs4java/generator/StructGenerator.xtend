@@ -35,9 +35,22 @@ class StructGenerator {
 			«readerMethodForStruct(struct)»
 			«writerMethodForStruct(struct)»
 			
+			«toStringMethod(struct)»
+			
 			«readerMethods(struct)»
 			«writerMethods(struct)»
 		}
+	'''
+	
+	def toStringMethod(StructDeclaration struct) '''
+	public String toString() {
+		StringBuilder buf = new StringBuilder("«javaType(struct)»[");
+		«FOR m : struct.members SEPARATOR "buf.append(\", \");"»
+			buf.append("«attributeName(m)»=" + «getterName(m)»());
+		«ENDFOR»
+		buf.append("]");
+		return buf.toString();
+	}
 	'''
 	
 	def readerMethods(StructDeclaration struct) '''
