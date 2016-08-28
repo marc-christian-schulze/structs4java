@@ -32,66 +32,40 @@ class StructGenerator {
 			«getters(struct)»
 			«setters(struct)»
 			
-			«reader(struct)»
-			«writer(struct)»
+			«readerMethodForStruct(struct)»
+			«writerMethodForStruct(struct)»
 			
-			«IF hasAtLeastOneStringMember(struct)»
-				«stringReader()»
-			«ENDIF»
+			«readerMethods(struct)»
+			«writerMethods(struct)»
 		}
 	'''
+	
+	def readerMethods(StructDeclaration struct) '''
+		«FOR m : struct.members»
+			«readerMethodForMember(m)»
+		«ENDFOR»
+	'''
 
-	def reader(StructDeclaration struct) '''
+	def readerMethodForStruct(StructDeclaration struct) '''
 		public static «struct.name» read(java.nio.ByteBuffer buf) throws java.io.IOException {
 			«struct.name» obj = new «struct.name»();
-			«FOR f : struct.members»
-				«alignField(f)»
-				«IF isArray(f)»
-					«readArray(f)»
-				«ELSE»
-					«setField("obj", f, readField(f))»
-				«ENDIF»
+			«FOR m : struct.members»
+			obj.«setterName(m)»(«readerMethodName(m)»(buf));
 			«ENDFOR»
 			return obj;
 		}
 	'''
+	
+	def readerMethodName(Member m) {
+		return "read" + m.name.toFirstUpper;
+	}
 
 	def isArray(Member m) {
 		return m.array != null
 	}
 
-	def readArray(Member m) {
-		if (m.array.dimension > 0) {
-			return readStaticArray(m)
-		} else {
-			return readDynamicArray(m)
-		}
-	}
-
-	def readStaticArray(Member m) '''
-		{
-			«native2JavaType(m)» lst = new «native2JavaType(m)»();
-		«FOR i : 0 ..< m.array.dimension»
-			«alignField(m)»
-			lst.add(«readField(m)»);
-		«ENDFOR»
-			«setField("obj", m, "lst")»
-		}
-	'''
-
-	def readDynamicArray(Member m) '''
-		{
-			int arrayLength = this.«getterName(sizeMember(m.eContainer as StructDeclaration, m))»();
-			«native2JavaType(m)» lst = new «native2JavaType(m)»();
-			for(int i = 0; i < arrayLength; ++i) {
-				«alignField(m)»
-				lst.add(«readField(m)»);
-			}
-			«setField("obj", m, "lst")»
-		}
-	'''
-
-	def sizeMember(StructDeclaration struct, Member m) {
+	def findMemberDefiningSizeOf(Member m) {
+		val struct = m.eContainer as StructDeclaration;
 		for (member : struct.members) {
 			if (member instanceof IntegerMember) {
 				val imem = member as IntegerMember
@@ -102,10 +76,6 @@ class StructGenerator {
 		}
 		return null
 	}
-
-	def setField(String variable, Member m, CharSequence expr) '''
-		«variable».«setterName(m)»(«expr»);
-	'''
 
 	def setterName(Member m) {
 		return "set" + attributeName(m).toFirstUpper();
@@ -119,149 +89,168 @@ class StructGenerator {
 		return m.name;
 	}
 
-	def readField(Member m) {
+	def readerMethodForMember(Member m) {
+		if(isArray(m)) {
+			switch (m) {
+				IntegerMember case m.typename == "uint8_t": readerMethodForByteBuffer(m as IntegerMember)
+				IntegerMember case m.typename == "int8_t": readerMethodForByteBuffer(m as IntegerMember)
+				StringMember: readerMethodForStringMember(m as StringMember)
+				default: readerMethodForArrayMember(m)
+			}
+		} else  {
+			readerMethodForPrimitive(m)		
+		}
+	}
+	
+	def readerMethodForPrimitive(Member m) {
 		switch (m) {
-			ComplexTypeMember: readField(m as ComplexTypeMember)
-			IntegerMember: readField(m as IntegerMember)
-			FloatMember: readField(m as FloatMember)
-			StringMember: readField(m as StringMember)
+			ComplexTypeMember: readerMethodForComplexTypeMember(m as ComplexTypeMember)
+			IntegerMember: readerMethodForIntegerMember(m as IntegerMember)
+			FloatMember: readerMethodForFloatMember(m as FloatMember)
+			StringMember: readerMethodForStringMember(m as StringMember)
 		}
 	}
-
-	def readField(ComplexTypeMember m) {
-		val nativeType = nativeTypeName(m)
-		val javaType = native2JavaType(nativeType)
-		return javaType + ".read(buf)";	
-	}
-
-	def readField(IntegerMember m) {
-		switch (m.typename) {
-			case "int8_t": '''buf.get()'''
-			case "uint8_t": '''buf.get() & 0xFF'''
-			case "int16_t": '''buf.getShort()'''
-			case "uint16_t": '''buf.getShort() & 0xFFFF'''
-			case "int32_t": '''buf.getInt()'''
-			case "uint32_t": '''buf.getInt() & 0xFFFFFFFF'''
-			case "int64_t": '''buf.getLong()'''
-			case "uint64_t": '''buf.getLong() & 0xFFFFFFFFFFFFFFFFL'''
-			default:
-				throw new RuntimeException("Unsupported type: " + m.typename)
+	
+	def readerMethodForArrayMember(Member m) '''
+	private static java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> «m.readerMethodName()»(java.nio.ByteBuffer buf) throws java.io.IOException {
+		java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> lst = new java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»>();
+		«IF dimensionOf(m) == 0»
+		int arrayLength = «getterName(findMemberDefiningSizeOf(m))»();
+		for(int i = 0; i < arrayLength; ++i) {
+			lst.add(«readerMethodName(m)»«arrayPostfix(m)»(buf));
 		}
+		«ELSE»
+		«FOR i : 0 ..< dimensionOf(m)»
+		lst.add(«readerMethodName(m)»«arrayPostfix(m)»(buf));
+		«ENDFOR»
+		«ENDIF»
+		return lst;
 	}
-
-	def readField(FloatMember m) {
-		switch (m.typename) {
-			case "float": '''buf.getFloat()'''
-			case "double": '''buf.getDouble()'''
-		}
-	}
-
-	def readField(StringMember m) '''
-		readString(buf, "«encodingOf(m)»", «dimensionOf(m)»)
+	
+	«readerMethodForPrimitive(m)»
 	'''
 	
-	def dimensionOf(StringMember m) {
-		if(m.array != null) {
-			return m.array.dimension
+	def dimensionOf(Member m) {
+		if(m.array == null) {
+			return 0;
 		}
-		return 0
+		return m.array.dimension;
 	}
+	
+	def readerMethodForByteBuffer(IntegerMember m) '''
+		private static java.nio.ByteBuffer «readerMethodName(m)»(java.nio.ByteBuffer buf) throws java.io.IOException {
+			byte[] buffer = new byte[«m.array.dimension»];
+			buf.get(buffer);
+			return java.nio.ByteBuffer.wrap(buffer); 
+		}
+	'''
 
-	def stringReader() '''
-		private static String readString(java.nio.ByteBuffer buf, String encoding, int size) throws java.io.IOException {
+	def readerMethodForComplexTypeMember(ComplexTypeMember m) '''
+		private static «m.nativeTypeName().native2JavaType()» «m.readerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf) throws java.io.IOException {
+			return «m.nativeTypeName().native2JavaType()».read(buf);
+		}
+	'''
+	
+	def readerMethodForIntegerMember(IntegerMember m) '''
+		private static «m.nativeTypeName().native2JavaType()» «m.readerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf) throws java.io.IOException {
+			«IF m.typename.equals("int8_t")»
+			return buf.get();
+			«ELSEIF m.typename.equals("uint8_t")»
+			return buf.get() & 0xFF;
+			«ELSEIF m.typename.equals("int16_t")»
+			return buf.getShort();
+			«ELSEIF m.typename.equals("uint16_t")»
+			return buf.getShort() & 0xFFFF;
+			«ELSEIF m.typename.equals("int32_t")»
+			return buf.getInt();
+			«ELSEIF m.typename.equals("uint32_t")»
+			return buf.getInt() & 0xFFFFFFFF;
+			«ELSEIF m.typename.equals("int64_t")»
+			return buf.getLong();
+			«ELSEIF m.typename.equals("uint64_t")»
+			return buf.getLong() & 0xFFFFFFFFFFFFFFFFL;
+			«ENDIF»
+		}
+	'''
+
+	def readerMethodForFloatMember(FloatMember m) '''
+		private static «m.nativeTypeName().native2JavaType()» «m.readerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf) throws java.io.IOException {
+			«IF m.typename.equals("float")»
+			return buf.getFloat();
+			«ELSEIF m.typename.equals("double")»
+			return buf.getDouble();
+			«ENDIF»
+		}
+	'''
+
+	def readerMethodForStringMember(StringMember m) '''
+		private static String «m.readerMethodName()»(java.nio.ByteBuffer buf) throws java.io.IOException {
 			try {
-				if(size == 0) {
-					int terminatingZeros = "\0".getBytes(encoding).length;
-					java.io.ByteArrayOutputStream tmp = new java.io.ByteArrayOutputStream();
-					int zerosRead = 0;
-					while(zerosRead < terminatingZeros) {
-						int b = buf.get();
-						tmp.write(b);
-						if(b == 0) {
-							zerosRead++;
-						} else {
-							zerosRead = 0;
-						}
+			«IF m.array.dimension == 0»
+				java.io.ByteArrayOutputStream tmp = new java.io.ByteArrayOutputStream();
+				int terminatingZeros = "\0".getBytes("«encodingOf(m)»").length;
+				int zerosRead = 0;
+				while(zerosRead < terminatingZeros) {
+					int b = buf.get();
+					tmp.write(b);
+					if(b == 0) {
+						zerosRead++;
+					} else {
+						zerosRead = 0;
 					}
-					return tmp.toString(encoding);
-				} else {
-					byte[] tmp = new byte[size];
-					buf.get(tmp);
-					return new String(tmp, encoding);
 				}
+				return tmp.toString("«encodingOf(m)»");
+			«ELSE»
+				byte[] tmp = new byte[«dimensionOf(m)»];
+				buf.get(tmp);
+				int terminatingZeros = "\0".getBytes("«encodingOf(m)»").length;
+				int zerosRead = 0;
+				int i = 0;
+				int len = 0;
+				while(zerosRead < terminatingZeros) {
+					if(i >= «dimensionOf(m)») {
+						len = i;
+						break;
+					}
+					if(tmp[i++] == 0) {
+						zerosRead++;
+					} else {
+						zerosRead = 0;
+						len = i;
+					}
+				}
+				return new String(tmp, 0, len, "«encodingOf(m)»");
+			«ENDIF»
 			} catch(java.io.UnsupportedEncodingException e) {
 				throw new java.io.IOException(e);
 			}
 		}
 	'''
+	
+	def arrayPostfix(Member m) {
+		if(m.isArray()) {
+			return "_ArrayItem"
+		}
+		return ""
+	}
+	
+	def writerMethodName(Member m) {
+		return "write" + m.name.toFirstUpper;
+	}
 
-	def writer(StructDeclaration struct) '''
+	def writerMethodForStruct(StructDeclaration struct) '''
 		public void write(java.nio.ByteBuffer buf) throws java.io.IOException {
-			«FOR f : struct.members»
-				«alignField(f)»
-				«IF isArray(f)»
-					«writeArray(f)»
-				«ELSE»
-					«writeField(f, "this." + getterName(f) + "()")»
-				«ENDIF»
+			«FOR m : struct.members»
+			«writerMethodName(m)»(buf);
 			«ENDFOR»
 		}
 	'''
-
-	def writeArray(Member m) {
-		if (m.array.dimension > 0) {
-			return writeStaticArray(m)
-		} else {
-			return writeDynamicArray(m)
-		}
-	}
-
-	def writeStaticArray(Member m) '''
-		«FOR i : 0 ..< m.array.dimension»
-			«alignField(m)»
-			«writeField(m, downcastIfNecessarry(m) + "this." + getterName(m) + "().get(" + i + ")")»
+	
+	def writerMethods(StructDeclaration struct) '''
+		«FOR m : struct.members»
+			«writerMethodForMember(m)»
 		«ENDFOR»
 	'''
-
-	def writeDynamicArray(Member m) '''
-		{
-			int arrayLength = this.«getterName(m)»().length();
-			for(int i = 0; i < arrayLength; ++i) {
-				«alignField(m)»
-				«writeField(m, downcastIfNecessarry(m) + "this." + getterName(m) + "().get(i)")»
-			}
-		}
-	''' 
-	
-	def downcastIfNecessarry(Member m) {
-		if(m instanceof ComplexTypeMember) {
-			return ""
-		}
-		return "("+native2JavaType(nativeTypeName(m))+")";
-	}
-
-	def writeField(Member m, CharSequence expr) {
-		switch (m) {
-			ComplexTypeMember: writeField(m as ComplexTypeMember, expr)
-			IntegerMember: writeField(m as IntegerMember, expr)
-			FloatMember: writeField(m as FloatMember, expr)
-			StringMember: writeField(m as StringMember, expr)
-			default: throw new RuntimeException("Unsupported member type: " + m)
-		}
-	}
-
-	def writeField(ComplexTypeMember m, CharSequence expr) '''
-		«expr».write(buf);
-	'''
-
-	def hasAtLeastOneStringMember(StructDeclaration struct) {
-		for (m : struct.members) {
-			if (m instanceof StringMember) {
-				return true;
-			}
-		}
-		return false;
-	}
 
 	def alignField(Member m) '''
 		«IF m.align > 1»
@@ -274,49 +263,112 @@ class StructGenerator {
 			}
 		«ENDIF»
 	'''
-
-	def writeField(IntegerMember m, CharSequence expr) {
-		switch (m.typename) {
-			case "int8_t": '''buf.put((byte)«expr»);'''
-			case "uint8_t": '''buf.put((byte)«expr»);'''
-			case "int16_t": '''buf.putShort((short)«expr»);'''
-			case "uint16_t": '''buf.putShort((short)«expr»);'''
-			case "int32_t": '''buf.putInt(«expr»);'''
-			case "uint32_t": '''buf.putInt(«expr»);'''
-			case "int64_t": '''buf.putLong(«expr»);'''
-			case "uint64_t": '''buf.putLong(«expr»);'''
+	
+	def writerMethodForMember(Member m) {
+		if(isArray(m)) {
+			switch (m) {
+				IntegerMember case m.typename == "uint8_t": writerMethodForByteBuffer(m as IntegerMember)
+				IntegerMember case m.typename == "int8_t": writerMethodForByteBuffer(m as IntegerMember)
+				StringMember: writerMethodForString(m as StringMember)
+				default: writerMethodForArrayMember(m)
+			}
+		} else  {
+			writerMethodForPrimitive(m)		
 		}
 	}
-
-	def writeField(FloatMember m, CharSequence expr) {
-		switch (m.typename) {
-			case "float": '''buf.putFloat(this.«attributeName(m)»);'''
-			case "double": '''buf.putDouble(this.«attributeName(m)»);'''
+	
+	def writerMethodForPrimitive(Member m) {
+		switch (m) {
+			ComplexTypeMember: writerMethodForComplexTypeMember(m as ComplexTypeMember)
+			IntegerMember: writerMethodForIntegerMember(m as IntegerMember)
+			FloatMember: writerMethodForFloatMember(m as FloatMember)
+			StringMember: writerMethodForString(m as StringMember)
 		}
 	}
+	
+	def writerMethodForArrayMember(Member m) '''
+	private void «m.writerMethodName()»(java.nio.ByteBuffer buf) throws java.io.IOException {
+		java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> lst = «getterName(m)»();
+		«IF dimensionOf(m) == 0»
+		for(«m.nativeTypeName().native2JavaType().box()» item : lst) {
+			«writerMethodName(m)»«arrayPostfix(m)»(item, buf);
+		}
+		«ELSE»
+		«FOR i : 0 ..< dimensionOf(m)»
+		«writerMethodName(m)»«arrayPostfix(m)»(lst.get(«i»), buf);
+		«ENDFOR»
+		«ENDIF»
+	}
+	
+	«writerMethodForPrimitive(m)»
+	'''
+	
+	def writerMethodForByteBuffer(IntegerMember m) '''
+		private void «m.writerMethodName()»(java.nio.ByteBuffer value, java.nio.ByteBuffer buf) throws java.io.IOException {
+			buf.put(value);
+		}
+	'''
 
-	def writeField(StringMember m, CharSequence expr) '''
+	def writerMethodForComplexTypeMember(ComplexTypeMember m) '''
+		private void «m.writerMethodName()»«arrayPostfix(m)»(«IF m.isArray()»«m.nativeTypeName().native2JavaType()» value, «ENDIF»java.nio.ByteBuffer buf) throws java.io.IOException {
+			«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF».write(buf);
+		}
+	'''
+
+	def writerMethodForIntegerMember(IntegerMember m) '''
+		private void «m.writerMethodName()»«arrayPostfix(m)»(«IF m.isArray()»«m.nativeTypeName().native2JavaType()» value, «ENDIF»java.nio.ByteBuffer buf) throws java.io.IOException {
+			«IF m.typename.equals("int8_t")»
+			buf.put((byte)«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			«ELSEIF m.typename.equals("uint8_t")»
+			buf.put((byte)«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			«ELSEIF m.typename.equals("int16_t")»
+			buf.putShort((short)«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			«ELSEIF m.typename.equals("uint16_t")»
+			buf.putShort((short)«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			«ELSEIF m.typename.equals("int32_t")»
+			buf.putInt(«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			«ELSEIF m.typename.equals("uint32_t")»
+			buf.putInt(«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			«ELSEIF m.typename.equals("int64_t")»
+			buf.putLong(«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			«ELSEIF m.typename.equals("uint64_t")»
+			buf.putLong(«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			«ENDIF»
+		}
+	'''
+
+	def writerMethodForFloatMember(FloatMember m) '''
+		private void «m.writerMethodName()»«arrayPostfix(m)»(«IF m.isArray()»«m.nativeTypeName().native2JavaType()» value, «ENDIF»java.nio.ByteBuffer buf) throws java.io.IOException {
+			«IF m.typename.equals("float")»
+			buf.putFloat(«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			«ELSEIF m.typename.equals("double")»
+			buf.putDouble(«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			«ENDIF»
+		}
+	'''
+
+	def writerMethodForString(StringMember m) '''
+	private void «writerMethodName(m)»(java.nio.ByteBuffer buf) throws java.io.IOException {
 		try {
-			String str = «expr»;
-			byte[] encoded = str.getBytes("«encodingOf(m)»");
+			byte[] encoded = «getterName(m)»().getBytes("«encodingOf(m)»");
 			«IF m.nullTerminated»
-				buf.put(encoded);
-				buf.put("\0".getBytes("«encodingOf(m)»"));
+			buf.put(encoded);
+			buf.put("\0".getBytes("«encodingOf(m)»"));
 			«ELSE»
-				int len = encoded.length;
-				int pad = «dimensionOf(m)» - len;
-				buf.put(encoded, 0, len);
-				if(pad > 0) {
-					for(int i = 0; i < pad; ++i) {
-						buf.put((byte)0);	
-					}
+			int len = Math.min(encoded.length, «dimensionOf(m)»);
+			int pad = «dimensionOf(m)» - len;
+			buf.put(encoded, 0, len);
+			if(pad > 0) {
+				for(int i = 0; i < pad; ++i) {
+					buf.put((byte)0);	
 				}
+			}
 			«ENDIF»
 		} catch(java.io.UnsupportedEncodingException e) {
 			throw new java.io.IOException(e);
 		}
+	}
 	'''
-	
 	
 	def encodingOf(StringMember m) {
 		if(m.encoding != null) {
@@ -351,40 +403,38 @@ class StructGenerator {
 	'''
 
 	def field(Member m) '''
-		private «native2JavaType(m)» «attributeName(m)»;
+		private «attributeJavaType(m)» «attributeName(m)»;
 	'''
 
 	def getter(Member m) '''
-		public «native2JavaType(m)» «getterName(m)»() {
+		public «attributeJavaType(m)» «getterName(m)»() {
 			return this.«attributeName(m)»;
 		}
 	'''
 
 	def setter(Member m) '''
-		public void «setterName(m)»(«native2JavaType(m)» «attributeName(m)») {
+		public void «setterName(m)»(«attributeJavaType(m)» «attributeName(m)») {
 			this.«attributeName(m)» = «attributeName(m)»;
 		}
 	'''
 
-	def native2JavaType(Member m) {
+	def attributeJavaType(Member m) {
 		val nativeType = nativeTypeName(m)
 		val javaType = native2JavaType(nativeType)
 
 		if (isArray(m)) {
-			return mapArrayToType(m, javaType)
+			if(m instanceof IntegerMember) {
+				if(m.typename.equals("uint8_t") || m.typename.equals("int8_t")) {
+					return "java.nio.ByteBuffer";
+				}
+			}
+			if(m instanceof StringMember) {
+				return javaType
+			}
+			return "java.util.ArrayList<" + box(javaType) + ">";
 		} else {
 			return javaType
 		}
-	}
-	
-	def mapArrayToType(Member m, String elementType) {
-		if(m instanceof StringMember) {
-			return "String"
-		}
-		if(elementType.equalsIgnoreCase("Byte")) {
-			return "java.nio.ByteBuffer"
-		}
-		return "java.util.ArrayList<" + box(elementType) + ">"
 	}
 
 	def box(String type) {
