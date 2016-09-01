@@ -39,7 +39,90 @@ class StructGenerator {
 			
 			«readerMethods(struct)»
 			«writerMethods(struct)»
+			
+			«hashCodeMethod(struct)»
+			«equalsMethod(struct)»
 		}
+	'''
+	
+	def hashCodeMethod(StructDeclaration struct) '''
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		«FOR m : struct.members»
+		«IF m instanceof StringMember || m instanceof ComplexTypeDeclaration || m.isArray()»
+		result = prime * result + ((this.«attributeName(m)» == null) ? 0 : this.«attributeName(m)».hashCode());
+		«ELSEIF m instanceof IntegerMember»
+		«IF (m as IntegerMember).typename.equals("int8_t") || (m as IntegerMember).typename.equals("uint8_t")»
+		result = prime * result + this.«attributeName(m)»;
+		«ELSEIF (m as IntegerMember).typename.equals("int16_t") || (m as IntegerMember).typename.equals("uint16_t")»
+		result = prime * result + this.«attributeName(m)»;
+		«ELSEIF (m as IntegerMember).typename.equals("int32_t") || (m as IntegerMember).typename.equals("uint32_t")»
+		result = prime * result + this.«attributeName(m)»;
+		«ELSEIF (m as IntegerMember).typename.equals("int64_t") || (m as IntegerMember).typename.equals("uint64_t")»
+		result = prime * result + (int) (this.«attributeName(m)» ^ (this.«attributeName(m)» >>> 32));
+		«ENDIF»
+		«ELSEIF m instanceof FloatMember»
+		«IF (m as FloatMember).typename.equals("float")»
+		result = prime * result + Float.floatToIntBits(this.«attributeName(m)»);
+		«ELSEIF (m as FloatMember).typename.equals("double")»
+		{
+			long temp;
+			temp = Double.doubleToLongBits(this.«attributeName(m)»);
+			result = prime * result + (int) (temp ^ (temp >>> 32));
+		}
+		«ENDIF»
+		«ENDIF»	
+		«ENDFOR»	
+		return result;
+	}
+	'''
+	
+	def equalsMethod(StructDeclaration struct) '''
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		«struct.name» other = («struct.name») obj;
+		
+		«FOR m : struct.members»
+		«IF m instanceof StringMember || m instanceof ComplexTypeDeclaration || m.isArray()»
+		if (this.«attributeName(m)» == null) {
+			if (other.«attributeName(m)» != null)
+				return false;
+		} else if (!this.«attributeName(m)».equals(other.«attributeName(m)»))
+			return false;
+		«ELSEIF m instanceof IntegerMember»
+		«IF (m as IntegerMember).typename.equals("int8_t") || (m as IntegerMember).typename.equals("uint8_t")»
+		if (this.«attributeName(m)» != other.«attributeName(m)»)
+			return false;
+		«ELSEIF (m as IntegerMember).typename.equals("int16_t") || (m as IntegerMember).typename.equals("uint16_t")»
+		if (this.«attributeName(m)» != other.«attributeName(m)»)
+			return false;
+		«ELSEIF (m as IntegerMember).typename.equals("int32_t") || (m as IntegerMember).typename.equals("uint32_t")»
+		if (this.«attributeName(m)» != other.«attributeName(m)»)
+			return false;
+		«ELSEIF (m as IntegerMember).typename.equals("int64_t") || (m as IntegerMember).typename.equals("uint64_t")»
+		if (this.«attributeName(m)» != other.«attributeName(m)»)
+			return false;
+		«ENDIF»
+		«ELSEIF m instanceof FloatMember»
+		«IF (m as FloatMember).typename.equals("float")»
+		if (Float.floatToIntBits(this.«attributeName(m)») != Float.floatToIntBits(other.«attributeName(m)»))
+			return false;
+		«ELSEIF (m as FloatMember).typename.equals("double")»
+		if (Double.doubleToLongBits(this.«attributeName(m)») != Double.doubleToLongBits(other.«attributeName(m)»))
+			return false;
+		«ENDIF»
+		«ENDIF»	
+		«ENDFOR»
+		return true;
+	}
 	'''
 	
 	def toStringMethod(StructDeclaration struct) '''
