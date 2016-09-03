@@ -70,10 +70,10 @@ class EnumGenerator {
 
 	def write(EnumDeclaration enumDecl) {
 		switch (enumDecl.typename) {
-			case "int8_t": '''buf.put(this.value & 0xFF);'''
-			case "uint8_t": '''buf.put(this.value & 0xFF);'''
-			case "int16_t": '''buf.putShort(this.value & 0xFFFF);'''
-			case "uint16_t": '''buf.putShort(this.value & 0xFFFF);'''
+			case "int8_t": '''buf.put((byte)(this.value & 0xFF));'''
+			case "uint8_t": '''buf.put((byte)(this.value & 0xFF));'''
+			case "int16_t": '''buf.putShort((short)(this.value & 0xFFFF));'''
+			case "uint16_t": '''buf.putShort((short)(this.value & 0xFFFF));'''
 			case "int32_t": '''buf.putInt(this.value & 0xFFFFFFFF);'''
 			case "uint32_t": '''buf.putInt(this.value & 0xFFFFFFFF);'''
 			case "int64_t": throw new RuntimeException("64bit enums not supported")

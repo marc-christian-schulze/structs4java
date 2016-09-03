@@ -400,8 +400,8 @@ class StructGenerator {
 	'''
 	
 	def writerMethodForByteBuffer(IntegerMember m) '''
-		private void «m.writerMethodName()»(java.nio.ByteBuffer value, java.nio.ByteBuffer buf) throws java.io.IOException {
-			buf.put(value);
+		private void «m.writerMethodName()»(java.nio.ByteBuffer buf) throws java.io.IOException {
+			buf.put(«getterName(m)»());
 		}
 	'''
 
