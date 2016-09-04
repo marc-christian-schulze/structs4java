@@ -4,17 +4,43 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import org.junit.Before;
+import org.junit.After;
 import org.structs4java.example1.SimpleEnum;
 import org.structs4java.example1.SimpleStructure;
 import org.structs4java.example2.AdvancedStructure;
 
 public class AbstractTest {
 
+	private static final int BUFFER_SIZE = 256;
 	protected ByteBuffer buffer;
 
 	@Before
 	public void before() {
-		buffer = ByteBuffer.allocate(4096);
+		buffer = ByteBuffer.allocate(BUFFER_SIZE);
+		for(int i = 0; i < BUFFER_SIZE; ++i) {
+			buffer.put((byte)0xFF);
+		}
+		buffer.position(0);
+		
+		System.out.println("------------------------- NEW TESTCASE ------------------------------");
+		System.out.println("Buffer before:");
+		dumpBuffer();
+	}
+	
+	@After
+	public void after() {
+		System.out.println("Buffer after:");
+		dumpBuffer();
+	}
+	
+	public void dumpBuffer() {
+		for(int i = 0; i < BUFFER_SIZE; ++i) {
+			System.out.print(String.format("%02X ", buffer.get(i)));
+			if(i % 32 == 31) {
+				System.out.println();
+			}
+		}
+		System.out.println();
 	}
 	
 	public SimpleStructure createSimpleStruct() {

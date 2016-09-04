@@ -11,6 +11,7 @@ import org.structs4java.structs4JavaDsl.Member
 import org.structs4java.structs4JavaDsl.Package
 import org.structs4java.structs4JavaDsl.StringMember
 import org.structs4java.structs4JavaDsl.StructDeclaration
+import org.structs4java.structs4JavaDsl.EnumDeclaration
 
 /**
  * Generates code from your model files on save.
@@ -23,26 +24,34 @@ class StructGenerator {
 		«packageDeclaration(pkg)»
 		
 		public class «struct.name» {
-			
-			«fields(struct)»
-			
 			public «struct.name»() {
 			}
-			
-			«getters(struct)»
-			«setters(struct)»
 			
 			«readerMethodForStruct(struct)»
 			«writerMethodForStruct(struct)»
 			
+			«getters(struct)»
+			«setters(struct)»
+			
+			«sizeOfStructMethod(struct)»
+			
 			«toStringMethod(struct)»
-			
-			«readerMethods(struct)»
-			«writerMethods(struct)»
-			
 			«hashCodeMethod(struct)»
 			«equalsMethod(struct)»
+			
+			«readerMethods(struct)»						
+			«writerMethods(struct)»
+			
+			«fields(struct)»
 		}
+	'''
+	
+	def sizeOfStructMethod(StructDeclaration struct) '''
+	«IF struct.isFixedSize()»
+	public static long getSizeOf() {
+		return «computeFixedSizeOf(struct)»;
+	}
+	«ENDIF»
 	'''
 	
 	def hashCodeMethod(StructDeclaration struct) '''
@@ -51,7 +60,8 @@ class StructGenerator {
 		final int prime = 31;
 		int result = 1;
 		«FOR m : struct.members»
-		«IF m instanceof StringMember || m instanceof ComplexTypeDeclaration || m.isArray()»
+		«IF !m.hasSizeOfOrCountOfAttribute()»
+		«IF m instanceof StringMember || m instanceof ComplexTypeMember || m.isArray()»
 		result = prime * result + ((this.«attributeName(m)» == null) ? 0 : this.«attributeName(m)».hashCode());
 		«ELSEIF m instanceof IntegerMember»
 		«IF (m as IntegerMember).typename.equals("int8_t") || (m as IntegerMember).typename.equals("uint8_t")»
@@ -74,6 +84,7 @@ class StructGenerator {
 		}
 		«ENDIF»
 		«ENDIF»	
+		«ENDIF»
 		«ENDFOR»	
 		return result;
 	}
@@ -91,35 +102,37 @@ class StructGenerator {
 		«struct.name» other = («struct.name») obj;
 		
 		«FOR m : struct.members»
-		«IF m instanceof StringMember || m instanceof ComplexTypeDeclaration || m.isArray()»
-		if (this.«attributeName(m)» == null) {
-			if (other.«attributeName(m)» != null)
-				return false;
-		} else if (!this.«attributeName(m)».equals(other.«attributeName(m)»))
-			return false;
-		«ELSEIF m instanceof IntegerMember»
-		«IF (m as IntegerMember).typename.equals("int8_t") || (m as IntegerMember).typename.equals("uint8_t")»
-		if (this.«attributeName(m)» != other.«attributeName(m)»)
-			return false;
-		«ELSEIF (m as IntegerMember).typename.equals("int16_t") || (m as IntegerMember).typename.equals("uint16_t")»
-		if (this.«attributeName(m)» != other.«attributeName(m)»)
-			return false;
-		«ELSEIF (m as IntegerMember).typename.equals("int32_t") || (m as IntegerMember).typename.equals("uint32_t")»
-		if (this.«attributeName(m)» != other.«attributeName(m)»)
-			return false;
-		«ELSEIF (m as IntegerMember).typename.equals("int64_t") || (m as IntegerMember).typename.equals("uint64_t")»
-		if (this.«attributeName(m)» != other.«attributeName(m)»)
-			return false;
-		«ENDIF»
-		«ELSEIF m instanceof FloatMember»
-		«IF (m as FloatMember).typename.equals("float")»
-		if (Float.floatToIntBits(this.«attributeName(m)») != Float.floatToIntBits(other.«attributeName(m)»))
-			return false;
-		«ELSEIF (m as FloatMember).typename.equals("double")»
-		if (Double.doubleToLongBits(this.«attributeName(m)») != Double.doubleToLongBits(other.«attributeName(m)»))
-			return false;
-		«ENDIF»
-		«ENDIF»	
+			«IF !m.hasSizeOfOrCountOfAttribute()»
+				«IF m instanceof StringMember || m instanceof ComplexTypeMember || m.isArray()»
+					if (this.«attributeName(m)» == null) {
+						if (other.«attributeName(m)» != null)
+							return false;
+					} else if (!this.«attributeName(m)».equals(other.«attributeName(m)»))
+						return false;
+				«ELSEIF m instanceof IntegerMember»
+					«IF (m as IntegerMember).typename.equals("int8_t") || (m as IntegerMember).typename.equals("uint8_t")»
+						if (this.«attributeName(m)» != other.«attributeName(m)»)
+							return false;
+					«ELSEIF (m as IntegerMember).typename.equals("int16_t") || (m as IntegerMember).typename.equals("uint16_t")»
+						if (this.«attributeName(m)» != other.«attributeName(m)»)
+							return false;
+					«ELSEIF (m as IntegerMember).typename.equals("int32_t") || (m as IntegerMember).typename.equals("uint32_t")»
+						if (this.«attributeName(m)» != other.«attributeName(m)»)
+							return false;
+					«ELSEIF (m as IntegerMember).typename.equals("int64_t") || (m as IntegerMember).typename.equals("uint64_t")»
+						if (this.«attributeName(m)» != other.«attributeName(m)»)
+							return false;
+					«ENDIF»
+				«ELSEIF m instanceof FloatMember»
+					«IF (m as FloatMember).typename.equals("float")»
+						if (Float.floatToIntBits(this.«attributeName(m)») != Float.floatToIntBits(other.«attributeName(m)»))
+							return false;
+					«ELSEIF (m as FloatMember).typename.equals("double")»
+						if (Double.doubleToLongBits(this.«attributeName(m)») != Double.doubleToLongBits(other.«attributeName(m)»))
+							return false;
+					«ENDIF»
+				«ENDIF»	
+			«ENDIF»
 		«ENDFOR»
 		return true;
 	}
@@ -128,13 +141,21 @@ class StructGenerator {
 	def toStringMethod(StructDeclaration struct) '''
 	public String toString() {
 		StringBuilder buf = new StringBuilder("«javaType(struct)»[");
-		«FOR m : struct.members SEPARATOR "buf.append(\", \");"»
+		«FOR m : struct.nonTransientMembers() SEPARATOR "buf.append(\", \");"»
 			buf.append("«attributeName(m)»=" + «getterName(m)»());
 		«ENDFOR»
 		buf.append("]");
 		return buf.toString();
 	}
 	'''
+	
+	def nonTransientMembers(StructDeclaration struct) {
+		return struct.members.filter[!hasSizeOfOrCountOfAttribute];
+	}
+	
+	def isTransient(Member m) {
+		return m.hasSizeOfOrCountOfAttribute()
+	}
 	
 	def readerMethods(StructDeclaration struct) '''
 		«FOR m : struct.members»
@@ -144,13 +165,70 @@ class StructGenerator {
 
 	def readerMethodForStruct(StructDeclaration struct) '''
 		public static «struct.name» read(java.nio.ByteBuffer buf) throws java.io.IOException {
+			«IF struct.isSelfSized()»
+			long structBeginPosition = buf.position();
+			long structEndPosition = -1;
+			«ENDIF»
+			
 			«struct.name» obj = new «struct.name»();
+			
 			«FOR m : struct.members»
-			obj.«setterName(m)»(«readerMethodName(m)»(buf));
+				«IF m.hasSizeOfOrCountOfAttribute()»
+					«IF (m as IntegerMember).sizeofThis»
+						structEndPosition = structBeginPosition + «readerMethodName(m)»(buf);
+					«ELSE»
+						«IF struct.isSelfSized()»
+							if(buf.position() == structEndPosition) {
+								return obj;
+							}
+							if(buf.position() > structEndPosition) {
+								throw new java.io.IOException(String.format("Read beyond the memory region of the struct [%d,%d) definition by %d bytes", structBeginPosition, structEndPosition, buf.position() - structEndPosition));
+							}
+						«ENDIF»
+						«attributeJavaType(m)» «tempVarForMember(m)» = «readerMethodName(m)»(buf);
+					«ENDIF»
+				«ELSE»
+					«IF struct.isSelfSized()»
+						if(buf.position() == structEndPosition) {
+							return obj;
+						}
+						if(structEndPosition != -1 && buf.position() > structEndPosition) {
+							throw new java.io.IOException(String.format("Read beyond the memory region of the struct [%d,%d) definition by %d bytes", structBeginPosition, structEndPosition, buf.position() - structEndPosition));
+						}
+					«ENDIF»
+					
+					«IF findMemberDefiningSizeOf(m) != null»
+						obj.«setterName(m)»(«readerMethodName(m)»(buf, «tempVarForMember(findMemberDefiningSizeOf(m))»));
+					«ELSEIF findMemberDefiningCountOf(m) != null»
+						obj.«setterName(m)»(«readerMethodName(m)»(buf, «tempVarForMember(findMemberDefiningCountOf(m))»));
+					«ELSE»
+						obj.«setterName(m)»(«readerMethodName(m)»(buf));
+					«ENDIF»
+				«ENDIF»
 			«ENDFOR»
+			
 			return obj;
 		}
 	'''
+	
+	def isSelfSized(StructDeclaration struct) {
+		for(Member m : struct.members) {
+			if(m instanceof IntegerMember) {
+				if(m.sizeofThis) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	def tempVarForMember(Member m) {
+		if(m.hasSizeOfAttribute()) {
+			return "sizeof__" + attributeName((m as IntegerMember).sizeof)				
+		} else {
+			return "countof__" + attributeName((m as IntegerMember).countof)
+		}
+	}
 	
 	def readerMethodName(Member m) {
 		return "read" + m.name.toFirstUpper;
@@ -159,14 +237,33 @@ class StructGenerator {
 	def isArray(Member m) {
 		return m.array != null
 	}
+	
+	def findMemberDefiningSizeOrCountOf(Member m) {
+		var m2 = findMemberDefiningSizeOf(m)
+		if(m2 != null) {
+			return m2
+		}
+		return findMemberDefiningCountOf(m)
+	}
 
 	def findMemberDefiningSizeOf(Member m) {
 		val struct = m.eContainer as StructDeclaration;
 		for (member : struct.members) {
 			if (member instanceof IntegerMember) {
-				val imem = member as IntegerMember
-				if (imem.sizeof.contains(m)) {
-					return imem
+				if (m.equals(member.sizeof)) {
+					return member
+				}
+			}
+		}
+		return null
+	}
+	
+	def findMemberDefiningCountOf(Member m) {
+		val struct = m.eContainer as StructDeclaration;
+		for (member : struct.members) {
+			if (member instanceof IntegerMember) {
+				if (m.equals(member.countof)) {
+					return member
 				}
 			}
 		}
@@ -186,11 +283,11 @@ class StructGenerator {
 	}
 
 	def readerMethodForMember(Member m) {
-		if(isArray(m)) {
+		if(m.isArray()) {
 			switch (m) {
-				IntegerMember case m.typename == "uint8_t": readerMethodForByteBuffer(m as IntegerMember)
-				IntegerMember case m.typename == "int8_t": readerMethodForByteBuffer(m as IntegerMember)
-				StringMember: readerMethodForStringMember(m as StringMember)
+				IntegerMember case m.typename == "uint8_t": readerMethodForByteBuffer(m)
+				IntegerMember case m.typename == "int8_t": readerMethodForByteBuffer(m)
+				StringMember: readerMethodForStringMember(m)
 				default: readerMethodForArrayMember(m)
 			}
 		} else  {
@@ -200,19 +297,22 @@ class StructGenerator {
 	
 	def readerMethodForPrimitive(Member m) {
 		switch (m) {
-			ComplexTypeMember: readerMethodForComplexTypeMember(m as ComplexTypeMember)
-			IntegerMember: readerMethodForIntegerMember(m as IntegerMember)
-			FloatMember: readerMethodForFloatMember(m as FloatMember)
-			StringMember: readerMethodForStringMember(m as StringMember)
+			ComplexTypeMember: readerMethodForComplexTypeMember(m)
+			IntegerMember: readerMethodForIntegerMember(m)
+			FloatMember: readerMethodForFloatMember(m)
+			StringMember: readerMethodForStringMember(m)
 		}
 	}
 	
+	def getDefiningStruct(Member m) {
+		return m.eContainer as StructDeclaration;
+	}
+	
 	def readerMethodForArrayMember(Member m) '''
-	private static java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> «m.readerMethodName()»(java.nio.ByteBuffer buf) throws java.io.IOException {
+	private static java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> «m.readerMethodName()»(java.nio.ByteBuffer buf«IF dimensionOf(m) == 0», «attributeJavaType(findMemberDefiningSizeOrCountOf(m))» countof«ENDIF») throws java.io.IOException {
 		java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> lst = new java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»>();
 		«IF dimensionOf(m) == 0»
-		int arrayLength = «getterName(findMemberDefiningSizeOf(m))»();
-		for(int i = 0; i < arrayLength; ++i) {
+		for(int i = 0; i < countof; ++i) {
 			lst.add(«readerMethodName(m)»«arrayPostfix(m)»(buf));
 		}
 		«ELSE»
@@ -234,8 +334,8 @@ class StructGenerator {
 	}
 	
 	def readerMethodForByteBuffer(IntegerMember m) '''
-		private static java.nio.ByteBuffer «readerMethodName(m)»(java.nio.ByteBuffer buf) throws java.io.IOException {
-			byte[] buffer = new byte[«m.array.dimension»];
+		private static java.nio.ByteBuffer «readerMethodName(m)»(java.nio.ByteBuffer buf«IF dimensionOf(m) == 0», «attributeJavaType(findMemberDefiningSizeOrCountOf(m))» sizeof«ENDIF») throws java.io.IOException {
+			byte[] buffer = new byte[«IF dimensionOf(m) == 0»sizeof«ELSE»«dimensionOf(m)»«ENDIF»];
 			buf.get(buffer);
 			return java.nio.ByteBuffer.wrap(buffer); 
 		}
@@ -280,9 +380,10 @@ class StructGenerator {
 	'''
 
 	def readerMethodForStringMember(StringMember m) '''
-		private static String «m.readerMethodName()»(java.nio.ByteBuffer buf) throws java.io.IOException {
+		private static String «m.readerMethodName()»(java.nio.ByteBuffer buf«IF dimensionOf(m) == 0 && findMemberDefiningSizeOf(m) != null», «attributeJavaType(findMemberDefiningSizeOrCountOf(m))» sizeof«ENDIF») throws java.io.IOException {
 			try {
-			«IF m.array.dimension == 0»
+			«IF dimensionOf(m) == 0»
+				«IF findMemberDefiningSizeOf(m) == null»
 				java.io.ByteArrayOutputStream tmp = new java.io.ByteArrayOutputStream();
 				int terminatingZeros = "\0".getBytes("«encodingOf(m)»").length;
 				int zerosRead = 0;
@@ -295,7 +396,12 @@ class StructGenerator {
 						zerosRead = 0;
 					}
 				}
-				return tmp.toString("«encodingOf(m)»");
+				return new String(tmp.toByteArray(), 0, tmp.size() - zerosRead, "«encodingOf(m)»");
+				«ELSE»
+				byte[] tmp = new byte[sizeof];
+				buf.get(tmp);
+				return new String(tmp, "«encodingOf(m)»");
+				«ENDIF»
 			«ELSE»
 				byte[] tmp = new byte[«dimensionOf(m)»];
 				buf.get(tmp);
@@ -336,49 +442,95 @@ class StructGenerator {
 
 	def writerMethodForStruct(StructDeclaration struct) '''
 		public void write(java.nio.ByteBuffer buf) throws java.io.IOException {
+			«IF struct.isSelfSized()»
+			int beginOfStruct = buf.position();
+			«ENDIF»
 			«FOR m : struct.members»
-			«writerMethodName(m)»(buf);
+				«IF m.isTransient()»
+				int positionof__«attributeName(m)» = buf.position();
+				buf.position(buf.position() + «computeFixedSizeOf(m)»);
+				«ELSE»
+					«IF m.findMemberDefiningSizeOrCountOf() != null»
+						int positionof__«attributeName(m)» = buf.position();
+						«writerMethodName(m)»(buf);
+						«attributeJavaType(m.findMemberDefiningSizeOrCountOf())» «attributeName(m.findMemberDefiningSizeOrCountOf())» = («attributeJavaType(m.findMemberDefiningSizeOrCountOf())»)(buf.position() - positionof__«attributeName(m)»);
+						positionof__«attributeName(m)» = buf.position();
+						buf.position(positionof__«attributeName(m.findMemberDefiningSizeOrCountOf())»);
+						«writerMethodName(m.findMemberDefiningSizeOrCountOf())»(buf, «attributeName(m.findMemberDefiningSizeOrCountOf())»);
+						buf.position(positionof__«attributeName(m)»);
+					«ELSE»
+						«writerMethodName(m)»(buf);
+					«ENDIF»
+				«ENDIF»
 			«ENDFOR»
+			
+			«IF struct.isSelfSized()»
+			int endOfStruct = buf.position();
+			buf.position(positionof__«attributeName(selfSizeMember(struct))»);
+			«writerMethodName(selfSizeMember(struct))»(buf, endOfStruct - beginOfStruct);
+			buf.position(endOfStruct);
+			«ENDIF»
 		}
 	'''
+	
+	def selfSizeMember(StructDeclaration struct) {
+		for(Member m : struct.members) {
+			if(m instanceof IntegerMember) {
+				if(m.sizeofThis) {
+					return m
+				}
+			}
+		}
+		return null
+	}
 	
 	def writerMethods(StructDeclaration struct) '''
 		«FOR m : struct.members»
 			«writerMethodForMember(m)»
 		«ENDFOR»
 	'''
-
-	def alignField(Member m) '''
-		«IF m.align > 1»
-			{
-				int pos = buf.position();
-				int gap = «m.align» - (pos % «m.align»);
-				if(gap > 0 && gap != «m.align») {
-					buf.position(pos + gap);	
-				}
-			}
-		«ENDIF»
-	'''
+	
+	def hasSizeOfOrCountOfAttribute(Member m) {
+		return m.hasSizeOfAttribute() || m.hasCountOfAttribute()
+	}
+	
+	def hasSizeOfAttribute(Member m) {
+		if(m instanceof IntegerMember) {
+			return m.sizeof != null || m.sizeofThis;
+		}
+		return false;
+	}
+	
+	def hasCountOfAttribute(Member m) {
+		if(m instanceof IntegerMember) {
+			return m.countof != null;
+		}
+		return false;
+	}
 	
 	def writerMethodForMember(Member m) {
+		if(m.isTransient()) {
+			return writerMethodForIntegerMemberReceivingValue(m as IntegerMember)
+		}
+		
 		if(isArray(m)) {
 			switch (m) {
-				IntegerMember case m.typename == "uint8_t": writerMethodForByteBuffer(m as IntegerMember)
-				IntegerMember case m.typename == "int8_t": writerMethodForByteBuffer(m as IntegerMember)
-				StringMember: writerMethodForString(m as StringMember)
-				default: writerMethodForArrayMember(m)
+				IntegerMember case m.typename == "uint8_t": return writerMethodForByteBuffer(m)
+				IntegerMember case m.typename == "int8_t": return writerMethodForByteBuffer(m)
+				StringMember: return writerMethodForString(m)
+				default: return writerMethodForArrayMember(m)
 			}
 		} else  {
-			writerMethodForPrimitive(m)		
+			return writerMethodForPrimitive(m)		
 		}
 	}
 	
 	def writerMethodForPrimitive(Member m) {
 		switch (m) {
-			ComplexTypeMember: writerMethodForComplexTypeMember(m as ComplexTypeMember)
-			IntegerMember: writerMethodForIntegerMember(m as IntegerMember)
-			FloatMember: writerMethodForFloatMember(m as FloatMember)
-			StringMember: writerMethodForString(m as StringMember)
+			ComplexTypeMember: writerMethodForComplexTypeMember(m)
+			IntegerMember: writerMethodForIntegerMember(m)
+			FloatMember: writerMethodForFloatMember(m)
+			StringMember: writerMethodForString(m)
 		}
 	}
 	
@@ -407,28 +559,56 @@ class StructGenerator {
 
 	def writerMethodForComplexTypeMember(ComplexTypeMember m) '''
 		private void «m.writerMethodName()»«arrayPostfix(m)»(«IF m.isArray()»«m.nativeTypeName().native2JavaType()» value, «ENDIF»java.nio.ByteBuffer buf) throws java.io.IOException {
-			«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF».write(buf);
+			if(«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF» != null) {
+				«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF».write(buf);
+			}
 		}
 	'''
 
 	def writerMethodForIntegerMember(IntegerMember m) '''
-		private void «m.writerMethodName()»«arrayPostfix(m)»(«IF m.isArray()»«m.nativeTypeName().native2JavaType()» value, «ENDIF»java.nio.ByteBuffer buf) throws java.io.IOException {
+	«IF m.isArray()»
+		«writerMethodForIntegerMemberReceivingValue(m)»
+	«ELSE»
+		private void «m.writerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf) throws java.io.IOException {
 			«IF m.typename.equals("int8_t")»
-			buf.put((byte)«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			buf.put((byte)«getterName(m)»());
 			«ELSEIF m.typename.equals("uint8_t")»
-			buf.put((byte)«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			buf.put((byte)«getterName(m)»());
 			«ELSEIF m.typename.equals("int16_t")»
-			buf.putShort((short)«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			buf.putShort((short)«getterName(m)»());
 			«ELSEIF m.typename.equals("uint16_t")»
-			buf.putShort((short)«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			buf.putShort((short)«getterName(m)»());
 			«ELSEIF m.typename.equals("int32_t")»
-			buf.putInt(«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			buf.putInt(«getterName(m)»());
 			«ELSEIF m.typename.equals("uint32_t")»
-			buf.putInt(«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			buf.putInt(«getterName(m)»());
 			«ELSEIF m.typename.equals("int64_t")»
-			buf.putLong(«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			buf.putLong(«getterName(m)»());
 			«ELSEIF m.typename.equals("uint64_t")»
-			buf.putLong(«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			buf.putLong(«getterName(m)»());
+			«ENDIF»
+		}
+	«ENDIF»
+	'''
+	
+	def writerMethodForIntegerMemberReceivingValue(IntegerMember m) '''
+		private void «m.writerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf, «m.nativeTypeName().native2JavaType()» value) throws java.io.IOException {
+			«IF m.typename.equals("int8_t")»
+			buf.put((byte)value);
+			«ELSEIF m.typename.equals("uint8_t")»
+			buf.put((byte)value);
+			«ELSEIF m.typename.equals("int16_t")»
+			buf.putShort((short)value);
+			«ELSEIF m.typename.equals("uint16_t")»
+			buf.putShort((short)value);
+			«ELSEIF m.typename.equals("int32_t")»
+			buf.putInt(value);
+			«ELSEIF m.typename.equals("uint32_t")»
+			buf.putInt(value);
+			«ELSEIF m.typename.equals("int64_t")»
+			buf.putLong(value);
+			«ELSEIF m.typename.equals("uint64_t")»
+			buf.putLong(value);
 			«ENDIF»
 		}
 	'''
@@ -447,9 +627,11 @@ class StructGenerator {
 	private void «writerMethodName(m)»(java.nio.ByteBuffer buf) throws java.io.IOException {
 		try {
 			byte[] encoded = «getterName(m)»().getBytes("«encodingOf(m)»");
-			«IF m.nullTerminated»
+			«IF dimensionOf(m) == 0»
 			buf.put(encoded);
+			«IF findMemberDefiningSizeOf(m) == null»
 			buf.put("\0".getBytes("«encodingOf(m)»"));
+			«ENDIF»
 			«ELSE»
 			int len = Math.min(encoded.length, «dimensionOf(m)»);
 			int pad = «dimensionOf(m)» - len;
@@ -481,20 +663,20 @@ class StructGenerator {
 	'''
 
 	def fields(StructDeclaration struct) '''
-		«FOR f : struct.members»
-			«field(f)»
+		«FOR m : struct.nonTransientMembers()»
+			«field(m)»
 		«ENDFOR»
 	'''
 
 	def getters(StructDeclaration struct) '''
-		«FOR f : struct.members»
-			«getter(f)»
+		«FOR m : struct.nonTransientMembers()»
+			«getter(m)»
 		«ENDFOR»
 	'''
 
 	def setters(StructDeclaration struct) '''
-		«FOR f : struct.members»
-			«setter(f)»
+		«FOR m : struct.nonTransientMembers()»
+			«setter(m)»
 		«ENDFOR»
 	'''
 
@@ -559,10 +741,10 @@ class StructGenerator {
 
 	def nativeTypeName(Member m) {
 		switch (m) {
-			ComplexTypeMember: javaType((m as ComplexTypeMember).type)
-			IntegerMember: (m as IntegerMember).typename
-			FloatMember: (m as FloatMember).typename
-			StringMember: (m as StringMember).typename
+			ComplexTypeMember: javaType(m.type)
+			IntegerMember: m.typename
+			FloatMember: m.typename
+			StringMember: m.typename
 			default: throw new RuntimeException("Unsupported member type: " + m)
 		}
 	}
@@ -589,5 +771,90 @@ class StructGenerator {
 			return pkg.name + "." + type.name
 		}
 		return type.name
+	}
+	
+	def boolean isFixedSize(StructDeclaration struct) {
+		for(Member m : struct.members) {
+			if(!m.isFixedSize()) {
+				return false;
+			}
+			if(m instanceof IntegerMember) {
+				if(m.sizeofThis) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	
+	def boolean isFixedSize(ComplexTypeDeclaration typeDecl) {
+		if(typeDecl instanceof StructDeclaration) {
+			return isFixedSize(typeDecl)
+		}
+		// for enums always true
+		return true;
+	}
+	
+	def boolean isFixedSize(Member m) {
+		if(m.isArray()) {
+			if(m.array.dimension == 0) {
+				return false;
+			}
+		}
+		
+		if(m instanceof ComplexTypeMember) {
+			return isFixedSize(m.type);
+		}
+		return true;
+	}
+	
+	def computeFixedSizeOf(StructDeclaration struct) {
+		var size = 0 as long;
+		for(Member m : struct.members) {
+			if(m.isArray()) {
+				size += computeFixedSizeOf(m) * dimensionOf(m);
+			} else {
+				size += computeFixedSizeOf(m);				
+			}
+		}
+		return size;
+	}
+	
+	def long computeFixedSizeOf(Member m)  {
+		switch(m) {
+			IntegerMember case m.typename == 'uint8_t': return 1
+			IntegerMember case m.typename == 'int8_t': return 1
+			IntegerMember case m.typename == 'uint16_t': return 2
+			IntegerMember case m.typename == 'int16_t': return 2
+			IntegerMember case m.typename == 'uint32_t': return 4
+			IntegerMember case m.typename == 'int32_t': return 4
+			IntegerMember case m.typename == 'uint64_t': return 8
+			IntegerMember case m.typename == 'int64_t': return 8
+			FloatMember case m.typename == 'float': return 4
+			FloatMember case m.typename == 'double': return 8
+			StringMember: return 1 // a char
+			ComplexTypeMember: return computeFixedSizeOf(m.type)
+			default: throw new RuntimeException("Unexpected member type: " + m)
+		}
+	}
+	
+	def long computeFixedSizeOf(ComplexTypeDeclaration typeDecl) {
+		if(typeDecl instanceof StructDeclaration) {
+			return computeFixedSizeOf(typeDecl)
+		} else {
+			return computeFixedSizeOf(typeDecl as EnumDeclaration)
+		}
+	}
+	
+	def long computeFixedSizeOf(EnumDeclaration enumDecl) {
+		switch(enumDecl.typename) {
+			case 'int8_t': return 1
+			case 'uint8_t': return 1
+			case 'int16_t': return 2
+			case 'uint16_t': return 2
+			case 'int32_t': return 4
+			case 'uint32_t': return 4
+			default: return 0
+		}
 	}
 }

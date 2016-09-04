@@ -22,48 +22,6 @@ class Structs4JavaDslParsingTest{
 	ParseHelper<org.structs4java.structs4JavaDsl.Package> parseHelper
 
 	@Test 
-	def void globalAlignment() {
-		val pkg = parseHelper.parse('''
-			package Hans;
-
-			alignment(4);
-			
-			struct A {
-				int8_t myInt;
-			}
-		''')
-		Assert.assertNotNull(pkg)
-		Assert.assertEquals(4, pkg.alignment)
-	}
-
-	@Test 
-	def void structWithAlignment() {
-		val pkg = parseHelper.parse('''
-			struct A {
-				int8_t  a align(4);
-				int16_t b align(4);
-				int32_t c align(4);
-				int64_t d align(4);
-				
-				uint8_t  e align(4);
-				uint16_t f align(4);
-				uint32_t g align(4);
-				uint64_t h align(4);
-				
-				bool i align(4);
-				float j align(4);
-				double k align(4);
-				char l[5] align(4);
-			}
-		''')
-		Assert.assertNotNull(pkg)
-		val members = pkg.structs.get(0).members
-		members.forEach[
-			Assert.assertEquals(4, it.align)
-		]
-	}
-	
-	@Test 
 	def void simpleEnum() {
 		val pkg = parseHelper.parse('''
 			enum E : int16_t {

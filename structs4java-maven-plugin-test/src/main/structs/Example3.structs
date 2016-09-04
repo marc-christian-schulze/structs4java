@@ -1,0 +1,22 @@
+package org.structs4java.example3;
+
+struct NullTerminatedString {
+	char value[];
+}
+
+struct BString {
+	uint32_t size sizeof(value);
+	char value[];
+}
+
+struct DynamicStruct {
+	int16_t size sizeof(this);
+	int32_t optionalWhatever;
+	OptionalPart optionalFields;
+}
+
+struct OptionalPart {
+	uint16_t x;
+	uint16_t y;
+	uint16_t z;
+}

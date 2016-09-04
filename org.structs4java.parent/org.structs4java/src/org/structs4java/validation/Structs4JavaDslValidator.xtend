@@ -3,6 +3,12 @@
  */
 package org.structs4java.validation
 
+import org.eclipse.xtext.validation.Check
+import org.structs4java.structs4JavaDsl.IntegerMember
+import org.structs4java.structs4JavaDsl.Member
+import org.structs4java.structs4JavaDsl.StructDeclaration
+import org.structs4java.structs4JavaDsl.Structs4JavaDslPackage
+import org.structs4java.structs4JavaDsl.StringMember
 
 /**
  * This class contains custom validation rules. 
@@ -11,15 +17,93 @@ package org.structs4java.validation
  */
 class Structs4JavaDslValidator extends AbstractStructs4JavaDslValidator {
 	
-//	public static val INVALID_NAME = 'invalidName'
-//
-//	@Check
-//	def checkGreetingStartsWithCapital(Greeting greeting) {
-//		if (!Character.isUpperCase(greeting.name.charAt(0))) {
-//			warning('Name should start with a capital', 
-//					Structs4JavaDslPackage.Literals.GREETING__NAME,
-//					INVALID_NAME)
-//		}
-//	}
+	@Check
+	def checkArrayDimension(Member m) {
+		if(m.array == null) {
+			return;
+		}
+		
+		if(m.array.dimension == 0) {
+			if(m instanceof StringMember) {
+				return;
+			}
+			
+			if(getCountOfFor(m) == null) {
+				error('Either array dimension or countof must be specified!', m, Structs4JavaDslPackage.Literals.MEMBER__ARRAY)
+			}
+		} else {
+			if(getCountOfFor(m) != null) {
+				error('Either array dimension or countof must be specified but not both!', m, Structs4JavaDslPackage.Literals.MEMBER__ARRAY)
+			}
+		}
+	}
 	
+	@Check
+	def checkArrayDimensionIsBeforeDynamicElement(Member m) {
+		if(m.array == null) {
+			return;
+		}
+		
+		if(m.array.dimension == 0) {
+			val struct = m.eContainer as StructDeclaration;
+			val countOf = getCountOfFor(m)
+			
+			val countOfIdx = struct.members.indexOf(countOf)
+			val memberIdx = struct.members.indexOf(m)
+			if(countOfIdx > memberIdx) {			
+				error('Size of a dynamic element must be specified before the actual field!', m, Structs4JavaDslPackage.Literals.MEMBER__ARRAY)
+				error('Size of a dynamic element must be specified before the actual field!', countOf, Structs4JavaDslPackage.Literals.INTEGER_MEMBER__COUNTOF)
+			}
+		}
+	}
+	
+	@Check
+	def checkSizeIsBeforeDynamicElement(Member m) {
+		if(m.array.dimension == 0) {
+			val struct = m.eContainer as StructDeclaration;
+			val sizeOf = getSizeOfFor(m)
+			
+			val sizeOfIdx = struct.members.indexOf(sizeOf)
+			val memberIdx = struct.members.indexOf(m)
+			if(sizeOfIdx > memberIdx) {			
+				error('Size of a dynamic element must be specified before the actual field!', m, Structs4JavaDslPackage.Literals.MEMBER__ARRAY)
+				error('Size of a dynamic element must be specified before the actual field!', sizeOf, Structs4JavaDslPackage.Literals.INTEGER_MEMBER__SIZEOF)
+			}
+		}
+	}
+	
+	@Check
+	def disable64BitSizeOfAndCountOf(Member m) {
+		if(m instanceof IntegerMember) {
+			if(m.sizeof != null || m.countof != null || m.sizeofThis) {
+				if(m.typename.equals("uint64_t") || m.typename.equals("int64_t")) {
+					error('Only 8, 16 and 32 bit sizes are supported for sizeof() and countof()!', m, Structs4JavaDslPackage.Literals.INTEGER_MEMBER__TYPENAME)
+				}
+			}
+		}
+	}
+	
+	def getSizeOfFor(Member m) {
+		val struct = m.eContainer as StructDeclaration;
+		for(Member field : struct.members) {
+			if(field instanceof IntegerMember) {
+				if(field.sizeof.equals(m)) {
+					return field
+				}
+			}
+		}
+		return null
+	}
+	
+	def getCountOfFor(Member m) {
+		val struct = m.eContainer as StructDeclaration;
+		for(Member field : struct.members) {
+			if(field instanceof IntegerMember) {
+				if(field.countof.equals(m)) {
+					return field
+				}
+			}
+		}
+		return null
+	}
 }

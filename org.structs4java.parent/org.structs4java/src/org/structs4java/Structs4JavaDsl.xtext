@@ -10,13 +10,11 @@ Package:
 	
 	(imports += Import)*
 	
-	('alignment' '(' alignment=INT ')' ';')?
-	
 	(structs += StructDeclaration | enums += EnumDeclaration)*
 ;
 
 Import:
-    'import' importedNamespace=QualifiedNameWithWildcard
+    'import' importedNamespace=QualifiedNameWithWildcard ';'
 ;
 	
 QualifiedNameWithWildcard:
@@ -50,7 +48,6 @@ Item:
 ComplexTypeMember:
 	type=[ComplexTypeDeclaration|QualifiedName] name=ID
 	(array=ArrayDimension)?
-	('align' '(' align=INT ')')?
 	';'
 ;
 
@@ -58,10 +55,9 @@ IntegerMember:
 	typename=INTEGER_TYPE name=ID 
 	(array=ArrayDimension)?
 	(
-		('sizeof' '(' sizeof+=[Member] ')')* &
+		('sizeof' '(' sizeof=[StringMember] ')')? &
 		('sizeof' '(' sizeofThis?='this' ')')? &
-		('countof' '(' countof+=[Member] ')')* &
-		('align' '(' align=INT ')')? 
+		('countof' '(' countof=[Member] ')')?
 	)
 	';'
 ;
@@ -69,18 +65,13 @@ IntegerMember:
 FloatMember:
 	typename=FLOAT_TYPE name=ID 
 	(array=ArrayDimension)?
-	('align' '(' align=INT ')')?
 	';'
 ;
 
 StringMember:
 	typename=STRING_TYPE name=ID 
 	(array=ArrayDimension)?
-	(
-		('align' '(' align=INT ')')? &
-		('encoding' '(' encoding=STRING ')')? &
-		(nullTerminated ?= 'null-terminated')?
-	)
+	('encoding' '(' encoding=STRING ')')?
 	';'
 ;
 

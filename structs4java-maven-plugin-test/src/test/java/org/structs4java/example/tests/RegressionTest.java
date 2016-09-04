@@ -8,6 +8,10 @@ import org.junit.Test;
 import org.structs4java.example1.SimpleEnum;
 import org.structs4java.example1.SimpleStructure;
 import org.structs4java.example2.AdvancedStructure;
+import org.structs4java.example3.BString;
+import org.structs4java.example3.DynamicStruct;
+import org.structs4java.example3.OptionalPart;
+import org.structs4java.example3.NullTerminatedString;
 
 public class RegressionTest extends AbstractTest {
 
@@ -40,6 +44,14 @@ public class RegressionTest extends AbstractTest {
 
 		AdvancedStructure actual = AdvancedStructure.read(buffer);
 		Assert.assertEquals(expected, actual);
+	}
+	
+	@Test
+	public void testFixedSizeStructure() throws IOException {
+		AdvancedStructure struct = createAdvancedStruct();
+		struct.write(buffer);
+
+		Assert.assertEquals(AdvancedStructure.getSizeOf(), buffer.position());
 	}
 
 	@Test
@@ -90,5 +102,61 @@ public class RegressionTest extends AbstractTest {
 		buffer.order(ByteOrder.BIG_ENDIAN);
 
 		SimpleEnum.read(buffer);
+	}
+	
+	@Test
+	public void testBString() throws IOException {
+		BString expected = new BString();
+		expected.setValue("A string of theoretically variable length!");
+		
+		expected.write(buffer);
+		buffer.position(0);
+
+		BString actual = BString.read(buffer);
+		Assert.assertEquals(expected, actual);
+	}
+	
+	@Test
+	public void testDynamicStructureWithContent() throws IOException {
+		OptionalPart optionalFields = new OptionalPart();
+		optionalFields.setX(45);
+		optionalFields.setY(13);
+		optionalFields.setZ(78);
+		
+		DynamicStruct expected = new DynamicStruct();
+		expected.setOptionalWhatever(12345);
+		expected.setOptionalFields(optionalFields);
+		
+		expected.write(buffer);
+		buffer.position(0);
+		
+		DynamicStruct actual = DynamicStruct.read(buffer);
+		
+		Assert.assertEquals(expected, actual);
+	}
+	
+	@Test
+	public void testDynamicStructureWithoutContent() throws IOException {
+		
+		DynamicStruct expected = new DynamicStruct();
+		
+		expected.write(buffer);
+		buffer.position(0);
+		
+		DynamicStruct actual = DynamicStruct.read(buffer);
+		
+		Assert.assertEquals(expected, actual);
+	}
+	
+	@Test
+	public void testNullTerminatedString() throws IOException {
+		NullTerminatedString expected = new NullTerminatedString();
+		expected.setValue("A string of theoretically variable length!");
+		
+		expected.write(buffer);
+		buffer.position(0);
+
+		NullTerminatedString actual = NullTerminatedString.read(buffer);
+		Assert.assertEquals(expected, actual);
 	}
 }

@@ -1,8 +1,10 @@
 package org.structs4java.example2;
 
+import org.structs4java.example1.SimpleStructure;
+
 struct AdvancedStructure {
 	float someFloat_;
-	org.structs4java.example1.SimpleStructure anArray[5];
+	SimpleStructure anArray[5];
 }
 
 struct StructureWithByteArray {
