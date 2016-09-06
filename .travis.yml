@@ -2,7 +2,6 @@ language: java
 script: mvn install
 jdk:
   - oraclejdk8
-  - openjdk8
 env: DISPLAY=:99.0
 before_script:
  - sh -e /etc/init.d/xvfb start
