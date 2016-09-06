@@ -8,6 +8,29 @@
 	</parent>
 	<artifactId>org.structs4java.repository</artifactId>
 	<packaging>eclipse-repository</packaging>
+	
+	<name>${project.groupId}:${project.artifactId}</name>
+	<description>Structs4Java is a code generator based on C/C++ structures.</description>
+	<url>https://github.com/marc-christian-schulze/structs4java</url>
+	<developers>
+		<developer>
+			<name>Marc-Christian Schulze</name>
+			<email>Marc.Christian.Schulze@gmail.com</email>
+			<organization>GitHub</organization>
+			<organizationUrl>https://github.com/marc-christian-schulze</organizationUrl>
+		</developer>
+	</developers>
+	<licenses>
+		<license>
+			<name>The Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+		</license>
+	</licenses>
+	<scm>
+		<connection>scm:git:git://github.com/marc-christian-schulze/structs4java.git</connection>
+		<developerConnection>scm:git:ssh://github.com:marc-christian-schulze/structs4java.git</developerConnection>
+		<url>https://github.com/marc-christian-schulze/structs4java/tree/master</url>
+	</scm>
 
 	<build>
 		<pluginManagement>
@@ -45,7 +68,4 @@
 			</plugins>
 		</pluginManagement>
 	</build>
-
-	<dependencies>
-	</dependencies>
 </project>
