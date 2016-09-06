@@ -2,7 +2,8 @@
 This project brings structs known from C/C++ to the Java language to read/write plain memory. Java code is generated using a XText-based compiler that takes structures definitions (similar to C/C++ struct definitions) as source. The compiler generates for each _struct_ and _enum_ declaration a corresponding class or enum in Java that provides read and write methods that take an _java.nio.ByteBuffer_ as input. The generated classes are no wrapper but plain POJOs (that's the reason why there is no union support). If you're looking for a library that wraps native memory and applies changes to the Java classes immediately to the underlying memory have a look at the Javolution project.
 
 ## Example
-The 64bit ELF file header:
+Let's try to read the header information of an ELF executable.
+The header structures for the 64bit ELF file header can be described like this:
 ```
 struct Elf64_Ehdr {
   // ELF identification
@@ -35,7 +36,8 @@ struct Elf64_Ehdr {
   uint16_t e_shstrndx; 
 }
 ```
-And corresponding Java code for reading it:
+Passing this struct delcaration to the Structs4Java Code Generator will lead to a _Elf64_Ehdr_ class that provides a static _read_ and _write_ method.
+Using the _read_ meathod you can parse the file header like this:
 ```
 RandomAccessFile elfFile = new RandomAccessFile("path/to/executable", "r");
 MappedByteBuffer buffer = elfFile.getChannel().map(MapMode.READ_ONLY, 0, Elf64_Ehdr.getSizeOf());
@@ -67,22 +69,22 @@ You can run the Structs4Java code generator (by default in the generate-source p
 * Reading / Writing C/C++ Structs from/to Java NIO ByteBuffers
 * No additional dependencies
 * Support for 
-** structs, 
-** enums (8, 16 and 32 bit), 
-** fixed-size primitives incl. floating point numbers,
-*** uint8_t
-*** int8_t
-*** uint16_t
-*** int16_t
-*** uint32_t
-*** int32_t
-*** uint64_t
-*** int64_t
-*** float
-*** double
-** strings incl. different encodings, 
-** arrays and 
-** nested elements
+  * structs, 
+  * enums (8, 16 and 32 bit), 
+  * fixed-size primitives incl. floating point numbers,
+    * uint8_t
+    * int8_t
+    * uint16_t
+    * int16_t
+    * uint32_t
+    * int32_t
+    * uint64_t
+    * int64_t
+    * float
+    * double
+  * strings incl. different encodings, 
+  * arrays and 
+  * nested elements
 
 ## Unsupported
 * Unions
@@ -92,7 +94,7 @@ You can run the Structs4Java code generator (by default in the generate-source p
 * Memory Alignment
 
 ## Comparison to Javolution
-[http://javolution.org/]
+[http://javolution.org/]  
 Structs4Java is focussed solely on plain C/C++ struct reading / writing whereas Javolution brings complete JNI interoperability tooling. Therefore Structs4Java does not have any additional dependency despite the Java Runtime Environment (JRE) classes. And finally, it's less verbose...
 
 Javolution (example taken from official documentation):
