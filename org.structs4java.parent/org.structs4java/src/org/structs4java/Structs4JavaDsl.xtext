@@ -55,7 +55,7 @@ IntegerMember:
 	typename=INTEGER_TYPE name=ID 
 	(array=ArrayDimension)?
 	(
-		('sizeof' '(' sizeof=[StringMember] ')')? &
+		('sizeof' '(' sizeof=[Member] ')')? &
 		('sizeof' '(' sizeofThis?='this' ')')? &
 		('countof' '(' countof=[Member] ')')?
 	)

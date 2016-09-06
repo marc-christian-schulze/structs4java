@@ -12,6 +12,8 @@ import org.structs4java.example3.BString;
 import org.structs4java.example3.DynamicStruct;
 import org.structs4java.example3.OptionalPart;
 import org.structs4java.example3.NullTerminatedString;
+import org.structs4java.example3.OptionalPart2;
+import org.structs4java.example3.DynamicStructHavingPartialNestedObject;
 
 public class RegressionTest extends AbstractTest {
 
@@ -157,6 +159,22 @@ public class RegressionTest extends AbstractTest {
 		buffer.position(0);
 
 		NullTerminatedString actual = NullTerminatedString.read(buffer);
+		Assert.assertEquals(expected, actual);
+	}
+	
+	@Test
+	public void testDynamicStructHavingPartialNestedObjectWithPartialContent() throws IOException {
+		OptionalPart2 optionalFields = new OptionalPart2();
+		optionalFields.setMandatory(13);
+		
+		DynamicStructHavingPartialNestedObject expected = new DynamicStructHavingPartialNestedObject();
+		expected.setOptionalFields(optionalFields);
+		
+		expected.write(buffer);
+		buffer.position(0);
+		
+		DynamicStructHavingPartialNestedObject actual = DynamicStructHavingPartialNestedObject.read(buffer);
+		
 		Assert.assertEquals(expected, actual);
 	}
 }

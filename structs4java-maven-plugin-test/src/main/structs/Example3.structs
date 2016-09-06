@@ -20,3 +20,13 @@ struct OptionalPart {
 	uint16_t y;
 	uint16_t z;
 }
+
+struct OptionalPart2 {
+	int32_t mandatory;
+	OptionalPart any;
+}
+
+struct DynamicStructHavingPartialNestedObject {
+	int16_t size sizeof(optionalFields);
+	OptionalPart2 optionalFields;
+}

@@ -38,6 +38,10 @@ class EnumGenerator {
 	'''
 
 	def reader(EnumDeclaration enumDecl) '''
+		public static «enumDecl.name» read(java.nio.ByteBuffer buf, boolean partialRead) throws java.io.IOException {
+			return read(buf);
+		}
+		
 		public static «enumDecl.name» read(java.nio.ByteBuffer buf) throws java.io.IOException {
 			«read(enumDecl)»
 			switch(value) {

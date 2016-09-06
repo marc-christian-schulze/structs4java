@@ -165,6 +165,14 @@ class StructGenerator {
 
 	def readerMethodForStruct(StructDeclaration struct) '''
 		public static «struct.name» read(java.nio.ByteBuffer buf) throws java.io.IOException {
+			return read(buf, false);
+		}
+		
+		public static «struct.name» read(java.nio.ByteBuffer buf, boolean partialRead) throws java.io.IOException {
+			if(buf.remaining() == 0) {
+				// avoid empty object construction for partial reads
+				throw new java.nio.BufferUnderflowException();
+			}
 			«IF struct.isSelfSized()»
 			long structBeginPosition = buf.position();
 			long structEndPosition = -1;
@@ -172,10 +180,11 @@ class StructGenerator {
 			
 			«struct.name» obj = new «struct.name»();
 			
+			try {
 			«FOR m : struct.members»
 				«IF m.hasSizeOfOrCountOfAttribute()»
 					«IF (m as IntegerMember).sizeofThis»
-						structEndPosition = structBeginPosition + «readerMethodName(m)»(buf);
+						structEndPosition = structBeginPosition + «readerMethodName(m)»(buf, partialRead);
 					«ELSE»
 						«IF struct.isSelfSized()»
 							if(buf.position() == structEndPosition) {
@@ -185,7 +194,7 @@ class StructGenerator {
 								throw new java.io.IOException(String.format("Read beyond the memory region of the struct [%d,%d) definition by %d bytes", structBeginPosition, structEndPosition, buf.position() - structEndPosition));
 							}
 						«ENDIF»
-						«attributeJavaType(m)» «tempVarForMember(m)» = «readerMethodName(m)»(buf);
+						«attributeJavaType(m)» «tempVarForMember(m)» = «readerMethodName(m)»(buf, partialRead);
 					«ENDIF»
 				«ELSE»
 					«IF struct.isSelfSized()»
@@ -198,14 +207,35 @@ class StructGenerator {
 					«ENDIF»
 					
 					«IF findMemberDefiningSizeOf(m) != null»
-						obj.«setterName(m)»(«readerMethodName(m)»(buf, «tempVarForMember(findMemberDefiningSizeOf(m))»));
+						«IF m instanceof ComplexTypeMember»
+						{
+							java.nio.ByteBuffer slice = buf.slice();
+							slice.limit(«tempVarForMember(findMemberDefiningSizeOf(m))»);
+							obj.«setterName(m)»(«readerMethodName(m)»(slice, true));
+						}
+						«ELSE»
+						obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, «tempVarForMember(findMemberDefiningSizeOf(m))»));
+						«ENDIF»
 					«ELSEIF findMemberDefiningCountOf(m) != null»
-						obj.«setterName(m)»(«readerMethodName(m)»(buf, «tempVarForMember(findMemberDefiningCountOf(m))»));
+						«IF m instanceof ComplexTypeMember»
+						{
+							java.nio.ByteBuffer slice = buf.slice();
+							slice.limit(«tempVarForMember(findMemberDefiningSizeOf(m))»);
+							obj.«setterName(m)»(«readerMethodName(m)»(slice, true));
+						}
+						«ELSE»
+						obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, «tempVarForMember(findMemberDefiningCountOf(m))»));
+						«ENDIF»
 					«ELSE»
-						obj.«setterName(m)»(«readerMethodName(m)»(buf));
+						obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead));
 					«ENDIF»
 				«ENDIF»
 			«ENDFOR»
+			} catch(java.nio.BufferUnderflowException e) {
+				if(!partialRead) {
+					throw e;
+				}
+			}
 			
 			return obj;
 		}
@@ -309,17 +339,23 @@ class StructGenerator {
 	}
 	
 	def readerMethodForArrayMember(Member m) '''
-	private static java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> «m.readerMethodName()»(java.nio.ByteBuffer buf«IF dimensionOf(m) == 0», «attributeJavaType(findMemberDefiningSizeOrCountOf(m))» countof«ENDIF») throws java.io.IOException {
+	private static java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> «m.readerMethodName()»(java.nio.ByteBuffer buf, boolean partialRead«IF dimensionOf(m) == 0», «attributeJavaType(findMemberDefiningSizeOrCountOf(m))» countof«ENDIF») throws java.io.IOException {
 		java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> lst = new java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»>();
+		try {
 		«IF dimensionOf(m) == 0»
 		for(int i = 0; i < countof; ++i) {
-			lst.add(«readerMethodName(m)»«arrayPostfix(m)»(buf));
+			lst.add(«readerMethodName(m)»«arrayPostfix(m)»(buf, partialRead));
 		}
 		«ELSE»
 		«FOR i : 0 ..< dimensionOf(m)»
-		lst.add(«readerMethodName(m)»«arrayPostfix(m)»(buf));
+		lst.add(«readerMethodName(m)»«arrayPostfix(m)»(buf, partialRead));
 		«ENDFOR»
 		«ENDIF»
+		} catch(java.nio.BufferUnderflowException e) {
+			if(!partialRead) {
+				throw e;
+			}
+		}
 		return lst;
 	}
 	
@@ -334,7 +370,7 @@ class StructGenerator {
 	}
 	
 	def readerMethodForByteBuffer(IntegerMember m) '''
-		private static java.nio.ByteBuffer «readerMethodName(m)»(java.nio.ByteBuffer buf«IF dimensionOf(m) == 0», «attributeJavaType(findMemberDefiningSizeOrCountOf(m))» sizeof«ENDIF») throws java.io.IOException {
+		private static java.nio.ByteBuffer «readerMethodName(m)»(java.nio.ByteBuffer buf, boolean partialRead«IF dimensionOf(m) == 0», «attributeJavaType(findMemberDefiningSizeOrCountOf(m))» sizeof«ENDIF») throws java.io.IOException {
 			byte[] buffer = new byte[«IF dimensionOf(m) == 0»sizeof«ELSE»«dimensionOf(m)»«ENDIF»];
 			buf.get(buffer);
 			return java.nio.ByteBuffer.wrap(buffer); 
@@ -342,13 +378,13 @@ class StructGenerator {
 	'''
 
 	def readerMethodForComplexTypeMember(ComplexTypeMember m) '''
-		private static «m.nativeTypeName().native2JavaType()» «m.readerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf) throws java.io.IOException {
-			return «m.nativeTypeName().native2JavaType()».read(buf);
+		private static «m.nativeTypeName().native2JavaType()» «m.readerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf, boolean partialRead) throws java.io.IOException {
+			return «m.nativeTypeName().native2JavaType()».read(buf, partialRead);
 		}
 	'''
 	
 	def readerMethodForIntegerMember(IntegerMember m) '''
-		private static «m.nativeTypeName().native2JavaType()» «m.readerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf) throws java.io.IOException {
+		private static «m.nativeTypeName().native2JavaType()» «m.readerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf, boolean partialRead) throws java.io.IOException {
 			«IF m.typename.equals("int8_t")»
 			return buf.get();
 			«ELSEIF m.typename.equals("uint8_t")»
@@ -370,7 +406,7 @@ class StructGenerator {
 	'''
 
 	def readerMethodForFloatMember(FloatMember m) '''
-		private static «m.nativeTypeName().native2JavaType()» «m.readerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf) throws java.io.IOException {
+		private static «m.nativeTypeName().native2JavaType()» «m.readerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf, boolean partialRead) throws java.io.IOException {
 			«IF m.typename.equals("float")»
 			return buf.getFloat();
 			«ELSEIF m.typename.equals("double")»
@@ -380,7 +416,7 @@ class StructGenerator {
 	'''
 
 	def readerMethodForStringMember(StringMember m) '''
-		private static String «m.readerMethodName()»(java.nio.ByteBuffer buf«IF dimensionOf(m) == 0 && findMemberDefiningSizeOf(m) != null», «attributeJavaType(findMemberDefiningSizeOrCountOf(m))» sizeof«ENDIF») throws java.io.IOException {
+		private static String «m.readerMethodName()»(java.nio.ByteBuffer buf, boolean partialRead«IF dimensionOf(m) == 0 && findMemberDefiningSizeOf(m) != null», «attributeJavaType(findMemberDefiningSizeOrCountOf(m))» sizeof«ENDIF») throws java.io.IOException {
 			try {
 			«IF dimensionOf(m) == 0»
 				«IF findMemberDefiningSizeOf(m) == null»
