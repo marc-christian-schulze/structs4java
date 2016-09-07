@@ -10,4 +10,9 @@ import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
  */
 @FinalFieldsConstructor
 class Structs4JavaDslUiModule extends AbstractStructs4JavaDslUiModule {
+	
+	override bindIXtextEditorCallback() {
+		return CustomNatureAddingEditorCallback
+	}
+	
 }

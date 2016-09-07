@@ -13,5 +13,5 @@ class Structs4JavaDslRuntimeModule extends AbstractStructs4JavaDslRuntimeModule 
 	override bindIValueConverterService() {
 		return Structs4JavaDslValueConverter;
 	}
-	
+
 }
