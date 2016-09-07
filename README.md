@@ -14,7 +14,7 @@ This builds the Structs4Java Code Generator, Eclipse Plugin and Maven Plugin.
 
 ## Using the Structs4Java Maven Plugin
 The Structs4Java Maven Plugin compiles any _*.structs_ files below the _src/main/structs_ directory to Java code. To enable the compiler in your maven build add the following plugin description:
-```Maven POM
+```Maven
 <plugin>
   <groupId>org.structs4java</groupId>
   <artifactId>structs4java-maven-plugin</artifactId>
@@ -224,7 +224,7 @@ For example, useful for header with optional fields at the end:
 struct LegacyFileHeader {
   uint32_t headerLength sizeof(this);
   ... (optional) header fields
-} 
+}
 ```
 
 ## CountOf() Attribute
