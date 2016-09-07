@@ -49,10 +49,10 @@ struct FileSection {
 ```
 
 ## Read and Write your Struct
-The compiler generates for each struct a regular Java class providing a read and write mthod that can be used together with th Java NIO API like this
+The compiler generates for each struct a regular Java class providing a read and write method that can be used together with the Java NIO API like this
 ```Java
 // open the file
-RandomAccessFile file = new RandomAccessFile("path/to/file", "r");
+RandomAccessFile file = new RandomAccessFile("path/to/file", "rw");
 // create a memory mapping for efficient access
 MappedByteBuffer buffer = file.getChannel().map(MapMode.READ_WRITE, 0, file.length());
 // set endianess depending on your CPU architecture
