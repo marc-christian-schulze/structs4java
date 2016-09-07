@@ -2,54 +2,18 @@
 [![Build Status](https://travis-ci.org/marc-christian-schulze/structs4java.svg?branch=master)](https://travis-ci.org/marc-christian-schulze/structs4java)  
  githubThis project brings structs known from C/C++ to the Java language to read/write plain memory. Java code is generated using a XText-based compiler that takes structures definitions (similar to C/C++ struct definitions) as source. The compiler generates for each _struct_ and _enum_ declaration a corresponding class or enum in Java that provides read and write methods that take an _java.nio.ByteBuffer_ as input. The generated classes are no wrapper but plain POJOs (that's the reason why there is no union support). If you're looking for a library that wraps native memory and applies changes to the Java classes immediately to the underlying memory have a look at the Javolution project.
 
-## Example
-Let's try to read the header information of an ELF executable.
-The header structures for the 64bit ELF file header can be described like this:
+## Getting Started
+Since we don't yet publish our artifacts to maven central you need to build it by your own.  
+To build everything in one step simply do
 ```
-struct Elf64_Ehdr {
-  // ELF identification
-  uint8_t e_ident[16];
-  // Object file type
-  uint16_t e_type; 
-  // Machine type
-  uint16_t e_machine; 
-  // Object file version
-  uint32_t e_version;
-  // Entry point address 
-  uint64_t e_entry;
-  // Program header offset 
-  uint64_t e_phoff; 
-  // Section header offset
-  uint64_t e_shoff; 
-  // Processor-specific flags
-  uint32_t e_flags; 
-  // ELF header size
-  uint16_t e_ehsize; 
-  // Size of program header entry
-  uint16_t e_phentsize;
-  // Number of program header entries
-  uint16_t e_phnum; 
-  // Size of section header entry
-  uint16_t e_shentsize;
-  // Number of section header entries 
-  uint16_t e_shnum; 
-  // Section name string table index
-  uint16_t e_shstrndx; 
-}
+$ git clone https://github.com/marc-christian-schulze/structs4java.git
+$ cd structs4java
+$ mvn clean install
 ```
-Passing this struct delcaration to the Structs4Java Code Generator will lead to a _Elf64_Ehdr_ class that provides a static _read_ and _write_ method.
-Using the _read_ meathod you can parse the file header like this:
-```
-RandomAccessFile elfFile = new RandomAccessFile("path/to/executable", "r");
-MappedByteBuffer buffer = elfFile.getChannel().map(MapMode.READ_ONLY, 0, Elf64_Ehdr.getSizeOf());
-buffer.order(ByteOrder.LITTLE_ENDIAN);
+This builds the Structs4Java Code Generator, Eclipse Plugin and Maven Plugin.
 
-Elf64_Ehdr elfHeader = Elf64_Ehdr.read(buffer);
-...
-```
-
-## Maven Plugin
-You can run the Structs4Java code generator (by default in the generate-source phase) like this:
+## Using the Structs4Java Maven Plugin
+The Structs4Java Maven Plugin compiles any _*.structs_ files below the _src/main/structs_ directory to Java code. To enable the compiler in your maven build add the following plugin description:
 ```
 <plugin>
   <groupId>org.structs4java</groupId>
@@ -64,6 +28,38 @@ You can run the Structs4Java code generator (by default in the generate-source p
     </execution>
   </executions>
 </plugin>
+```
+
+## Describe your Struct
+Structs4Java is based on a struct description language that is very close to the original syntax of C/C++.
+```
+package com.mycompany.projectx;
+
+struct FileHeader {
+	uint8_t     magic[4];
+	uint16_t    numberSections countof(sections);
+	FileSection sections[];
+}
+
+struct FileSection {
+	char     sectionName[32];
+	uint32_t sectionLength sizeof(sectionContent);
+	uint8_t  sectionContent[];
+}
+```
+
+## Read your Struct
+The compiler generates for each struct a regular Java class providing a read and write mthod that can be used together with th Java NIO API like this
+```
+RandomAccessFile file = new RandomAccessFile("path/to/file", "r");
+MappedByteBuffer buffer = file.getChannel().map(MapMode.READ_ONLY, 0, file.length());
+buffer.order(ByteOrder.LITTLE_ENDIAN);
+
+FileHeader fileHeader = FileHeader.read(buffer);
+checkMagic(fileHeader.getMagic());
+for(FileSection section : fileHeader.getSections()) {
+	processSection(section.getSectionName(), section.getSectionContent());
+}
 ```
 
 ## Features
