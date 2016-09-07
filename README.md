@@ -5,7 +5,7 @@
 ## Getting Started
 Since we don't yet publish our artifacts to maven central you need to build it by your own.  
 To build everything in one step simply do
-```
+```Shell
 $ git clone https://github.com/marc-christian-schulze/structs4java.git
 $ cd structs4java
 $ mvn clean install
@@ -14,7 +14,7 @@ This builds the Structs4Java Code Generator, Eclipse Plugin and Maven Plugin.
 
 ## Using the Structs4Java Maven Plugin
 The Structs4Java Maven Plugin compiles any _*.structs_ files below the _src/main/structs_ directory to Java code. To enable the compiler in your maven build add the following plugin description:
-```
+```Maven POM
 <plugin>
   <groupId>org.structs4java</groupId>
   <artifactId>structs4java-maven-plugin</artifactId>
@@ -32,7 +32,7 @@ The Structs4Java Maven Plugin compiles any _*.structs_ files below the _src/main
 
 ## Describe your Struct
 Structs4Java is based on a struct description language that is very close to the original syntax of C/C++.
-```
+```C++
 package com.mycompany.projectx;
 
 struct FileHeader {
@@ -50,7 +50,7 @@ struct FileSection {
 
 ## Read your Struct
 The compiler generates for each struct a regular Java class providing a read and write mthod that can be used together with th Java NIO API like this
-```
+```Java
 RandomAccessFile file = new RandomAccessFile("path/to/file", "r");
 MappedByteBuffer buffer = file.getChannel().map(MapMode.READ_ONLY, 0, file.length());
 buffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -95,7 +95,7 @@ for(FileSection section : fileHeader.getSections()) {
 Structs4Java is focussed solely on plain C/C++ struct reading / writing whereas Javolution brings complete JNI interoperability tooling. Therefore Structs4Java does not have any additional dependency despite the Java Runtime Environment (JRE) classes. And finally, it's less verbose...
 
 Javolution (example taken from official documentation):
-```
+```Java
  public enum Gender { MALE, FEMALE };
  public static class Date extends Struct {
      public final Unsigned16 year = new Unsigned16();
@@ -111,7 +111,7 @@ Javolution (example taken from official documentation):
  }
 ```
 Structs4Java:
-```
+```C++
 enum Gender : uint32_t {
   MALE = 0, 
   FEMALE = 1
@@ -137,7 +137,7 @@ struct Student {
 
 ## Structs
 Structures are declared using the struct keyword:
-```
+```C++
 struct Coordinate {
   int32_t x;
   int32_t y;
@@ -147,7 +147,7 @@ struct Coordinate {
 
 ## Packages
 You can group certain structures into a package.
-```
+```C++
 package com.structs4java.pkg;
 
 ... your struct definitions
@@ -157,7 +157,7 @@ A document (*.struct) can contain only a single package declaration and if prese
 ## Imports
 Once you've defined structures across multiple documents (*.struct) and packages it becomes handy to import a fully qualified name.
 Pkg1.structs
-```
+```C++
 package com.structs4java.example.pkg1;
 
 struct Address {
@@ -165,7 +165,7 @@ struct Address {
 }
 ```
 Pkg2.structs
-```
+```C++
 package com.structs4java.example.pkg2;
 
 import com.structs4java.example.pkg1.Address;
@@ -178,7 +178,7 @@ struct Person {
 
 ## Enums
 Enumerations are declared using the enum keyword:
-```
+```C++
 enum Colors : uint8_t {
   RED = 0xCAFE,
   BLUE = 123,
@@ -189,27 +189,27 @@ Each enum must provide a base type specified after the colon that defines the si
 
 ## Strings
 Fixed strings can be specified as an array of chars:
-```
+```C++
 struct Person {
   char name[20];
 }
 ```
 By default UTF-8 is choosen as encoding but can be specified explicitily using the encoding attribute
-```
+```C++
 struct Person {
   // Windows wide-string
   char name[20] encoding("UTF16-LE");
 }
 ```
 Null-terminated strings can be specified as an array of char without a dimension:
-```
+```C++
 struct NullTerminatedString {
   char value[];
 }
 ```
 For null-terminated strings the number of terminating zeros is determined according to the string encoding so that for example for US-ASCII a single zero indicates the end of the string while 2 zeros are necessary for an UTF16 encoded string.
 Variable-length but not null-terminated strings can be represented like the following:
-```
+```C++
 struct DynamicString {
   uint32_t length sizeof(value);
   char     value[];
@@ -220,7 +220,7 @@ struct DynamicString {
 The sizeof attribute defines the size of a struct member or the entire struct in bytes.
 
 For example, useful for header with optional fields at the end:
-```
+```C++
 struct LegacyFileHeader {
   uint32_t headerLength sizeof(this);
   ... (optional) header fields
@@ -229,7 +229,7 @@ struct LegacyFileHeader {
 
 ## CountOf() Attribute
 The countof attribute defines the number of elments of an array.
-```
+```C++
 struct Entry {
   ...
 }
