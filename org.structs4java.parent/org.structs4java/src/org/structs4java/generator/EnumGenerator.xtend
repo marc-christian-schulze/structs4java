@@ -5,6 +5,7 @@ package org.structs4java.generator
 
 import org.structs4java.structs4JavaDsl.EnumDeclaration
 import org.structs4java.structs4JavaDsl.Package
+import org.structs4java.structs4JavaDsl.Item
 
 /**
  * Generates code from your model files on save.
@@ -16,6 +17,7 @@ class EnumGenerator {
 	def compile(Package pkg, EnumDeclaration enumDecl) '''
 		«packageDeclaration(pkg)»
 		
+		«printComments(enumDecl)»
 		public enum «enumDecl.name» {
 			
 			«items(enumDecl)»
@@ -30,9 +32,26 @@ class EnumGenerator {
 			private int value;
 		}
 	'''
+	
+	def printComments(EnumDeclaration typeDecl) '''
+	/**
+	«FOR comment : typeDecl.comments»
+	* «comment.substring(2).trim()»
+	«ENDFOR»
+	*/
+	'''
+	
+	def printComments(Item item) '''
+	/**
+	«FOR comment : item.comments»
+	* «comment.substring(2).trim()»
+	«ENDFOR»
+	*/
+	'''
 
 	def items(EnumDeclaration enumDecl) '''
 		«FOR i : enumDecl.items SEPARATOR "," AFTER ";"»
+			«printComments(i)»
 			«i.name»(«i.value»)
 		«ENDFOR»
 	'''

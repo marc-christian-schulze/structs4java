@@ -2,6 +2,7 @@ package org.structs4java.example.tests;
 
 import java.io.IOException;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -10,10 +11,11 @@ import org.structs4java.example1.SimpleStructure;
 import org.structs4java.example2.AdvancedStructure;
 import org.structs4java.example3.BString;
 import org.structs4java.example3.DynamicStruct;
-import org.structs4java.example3.OptionalPart;
-import org.structs4java.example3.NullTerminatedString;
-import org.structs4java.example3.OptionalPart2;
 import org.structs4java.example3.DynamicStructHavingPartialNestedObject;
+import org.structs4java.example3.NullTerminatedString;
+import org.structs4java.example3.OptionalPart;
+import org.structs4java.example3.OptionalPart2;
+import org.structs4java.example3.ListOfIntegers;
 
 public class RegressionTest extends AbstractTest {
 
@@ -174,6 +176,23 @@ public class RegressionTest extends AbstractTest {
 		buffer.position(0);
 		
 		DynamicStructHavingPartialNestedObject actual = DynamicStructHavingPartialNestedObject.read(buffer);
+		
+		Assert.assertEquals(expected, actual);
+	}
+	
+	@Test
+	public void testListOfIntegers() throws IOException {
+		ListOfIntegers expected = new ListOfIntegers();
+		ArrayList<Integer> list = new ArrayList<Integer>();
+		for(int i = 0; i < 10; ++i) {
+			list.add(10 - i);
+		}
+		expected.setArray(list);
+		
+		expected.write(buffer);
+		buffer.position(0);
+		
+		ListOfIntegers actual = ListOfIntegers.read(buffer);
 		
 		Assert.assertEquals(expected, actual);
 	}

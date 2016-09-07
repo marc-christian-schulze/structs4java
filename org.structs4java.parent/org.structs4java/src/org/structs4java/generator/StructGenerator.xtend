@@ -23,6 +23,7 @@ class StructGenerator {
 	def compile(Package pkg, StructDeclaration struct) '''
 		«packageDeclaration(pkg)»
 		
+		«printComments(struct)»
 		public class «struct.name» {
 			public «struct.name»() {
 			}
@@ -39,11 +40,27 @@ class StructGenerator {
 			«hashCodeMethod(struct)»
 			«equalsMethod(struct)»
 			
-			«readerMethods(struct)»						
+			«readerMethods(struct)»
 			«writerMethods(struct)»
 			
 			«fields(struct)»
 		}
+	'''
+	
+	def printComments(StructDeclaration struct) '''
+	/**
+	«FOR comment : struct.comments»
+	* «comment.substring(2).trim()»
+	«ENDFOR»
+	*/
+	'''
+	
+	def printComments(Member member) '''
+	/**
+	«FOR comment : member.comments»
+	* «comment.substring(2).trim()»
+	«ENDFOR»
+	*/
 	'''
 	
 	def sizeOfStructMethod(StructDeclaration struct) '''
@@ -575,11 +592,11 @@ class StructGenerator {
 		java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> lst = «getterName(m)»();
 		«IF dimensionOf(m) == 0»
 		for(«m.nativeTypeName().native2JavaType().box()» item : lst) {
-			«writerMethodName(m)»«arrayPostfix(m)»(item, buf);
+			«writerMethodName(m)»«arrayPostfix(m)»(buf, item);
 		}
 		«ELSE»
 		«FOR i : 0 ..< dimensionOf(m)»
-		«writerMethodName(m)»«arrayPostfix(m)»(lst.get(«i»), buf);
+		«writerMethodName(m)»«arrayPostfix(m)»(buf, lst.get(«i»));
 		«ENDFOR»
 		«ENDIF»
 	}
@@ -594,7 +611,7 @@ class StructGenerator {
 	'''
 
 	def writerMethodForComplexTypeMember(ComplexTypeMember m) '''
-		private void «m.writerMethodName()»«arrayPostfix(m)»(«IF m.isArray()»«m.nativeTypeName().native2JavaType()» value, «ENDIF»java.nio.ByteBuffer buf) throws java.io.IOException {
+		private void «m.writerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf«IF m.isArray()», «m.nativeTypeName().native2JavaType()» value«ENDIF») throws java.io.IOException {
 			if(«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF» != null) {
 				«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF».write(buf);
 			}
@@ -650,7 +667,7 @@ class StructGenerator {
 	'''
 
 	def writerMethodForFloatMember(FloatMember m) '''
-		private void «m.writerMethodName()»«arrayPostfix(m)»(«IF m.isArray()»«m.nativeTypeName().native2JavaType()» value, «ENDIF»java.nio.ByteBuffer buf) throws java.io.IOException {
+		private void «m.writerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf«IF m.isArray()», «m.nativeTypeName().native2JavaType()» value«ENDIF») throws java.io.IOException {
 			«IF m.typename.equals("float")»
 			buf.putFloat(«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
 			«ELSEIF m.typename.equals("double")»
@@ -717,16 +734,19 @@ class StructGenerator {
 	'''
 
 	def field(Member m) '''
+		«printComments(m)»
 		private «attributeJavaType(m)» «attributeName(m)»;
 	'''
 
 	def getter(Member m) '''
+		«printComments(m)»
 		public «attributeJavaType(m)» «getterName(m)»() {
 			return this.«attributeName(m)»;
 		}
 	'''
 
 	def setter(Member m) '''
+		«printComments(m)»
 		public void «setterName(m)»(«attributeJavaType(m)» «attributeName(m)») {
 			this.«attributeName(m)» = «attributeName(m)»;
 		}

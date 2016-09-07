@@ -30,3 +30,7 @@ struct DynamicStructHavingPartialNestedObject {
 	int16_t size sizeof(optionalFields);
 	OptionalPart2 optionalFields;
 }
+
+struct ListOfIntegers {
+	int16_t array[10];
+}
