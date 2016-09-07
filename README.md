@@ -48,19 +48,48 @@ struct FileSection {
 }
 ```
 
-## Read your Struct
+## Read and Write your Struct
 The compiler generates for each struct a regular Java class providing a read and write mthod that can be used together with th Java NIO API like this
 ```Java
+// open the file
 RandomAccessFile file = new RandomAccessFile("path/to/file", "r");
-MappedByteBuffer buffer = file.getChannel().map(MapMode.READ_ONLY, 0, file.length());
+// create a memory mapping for efficient access
+MappedByteBuffer buffer = file.getChannel().map(MapMode.READ_WRITE, 0, file.length());
+// set endianess depending on your CPU architecture
 buffer.order(ByteOrder.LITTLE_ENDIAN);
 
+// read the struct
 FileHeader fileHeader = FileHeader.read(buffer);
+
+// process your struct as POJO
 checkMagic(fileHeader.getMagic());
 for(FileSection section : fileHeader.getSections()) {
 	processSection(section.getSectionName(), section.getSectionContent());
 }
+
+// reset file pointer to the beginning of the file
+buffer.position(0);
+// and write the struct back to the hard-drive
+fileHeader.write(buffer);
 ```
+
+## Data Types
+| S4J Typename  | Java Mapping  | Description |
+| ------------- | ------------- | ----------- |
+| uint8_t       | int           | Fixed-size 8bit unsigned integer |
+| int8_t        | int           | Fixed-size 8bit signed integer |
+| uint16_t      | int           | Fixed-size 16bit unsigned integer |
+| int16_t       | int           | Fixed-size 16bit signed integer |
+| uint32_t      | int           | Fixed-size 32bit unsigned integer |
+| int32_t       | int           | Fixed-size 32bit signed integer |
+| uint64_t      | long          | Fixed-size 64bit unsigned integer |
+| int64_t       | long          | Fixed-size 64bit signed integer |
+| float         | float         | Fixed-size 32bit floating point number |
+| double        | float         | Fixed-size 64bit floating point number |
+| char          | -             | unsupported |
+| char[]        | String        | String of characters |
+| uint8_t[]     | ByteBuffer    | Raw ByteBuffer |
+| int8_t[]      | ByteBuffer    | Raw ByteBuffer |
 
 ## Features
 * Reading / Writing C/C++ Structs from/to Java NIO ByteBuffers
