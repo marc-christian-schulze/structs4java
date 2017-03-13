@@ -1,6 +1,6 @@
 # Structs4Java
-[![Build Status](https://travis-ci.org/marc-christian-schulze/structs4java.svg?branch=master)](https://travis-ci.org/marc-christian-schulze/structs4java)  
- githubThis project brings structs known from C/C++ to the Java language to read/write plain memory. Java code is generated using a XText-based compiler that takes structures definitions (similar to C/C++ struct definitions) as source. The compiler generates for each _struct_ and _enum_ declaration a corresponding class or enum in Java that provides read and write methods that take an _java.nio.ByteBuffer_ as input. The generated classes are no wrapper but plain POJOs (that's the reason why there is no union support). If you're looking for a library that wraps native memory and applies changes to the Java classes immediately to the underlying memory have a look at the Javolution project.
+[![Build Status](https://travis-ci.org/marc-christian-schulze/structs4java.svg?branch=master)](https://travis-ci.org/marc-christian-schulze/structs4java)
+This project brings structs known from C/C++ to the Java language to read/write plain memory. Java code is generated using a XText-based compiler that takes structures definitions (similar to C/C++ struct definitions) as source. The compiler generates for each _struct_ and _enum_ declaration a corresponding class or enum in Java that provides read and write methods that take an _java.nio.ByteBuffer_ as input. The generated classes are no wrapper but plain POJOs (that's the reason why there is no union support). If you're looking for a library that wraps native memory and applies changes to the Java classes immediately to the underlying memory have a look at the Javolution project.
 
 ## Getting Started
 Since we don't yet publish our artifacts to maven central you need to build it by your own.  
@@ -16,7 +16,7 @@ This builds the Structs4Java Code Generator, Eclipse Plugin and Maven Plugin.
 The Structs4Java Maven Plugin compiles any _*.structs_ files below the _src/main/structs_ directory to Java code. To enable the compiler in your maven build add the following plugin description:
 ```Maven
 <plugin>
-  <groupId>org.structs4java</groupId>
+  <groupId>com.github.marc-christian-schulze.structs4java</groupId>
   <artifactId>structs4java-maven-plugin</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <executions>
