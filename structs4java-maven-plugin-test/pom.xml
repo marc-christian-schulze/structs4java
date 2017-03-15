@@ -5,6 +5,10 @@
 	<artifactId>structs4java-maven-plugin-test</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
 	<name>${project.groupId}:${project.artifactId}</name>
 	<description>Structs4Java is a code generator based on C/C++ structures.</description>
 	<url>https://github.com/marc-christian-schulze/structs4java</url>
