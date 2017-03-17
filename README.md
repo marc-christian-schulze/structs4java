@@ -1,24 +1,17 @@
 # Structs4Java
-[![Build Status](https://travis-ci.org/marc-christian-schulze/structs4java.svg?branch=master)](https://travis-ci.org/marc-christian-schulze/structs4java) [![Maven Central](https://img.shields.io/maven-central/v/com.github.marc-christian-schulze.structs4java/structs4java-maven-plugin.svg)]
+[![Build Status](https://travis-ci.org/marc-christian-schulze/structs4java.svg?branch=master)](https://travis-ci.org/marc-christian-schulze/structs4java) 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.marc-christian-schulze/structs4java-maven-plugin/badge.svg?style=plastic)](https://maven-badges.herokuapp.com/maven-central/com.github.marc-christian-schulze/structs4java-maven-plugin)  
+
+
 This project brings structs known from C/C++ to the Java language to read/write plain memory. Java code is generated using a XText-based compiler that takes structures definitions (similar to C/C++ struct definitions) as source. The compiler generates for each _struct_ and _enum_ declaration a corresponding class or enum in Java that provides read and write methods that take an _java.nio.ByteBuffer_ as input. The generated classes are no wrapper but plain POJOs (that's the reason why there is no union support). If you're looking for a library that wraps native memory and applies changes to the Java classes immediately to the underlying memory have a look at the Javolution project.
 
 ## Getting Started
-Since we don't yet publish our artifacts to maven central you need to build it by your own.  
-To build everything in one step simply do
-```Shell
-$ git clone https://github.com/marc-christian-schulze/structs4java.git
-$ cd structs4java
-$ mvn clean install
-```
-This builds the Structs4Java Code Generator, Eclipse Plugin and Maven Plugin.
-
-## Using the Structs4Java Maven Plugin
-The Structs4Java Maven Plugin compiles any _*.structs_ files below the _src/main/structs_ directory to Java code. To enable the compiler in your maven build add the following plugin description:
+Add the plugin to your maven build:
 ```Maven
 <plugin>
   <groupId>com.github.marc-christian-schulze.structs4java</groupId>
   <artifactId>structs4java-maven-plugin</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <executions>
     <execution>
       <id>compile-structs</id>
@@ -30,26 +23,24 @@ The Structs4Java Maven Plugin compiles any _*.structs_ files below the _src/main
 </plugin>
 ```
 
-## Describe your Struct
-Structs4Java is based on a struct description language that is very close to the original syntax of C/C++.
+Create some Structs under `src/main/structs`:
 ```C++
 package com.mycompany.projectx;
 
 struct FileHeader {
-	uint8_t     magic[4];
-	uint16_t    numberSections countof(sections);
-	FileSection sections[];
+  uint8_t     magic[4];
+  uint16_t    numberSections countof(sections);
+  FileSection sections[];
 }
 
 struct FileSection {
-	char     sectionName[32];
-	uint32_t sectionLength sizeof(sectionContent);
-	uint8_t  sectionContent[];
+  char     sectionName[32];
+  uint32_t sectionLength sizeof(sectionContent);
+  uint8_t  sectionContent[];
 }
 ```
 
-## Read and Write your Struct
-The compiler generates for each struct a regular Java class providing a read and write method that can be used together with the Java NIO API like this
+Use your Structs:
 ```Java
 // open the file
 RandomAccessFile file = new RandomAccessFile("path/to/file", "rw");
@@ -57,6 +48,8 @@ RandomAccessFile file = new RandomAccessFile("path/to/file", "rw");
 MappedByteBuffer buffer = file.getChannel().map(MapMode.READ_WRITE, 0, file.length());
 // set endianess depending on your CPU architecture
 buffer.order(ByteOrder.LITTLE_ENDIAN);
+
+// ...
 
 // read the struct
 FileHeader fileHeader = FileHeader.read(buffer);
@@ -67,29 +60,13 @@ for(FileSection section : fileHeader.getSections()) {
 	processSection(section.getSectionName(), section.getSectionContent());
 }
 
+// ...
+
 // reset file pointer to the beginning of the file
 buffer.position(0);
 // and write the struct back to the hard-drive
 fileHeader.write(buffer);
 ```
-
-## Data Types
-| S4J Typename  | Java Mapping  | Description |
-| ------------- | ------------- | ----------- |
-| uint8_t       | int           | Fixed-size 8bit unsigned integer |
-| int8_t        | int           | Fixed-size 8bit signed integer |
-| uint16_t      | int           | Fixed-size 16bit unsigned integer |
-| int16_t       | int           | Fixed-size 16bit signed integer |
-| uint32_t      | int           | Fixed-size 32bit unsigned integer |
-| int32_t       | int           | Fixed-size 32bit signed integer |
-| uint64_t      | long          | Fixed-size 64bit unsigned integer |
-| int64_t       | long          | Fixed-size 64bit signed integer |
-| float         | float         | Fixed-size 32bit floating point number |
-| double        | float         | Fixed-size 64bit floating point number |
-| char          | -             | unsupported |
-| char[]        | String        | String of characters |
-| uint8_t[]     | ByteBuffer    | Raw ByteBuffer |
-| int8_t[]      | ByteBuffer    | Raw ByteBuffer |
 
 ## Features
 * Reading / Writing C/C++ Structs from/to Java NIO ByteBuffers
@@ -111,6 +88,7 @@ fileHeader.write(buffer);
   * strings incl. different encodings, 
   * arrays and 
   * nested elements
+  * variable lengths
 
 ## Unsupported
 * Unions
@@ -163,6 +141,24 @@ struct Student {
 ```
 
 # Tutorial
+
+## Primitive Data Types
+| S4J Typename  | Java Mapping           | Description                            |
+| ------------- | ---------------------- | -------------------------------------- |
+| uint8_t       | int                    | Fixed-size 8bit unsigned integer       |
+| int8_t        | int                    | Fixed-size 8bit signed integer         |
+| uint16_t      | int                    | Fixed-size 16bit unsigned integer      |
+| int16_t       | int                    | Fixed-size 16bit signed integer        |
+| uint32_t      | int                    | Fixed-size 32bit unsigned integer      |
+| int32_t       | int                    | Fixed-size 32bit signed integer        |
+| uint64_t      | long                   | Fixed-size 64bit unsigned integer      |
+| int64_t       | long                   | Fixed-size 64bit signed integer        |
+| float         | float                  | Fixed-size 32bit floating point number |
+| double        | float                  | Fixed-size 64bit floating point number |
+| char          | -                      | unsupported                            |
+| char[]        | String                 | String of characters                   |
+| uint8_t[]     | java.nio.ByteBuffer    | Raw ByteBuffer                         |
+| int8_t[]      | java.nio.ByteBuffer    | Raw ByteBuffer                         |
 
 ## Structs
 Structures are declared using the struct keyword:
