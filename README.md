@@ -34,37 +34,45 @@ struct FileHeader {
 }
 
 struct FileSection {
-  char     sectionName[32];
-  uint32_t sectionLength sizeof(sectionContent);
-  uint8_t  sectionContent[];
+  SectionType type;
+  char        name[32];
+  uint32_t    length sizeof(sectionContent);
+  uint8_t     content[];
+}
+
+enum SectionType : uint16_t {
+  TypeA = 0xCAFEBABE,
+  TypeB = 0xDEADBEAF,
+  TypeC = 0815
+}
+
+struct ContentA {
+  ...
 }
 ```
 
-Use your Structs:
+Reading structs:
 ```Java
-// open the file
-RandomAccessFile file = new RandomAccessFile("path/to/file", "rw");
-// create a memory mapping for efficient access
-MappedByteBuffer buffer = file.getChannel().map(MapMode.READ_WRITE, 0, file.length());
-// set endianess depending on your CPU architecture
-buffer.order(ByteOrder.LITTLE_ENDIAN);
-
-// ...
-
-// read the struct
+java.nio.ByteBuffer buffer = ...
 FileHeader fileHeader = FileHeader.read(buffer);
 
-// process your struct as POJO
-checkMagic(fileHeader.getMagic());
 for(FileSection section : fileHeader.getSections()) {
-  processSection(section.getSectionName(), section.getSectionContent());
+  switch(section.getType()) {
+    case TypeA:
+      ContentA content = ContentA.read(section.getContent());
+      ...
+    case TypeB:
+      ...
+  }
 }
+```
 
-// ...
+Writing structs:
+```Java
+FileHeader fileHeader = ...
+fileHeader.getSections().add(new FileSection());
 
-// reset file pointer to the beginning of the file
-buffer.position(0);
-// and write the struct back to the hard-drive
+java.nio.ByteBuffer buffer = ...
 fileHeader.write(buffer);
 ```
 
@@ -96,49 +104,6 @@ fileHeader.write(buffer);
 * Pointer (and object-graphs)
 * 64bit enums
 * Memory Alignment
-
-## Comparison to Javolution
-[http://javolution.org/]  
-Structs4Java is focussed solely on plain C/C++ struct reading / writing whereas Javolution brings complete JNI interoperability tooling. Therefore Structs4Java does not have any additional dependency despite the Java Runtime Environment (JRE) classes. And finally, it's less verbose...
-
-Javolution (example taken from official documentation):
-```Java
- public enum Gender { MALE, FEMALE };
- public static class Date extends Struct {
-     public final Unsigned16 year = new Unsigned16();
-     public final Unsigned8 month = new Unsigned8();
-     public final Unsigned8 day   = new Unsigned8();
- }
- public static class Student extends Struct {
-     public final Enum32<Gender>       gender = new Enum32<Gender>(Gender.values());
-     public final UTF8String           name   = new UTF8String(64);
-     public final Date                 birth  = inner(new Date());
-     public final Float32[]            grades = array(new Float32[10]);
-     public final Reference32<Student> next   =  new Reference32<Student>();
- }
-```
-Structs4Java:
-```C++
-enum Gender : uint32_t {
-  MALE = 0, 
-  FEMALE = 1
-}
-
-struct Date {
-  uint16_t year;
-  uint8_t  month;
-  uint8_t  day;
-}
-
-struct Student {
-  Gender  gender;
-  char    name[64];
-  Date    birth;
-  float   grades[10];
-  // Pointers are not supported by Structs4Java
-  // Student*    next;
-}
-```
 
 # User Guide
 
@@ -268,4 +233,45 @@ struct Directory {
 }
 ```
 
+# Comparison to Javolution
+[http://javolution.org/]  
+Structs4Java is focussed solely on plain C/C++ struct reading / writing whereas Javolution brings complete JNI interoperability tooling. Therefore Structs4Java does not have any additional dependency despite the Java Runtime Environment (JRE) classes. And finally, it's less verbose...
 
+Javolution (example taken from official documentation):
+```Java
+ public enum Gender { MALE, FEMALE };
+ public static class Date extends Struct {
+     public final Unsigned16 year = new Unsigned16();
+     public final Unsigned8 month = new Unsigned8();
+     public final Unsigned8 day   = new Unsigned8();
+ }
+ public static class Student extends Struct {
+     public final Enum32<Gender>       gender = new Enum32<Gender>(Gender.values());
+     public final UTF8String           name   = new UTF8String(64);
+     public final Date                 birth  = inner(new Date());
+     public final Float32[]            grades = array(new Float32[10]);
+     public final Reference32<Student> next   =  new Reference32<Student>();
+ }
+```
+Structs4Java:
+```C++
+enum Gender : uint32_t {
+  MALE = 0, 
+  FEMALE = 1
+}
+
+struct Date {
+  uint16_t year;
+  uint8_t  month;
+  uint8_t  day;
+}
+
+struct Student {
+  Gender  gender;
+  char    name[64];
+  Date    birth;
+  float   grades[10];
+  // Pointers are not supported by Structs4Java
+  // Student*    next;
+}
+```
