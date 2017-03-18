@@ -37,7 +37,7 @@
 			<plugin>
 				<groupId>com.github.marc-christian-schulze.structs4java</groupId>
 				<artifactId>structs4java-maven-plugin</artifactId>
-				<version>1.0.1-SNAPSHOT</version>
+				<version>${project.version}</version>
 				<executions>
 					<execution>
 						<id>compile-structs</id>

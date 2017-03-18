@@ -56,7 +56,7 @@
 		<dependency>
 			<groupId>com.github.marc-christian-schulze.structs4java</groupId>
 			<artifactId>org.structs4java</artifactId>
-			<version>1.0.1-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.xtext</groupId>
