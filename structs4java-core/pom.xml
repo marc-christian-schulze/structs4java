@@ -2,9 +2,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.marc-christian-schulze.structs4java</groupId>
-	<artifactId>structs4java-maven-plugin</artifactId>
+	<artifactId>structs4java-core</artifactId>
 	<version>1.0.3-SNAPSHOT</version>
-	<packaging>maven-plugin</packaging>
+	<packaging>jar</packaging>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -35,28 +35,14 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.apache.maven</groupId>
-			<artifactId>maven-plugin-api</artifactId>
-			<version>3.3.9</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.maven.plugin-tools</groupId>
-			<artifactId>maven-plugin-annotations</artifactId>
-			<version>3.4</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.maven</groupId>
-			<artifactId>maven-project</artifactId>
-			<version>2.2.1</version>
-			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
 			<groupId>com.github.marc-christian-schulze.structs4java</groupId>
-			<artifactId>structs4java-core</artifactId>
+			<artifactId>org.structs4java</artifactId>
 			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.xtext</groupId>
+			<artifactId>org.eclipse.xtext</artifactId>
+			<version>2.10.0</version>
 		</dependency>
 	</dependencies>
 
@@ -102,6 +88,40 @@
 					<source>1.8</source>
 					<target>1.8</target>
 				</configuration>
+			</plugin>
+			<plugin>
+			    <groupId>org.apache.maven.plugins</groupId>
+			    <artifactId>maven-dependency-plugin</artifactId>
+			    <executions>
+			        <execution>
+			            <id>copy-dependencies</id>
+			            <phase>prepare-package</phase>
+			            <goals>
+			                <goal>copy-dependencies</goal>
+			            </goals>
+			            <configuration>
+			                <outputDirectory>${project.build.directory}/classes/lib</outputDirectory>
+			                <overWriteReleases>false</overWriteReleases>
+			                <overWriteSnapshots>false</overWriteSnapshots>
+			                <overWriteIfNewer>true</overWriteIfNewer>
+			                <includeScope>runtime</includeScope>
+			            </configuration>
+			        </execution>
+			    </executions>
+			</plugin>
+			<plugin>
+			    <groupId>org.apache.maven.plugins</groupId>
+			    <artifactId>maven-jar-plugin</artifactId>
+			    <configuration>
+			        <archive>
+			            <manifest>
+			                <addClasspath>true</addClasspath>
+			            </manifest>
+			            <manifestEntries>
+			                <Class-Path>lib/</Class-Path>
+			            </manifestEntries>
+			        </archive>
+			    </configuration>
 			</plugin>
 		</plugins>
 	</build>
