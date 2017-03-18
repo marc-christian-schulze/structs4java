@@ -108,7 +108,7 @@
 					<target>1.8</target>
 				</configuration>
 			</plugin>
-			<plugin>
+			<!-- <plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<executions>
 					<execution>
@@ -124,7 +124,7 @@
 					</descriptorRefs>
 					<appendAssemblyId>false</appendAssemblyId>
 				</configuration>
-			</plugin>
+			</plugin> -->
 		</plugins>
 	</build>
 
