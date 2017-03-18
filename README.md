@@ -40,7 +40,7 @@ struct FileSection {
   uint8_t     content[];
 }
 
-enum SectionType : uint16_t {
+enum SectionType : uint32_t {
   TypeA = 0xCAFEBABE,
   TypeB = 0xDEADBEAF,
   TypeC = 0815
