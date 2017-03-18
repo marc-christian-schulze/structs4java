@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.github.marc-christian-schulze.structs4java</groupId>
 		<artifactId>org.structs4java.parent</artifactId>
-		<version>1.0.2</version>
+		<version>1.0.3-SNAPSHOT</version>
 	</parent>
 	<artifactId>org.structs4java.target</artifactId>
 	<packaging>eclipse-target-definition</packaging>
