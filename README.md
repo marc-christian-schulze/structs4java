@@ -1,7 +1,7 @@
 # Structs4Java
-[![Build Status](https://travis-ci.org/marc-christian-schulze/structs4java.svg?branch=master)](https://travis-ci.org/marc-christian-schulze/structs4java) 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.marc-christian-schulze/structs4java-maven-plugin/badge.svg?style=plastic)](https://maven-badges.herokuapp.com/maven-central/com.github.marc-christian-schulze/structs4java-maven-plugin)  
-
+[![master status](https://img.shields.io/travis/marc-christian-schulze/structs4java/master.svg?maxAge=3600)](https://travis-ci.org/marc-christian-schulze/structs4java)
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.marc-christian-schulze/structs4java-maven-plugin.svg?maxAge=3600)]
+[![license](https://img.shields.io/github/license/marc-christian-schulze/structs4java.svg?maxAge=3600)](https://github.com/marc-christian-schulze/structs4java/blob/master/LICENSE)
 
 This project brings structs known from C/C++ to the Java language to read/write plain memory. Java code is generated using a XText-based compiler that takes structures definitions (similar to C/C++ struct definitions) as source. The compiler generates for each _struct_ and _enum_ declaration a corresponding class or enum in Java that provides read and write methods that take an _java.nio.ByteBuffer_ as input. The generated classes are no wrapper but plain POJOs (that's the reason why there is no union support). If you're looking for a library that wraps native memory and applies changes to the Java classes immediately to the underlying memory have a look at the Javolution project.
 
@@ -11,19 +11,19 @@ Add the plugin to your maven build:
 <plugin>
   <groupId>com.github.marc-christian-schulze.structs4java</groupId>
   <artifactId>structs4java-maven-plugin</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.3</version>
   <executions>
     <execution>
       <id>compile-structs</id>
       <goals>
-      	<goal>compile</goal>
+        <goal>compile</goal>
       </goals>
     </execution>
   </executions>
 </plugin>
 ```
 
-Create some Structs under `src/main/structs`:
+Create some Structs in a file `FileFormat.structs` under `src/main/structs`:
 ```C++
 package com.mycompany.projectx;
 
@@ -57,7 +57,7 @@ FileHeader fileHeader = FileHeader.read(buffer);
 // process your struct as POJO
 checkMagic(fileHeader.getMagic());
 for(FileSection section : fileHeader.getSections()) {
-	processSection(section.getSectionName(), section.getSectionContent());
+  processSection(section.getSectionName(), section.getSectionContent());
 }
 
 // ...
@@ -140,7 +140,7 @@ struct Student {
 }
 ```
 
-# Tutorial
+# User Guide
 
 ## Primitive Data Types
 | S4J Typename  | Java Mapping           | Description                            |
@@ -160,8 +160,11 @@ struct Student {
 | uint8_t[]     | java.nio.ByteBuffer    | Raw ByteBuffer                         |
 | int8_t[]      | java.nio.ByteBuffer    | Raw ByteBuffer                         |
 
+## Struct Files
+Struct files have the file extension `*.structs` and can contain multiple struct or enum definitions. Different to Java very struct and enum declared in a Struct file is publicly visible.
+
 ## Structs
-Structures are declared using the struct keyword:
+Structs are simple Java POJOs that provide a read and write method accepting a `java.nio.ByteBuffer`. A struct can have multiple 
 ```C++
 struct Coordinate {
   int32_t x;
@@ -171,7 +174,7 @@ struct Coordinate {
 ```
 
 ## Packages
-You can group certain structures into a package.
+Similar to Java, you can group structures in packages. 
 ```C++
 package com.structs4java.pkg;
 
