@@ -1,6 +1,6 @@
 # Structs4Java
 [![master status](https://img.shields.io/travis/marc-christian-schulze/structs4java/master.svg?maxAge=3600)](https://travis-ci.org/marc-christian-schulze/structs4java)
-[![Maven Central](https://img.shields.io/maven-central/v/com.github.marc-christian-schulze/structs4java-maven-plugin.svg?maxAge=3600)]
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.marc-christian-schulze/structs4java-maven-plugin.svg?maxAge=3600)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.github.marc-christian-schulze.structs4java%22)
 [![license](https://img.shields.io/github/license/marc-christian-schulze/structs4java.svg?maxAge=3600)](https://github.com/marc-christian-schulze/structs4java/blob/master/LICENSE)
 
 This project brings structs known from C/C++ to the Java language to read/write plain memory. Java code is generated using a XText-based compiler that takes structures definitions (similar to C/C++ struct definitions) as source. The compiler generates for each _struct_ and _enum_ declaration a corresponding class or enum in Java that provides read and write methods that take an _java.nio.ByteBuffer_ as input. The generated classes are no wrapper but plain POJOs (that's the reason why there is no union support). If you're looking for a library that wraps native memory and applies changes to the Java classes immediately to the underlying memory have a look at the Javolution project.
