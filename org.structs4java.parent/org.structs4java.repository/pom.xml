@@ -109,13 +109,17 @@
 			<id>release-composite</id>
 			<activation>
 				<activeByDefault>false</activeByDefault>
-			</activation>
+                <property>
+                    <name>performUpdateSiteRelease</name>
+                    <value>true</value>
+                </property>
+            </activation>
 
 			<build>
 				<plugins>
 					<plugin>
 						<artifactId>maven-antrun-plugin</artifactId>
-						<version>${maven-antrun-plugin.version}</version>
+						<version>1.8</version>
 						<executions>
 							<execution>
 								<!-- Retrieve possibly existing remote composite metadata -->
