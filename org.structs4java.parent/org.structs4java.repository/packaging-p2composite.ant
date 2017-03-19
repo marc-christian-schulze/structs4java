@@ -29,7 +29,9 @@
 										should be "../../releases/"
 	-->
 	<target name="compute.child.repository.data" depends="getMajorMinorVersion">
-		<property name="full.version" value="${unqualifiedVersion}.${buildQualifier}" />
+		<condition property="full.version" value="${unqualifiedVersion}.${buildQualifier}" else="${unqualifiedVersion}">
+			<isset property="buildQualifier"/>
+		</condition>
 
 		<property name="site.composite.name" value="${site.label} ${majorMinorVersion}" />
 		<property name="main.site.composite.name" value="${site.label} All Versions" />
