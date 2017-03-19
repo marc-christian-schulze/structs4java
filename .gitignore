@@ -5,3 +5,4 @@ target/
 src-gen/
 xtend-gen/
 model/
+workspace/
