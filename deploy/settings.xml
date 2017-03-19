@@ -6,4 +6,16 @@
             <password>${env.SONATYPE_PASSWORD}</password>
         </server>
     </servers>
+	<profiles>
+		<profile>
+			<id>inject-properties</id>
+			<properties>
+				<bintray.user>${env.BINTRAY_USERNAME}</bintray.user>
+				<bintray.apikey>${env.BINTRAY_API_KEY}</bintray.apikey>
+			</properties>
+		</profile>
+	</profiles>
+	<activeProfiles>
+		<activeProfile>inject-properties</activeProfile>
+	</activeProfiles>
 </settings>

@@ -31,7 +31,7 @@
 			used to publish child composite repositories and actual released p2 repositories -->
 		<child.repository.path.prefix>../../releases/</child.repository.path.prefix>
 	</properties>
-	
+
 	<name>${project.groupId}:${project.artifactId}</name>
 	<description>Structs4Java is a code generator based on C/C++ structures.</description>
 	<url>https://github.com/marc-christian-schulze/structs4java</url>

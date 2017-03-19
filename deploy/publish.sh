@@ -1,6 +1,6 @@
 #!/bin/bash
 
 if [[ $TRAVIS_PULL_REQUEST == "false" ]]; then
-    mvn deploy --settings $GPG_DIR/settings.xml -DperformRelease=true -DskipTests=true
+    mvn deploy --settings $GPG_DIR/settings.xml -DperformRelease=true -DskipTests=true -Drelease-composite=true
     exit $?
 fi
