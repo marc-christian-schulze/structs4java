@@ -76,6 +76,12 @@ java.nio.ByteBuffer buffer = ...
 fileHeader.write(buffer);
 ```
 
+## Getting Started with the Eclipse Plugin
+Install the plugin from our Update Site:
+```
+https://dl.bintray.com/marc-christian-schulze/Structs4JavaUpdateSite/updates/
+```
+
 ## Features
 * Reading / Writing C/C++ Structs from/to Java NIO ByteBuffers
 * No additional dependencies
