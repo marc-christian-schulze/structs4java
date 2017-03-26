@@ -39,6 +39,11 @@
 			<artifactId>structs4java-with-dependencies</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.eclipse.xtext</groupId>
+			<artifactId>org.eclipse.xtext</artifactId>
+			<version>2.10.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>
