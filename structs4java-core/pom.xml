@@ -90,7 +90,6 @@
 		        <version>3.0.0</version>
 		        <configuration>
 		        	<createDependencyReducedPom>true</createDependencyReducedPom>
-		        	<!--shadedArtifactAttached>true</shadedArtifactAttached-->
 		        	<artifactSet>
 			            <includes>
 			              <include>com.github.marc-christian-schulze.structs4java:*</include>
@@ -105,6 +104,20 @@
 		            </goals>
 		          </execution>
 		        </executions>
+			</plugin>
+			<plugin>
+			    <groupId>org.apache.maven.plugins</groupId>
+			    <artifactId>maven-jar-plugin</artifactId>
+			    <configuration>
+			        <archive>
+			            <manifest>
+			                <addClasspath>true</addClasspath>
+			            </manifest>
+			            <manifestEntries>
+			                <Class-Path>lib/</Class-Path>
+			            </manifestEntries>
+			        </archive>
+			    </configuration>
 			</plugin>
 		</plugins>
 	</build>
