@@ -35,6 +35,7 @@ mvn -f $(pwd)/org.structs4java.parent/pom.xml org.eclipse.tycho:tycho-versions-p
 
 mvn versions:set -DnewVersion=${version} -DgenerateBackupPoms=false
 mvn -f $(pwd)/org.structs4java.parent/pom.xml versions:set -DnewVersion=${version} -DgenerateBackupPoms=false
+mvn -f $(pwd)/structs4java-with-dependencies/pom.xml versions:set -DnewVersion=${version} -DgenerateBackupPoms=false
 mvn -f $(pwd)/structs4java-core/pom.xml versions:set -DnewVersion=${version} -DgenerateBackupPoms=false
 mvn -f $(pwd)/structs4java-maven-plugin/pom.xml versions:set -DnewVersion=${version} -DgenerateBackupPoms=false
 mvn -f $(pwd)/structs4java-maven-plugin-test/pom.xml versions:set -DnewVersion=${version} -DgenerateBackupPoms=false
@@ -52,6 +53,7 @@ mvn -f $(pwd)/org.structs4java.parent/pom.xml org.eclipse.tycho:tycho-versions-p
 
 mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${next_version}-SNAPSHOT
 mvn -f $(pwd)/org.structs4java.parent/pom.xml versions:set -DgenerateBackupPoms=false -DnewVersion=${next_version}-SNAPSHOT
+mvn -f $(pwd)/structs4java-with-dependencies/pom.xml versions:set -DgenerateBackupPoms=false -DnewVersion=${next_version}-SNAPSHOT
 mvn -f $(pwd)/structs4java-core/pom.xml versions:set -DgenerateBackupPoms=false -DnewVersion=${next_version}-SNAPSHOT
 mvn -f $(pwd)/structs4java-maven-plugin/pom.xml versions:set -DgenerateBackupPoms=false -DnewVersion=${next_version}-SNAPSHOT
 mvn -f $(pwd)/structs4java-maven-plugin-test/pom.xml versions:set -DgenerateBackupPoms=false -DnewVersion=${next_version}-SNAPSHOT

@@ -159,17 +159,7 @@
 						<version>${tycho-version}</version>
 						<configuration>
 							<!-- Update p2 composite metadata or create it -->
-							<applicationsArgs>
-								<args>-application</args>
-								<args>org.eclipse.ant.core.antRunner</args>
-								<args>-buildfile</args>
-								<args>packaging-p2composite.ant p2.composite.add</args>
-								<args>-Dsite.label="${site.label}"</args>
-								<args>-Dproject.build.directory=${project.build.directory}</args>
-								<args>-DunqualifiedVersion=${unqualifiedVersion}</args>
-								<args>-DbuildQualifier="\"${buildQualifier}\""</args>
-								<args>-Dchild.repository.path.prefix="${child.repository.path.prefix}"</args>
-							</applicationsArgs>
+							<appArgLine>-application org.eclipse.ant.core.antRunner -buildfile packaging-p2composite.ant p2.composite.add -Dsite.label="${site.label}" -Dproject.build.directory=${project.build.directory} -DunqualifiedVersion=${unqualifiedVersion} -DbuildQualifier="${buildQualifier}" -Dchild.repository.path.prefix="${child.repository.path.prefix}"</appArgLine>
 							<repositories>
 								<repository>
 									<id>mars</id>
