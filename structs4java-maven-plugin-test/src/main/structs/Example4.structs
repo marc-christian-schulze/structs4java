@@ -1,0 +1,11 @@
+package org.structs4java.example4;
+
+struct SimpleGreedy {
+	uint8_t first;
+	uint8_t rest[];
+}
+
+struct NonGreedy {
+	uint8_t veryFirst sizeof(greedy);
+	SimpleGreedy greedy;
+}

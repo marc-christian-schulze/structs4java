@@ -237,14 +237,19 @@ class StructGenerator {
 						«IF m instanceof ComplexTypeMember»
 						{
 							java.nio.ByteBuffer slice = buf.slice();
-							slice.limit(«tempVarForMember(findMemberDefiningSizeOf(m))»);
+							slice.limit(«tempVarForMember(findMemberDefiningCountOf(m))»);
 							obj.«setterName(m)»(«readerMethodName(m)»(slice, true));
 						}
 						«ELSE»
 						obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, «tempVarForMember(findMemberDefiningCountOf(m))»));
 						«ENDIF»
 					«ELSE»
+						«IF m.isArray() && !m.isString() && m.isGreedy()»
+						// greedy member
+						obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, buf.limit() - buf.position()));
+						«ELSE»
 						obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead));
+						«ENDIF»
 					«ENDIF»
 				«ENDIF»
 			«ENDFOR»
@@ -283,6 +288,22 @@ class StructGenerator {
 
 	def isArray(Member m) {
 		return m.array != null
+	}
+	
+	def isGreedy(Member m) {
+		if(m.array == null) {
+			return false;
+		}
+		
+		if(m.array.dimension > 0) {
+			return false;
+		}
+		
+		return true;
+	}
+	
+	def isString(Member m) {
+		return m instanceof StringMember;
 	}
 	
 	def findMemberDefiningSizeOrCountOf(Member m) {
@@ -356,7 +377,7 @@ class StructGenerator {
 	}
 	
 	def readerMethodForArrayMember(Member m) '''
-	private static java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> «m.readerMethodName()»(java.nio.ByteBuffer buf, boolean partialRead«IF dimensionOf(m) == 0», «attributeJavaType(findMemberDefiningSizeOrCountOf(m))» countof«ENDIF») throws java.io.IOException {
+	private static java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> «m.readerMethodName()»(java.nio.ByteBuffer buf, boolean partialRead«IF dimensionOf(m) == 0», int countof«ENDIF») throws java.io.IOException {
 		java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> lst = new java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»>();
 		try {
 		«IF dimensionOf(m) == 0»
@@ -387,7 +408,7 @@ class StructGenerator {
 	}
 	
 	def readerMethodForByteBuffer(IntegerMember m) '''
-		private static java.nio.ByteBuffer «readerMethodName(m)»(java.nio.ByteBuffer buf, boolean partialRead«IF dimensionOf(m) == 0», «attributeJavaType(findMemberDefiningSizeOrCountOf(m))» sizeof«ENDIF») throws java.io.IOException {
+		private static java.nio.ByteBuffer «readerMethodName(m)»(java.nio.ByteBuffer buf, boolean partialRead«IF dimensionOf(m) == 0», int sizeof«ENDIF») throws java.io.IOException {
 			byte[] buffer = new byte[«IF dimensionOf(m) == 0»sizeof«ELSE»«dimensionOf(m)»«ENDIF»];
 			buf.get(buffer);
 			return java.nio.ByteBuffer.wrap(buffer); 

@@ -28,12 +28,20 @@ class Structs4JavaDslValidator extends AbstractStructs4JavaDslValidator {
 				return;
 			}
 			
-			if(getCountOfFor(m) == null) {
-				error('Either array dimension or countof must be specified!', m, Structs4JavaDslPackage.Literals.MEMBER__ARRAY)
+			val struct = m.eContainer as StructDeclaration;
+			val idx = struct.members.indexOf(m)
+			
+			if(idx+1 < struct.members.size()) {
+				error('Only the last member is allowed to be greedy!', m, Structs4JavaDslPackage.Literals.MEMBER__ARRAY)
 			}
+			
 		} else {
 			if(getCountOfFor(m) != null) {
 				error('Either array dimension or countof must be specified but not both!', m, Structs4JavaDslPackage.Literals.MEMBER__ARRAY)
+			}
+			
+			if(getSizeOfFor(m) != null) {
+				error('Either array dimension or sizeof must be specified but not both!', m, Structs4JavaDslPackage.Literals.MEMBER__ARRAY)
 			}
 		}
 	}

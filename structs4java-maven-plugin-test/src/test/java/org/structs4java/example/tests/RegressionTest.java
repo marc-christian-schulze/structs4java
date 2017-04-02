@@ -2,6 +2,7 @@ package org.structs4java.example.tests;
 
 import java.io.IOException;
 import java.nio.ByteOrder;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import org.junit.Assert;
@@ -16,6 +17,9 @@ import org.structs4java.example3.NullTerminatedString;
 import org.structs4java.example3.OptionalPart;
 import org.structs4java.example3.OptionalPart2;
 import org.structs4java.example3.ListOfIntegers;
+import org.structs4java.example4.SimpleGreedy;
+import org.structs4java.example4.NonGreedy;
+
 
 public class RegressionTest extends AbstractTest {
 
@@ -195,5 +199,25 @@ public class RegressionTest extends AbstractTest {
 		ListOfIntegers actual = ListOfIntegers.read(buffer);
 		
 		Assert.assertEquals(expected, actual);
+	}
+	
+	@Test
+	public void testReadSimpleGreedy() throws IOException {
+		byte[] testData = new byte[]{ 6, 1, 2, 3, 4, 5};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		SimpleGreedy greedy = SimpleGreedy.read(buffer);
+		
+		Assert.assertEquals(6, greedy.getFirst());
+		Assert.assertEquals(ByteBuffer.wrap(new byte[]{1, 2, 3, 4, 5}), greedy.getRest());
+	}
+	
+	@Test
+	public void testReadGreedyWithinNonGreedy() throws IOException {
+		byte[] testData = new byte[]{ 3, 1, 2, 3, 4, 5};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		NonGreedy nonGreedy = NonGreedy.read(buffer);
+		
+		Assert.assertEquals(1, nonGreedy.getGreedy().getFirst());
+		Assert.assertEquals(ByteBuffer.wrap(new byte[]{2, 3}), nonGreedy.getGreedy().getRest());
 	}
 }
