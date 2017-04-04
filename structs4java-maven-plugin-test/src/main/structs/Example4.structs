@@ -9,3 +9,8 @@ struct NonGreedy {
 	uint8_t veryFirst sizeof(greedy);
 	SimpleGreedy greedy;
 }
+
+struct SelfSizedGreedy {
+	uint8_t selfSize sizeof(this);
+	uint8_t rest[];
+}

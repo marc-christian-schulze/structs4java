@@ -19,6 +19,7 @@ import org.structs4java.example3.OptionalPart2;
 import org.structs4java.example3.ListOfIntegers;
 import org.structs4java.example4.SimpleGreedy;
 import org.structs4java.example4.NonGreedy;
+import org.structs4java.example4.SelfSizedGreedy;
 
 
 public class RegressionTest extends AbstractTest {
@@ -219,5 +220,14 @@ public class RegressionTest extends AbstractTest {
 		
 		Assert.assertEquals(1, nonGreedy.getGreedy().getFirst());
 		Assert.assertEquals(ByteBuffer.wrap(new byte[]{2, 3}), nonGreedy.getGreedy().getRest());
+	}
+	
+	@Test
+	public void testReadSelfSizedGreedy() throws IOException {
+		byte[] testData = new byte[]{ 3, 1, 2, 3, 4, 5};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		SelfSizedGreedy selfSizedGreedy = SelfSizedGreedy.read(buffer);
+		
+		Assert.assertEquals(ByteBuffer.wrap(new byte[]{1, 2}), selfSizedGreedy.getRest());
 	}
 }

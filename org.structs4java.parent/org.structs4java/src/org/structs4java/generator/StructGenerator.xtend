@@ -245,8 +245,12 @@ class StructGenerator {
 						«ENDIF»
 					«ELSE»
 						«IF m.isArray() && !m.isString() && m.isGreedy()»
-						// greedy member
-						obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, buf.limit() - buf.position()));
+							«IF struct.isSelfSized()»
+							obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)(structEndPosition - buf.position())));
+							«ELSE»
+							// greedy member
+							obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, buf.limit() - buf.position()));
+							«ENDIF»
 						«ELSE»
 						obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead));
 						«ENDIF»
