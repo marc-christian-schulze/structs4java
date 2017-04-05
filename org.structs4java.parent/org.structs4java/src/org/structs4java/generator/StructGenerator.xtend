@@ -167,7 +167,7 @@ class StructGenerator {
 	'''
 	
 	def nonTransientMembers(StructDeclaration struct) {
-		return struct.members.filter[!hasSizeOfOrCountOfAttribute];
+		return struct.members.filter[!isTransient];
 	}
 	
 	def isTransient(Member m) {
@@ -212,6 +212,7 @@ class StructGenerator {
 							}
 						«ENDIF»
 						«attributeJavaType(m)» «tempVarForMember(m)» = «readerMethodName(m)»(buf, partialRead);
+						obj.«attributeName(m)» = «tempVarForMember(m)»;
 					«ENDIF»
 				«ELSE»
 					«IF struct.isSelfSized()»
@@ -741,13 +742,13 @@ class StructGenerator {
 	'''
 
 	def fields(StructDeclaration struct) '''
-		«FOR m : struct.nonTransientMembers()»
+		«FOR m : struct.members»
 			«field(m)»
 		«ENDFOR»
 	'''
 
 	def getters(StructDeclaration struct) '''
-		«FOR m : struct.nonTransientMembers()»
+		«FOR m : struct.members»
 			«getter(m)»
 		«ENDFOR»
 	'''

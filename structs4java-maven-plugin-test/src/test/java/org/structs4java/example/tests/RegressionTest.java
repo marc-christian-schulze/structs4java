@@ -218,6 +218,7 @@ public class RegressionTest extends AbstractTest {
 		ByteBuffer buffer = ByteBuffer.wrap(testData);
 		NonGreedy nonGreedy = NonGreedy.read(buffer);
 		
+		Assert.assertEquals(3, nonGreedy.getVeryFirst());
 		Assert.assertEquals(1, nonGreedy.getGreedy().getFirst());
 		Assert.assertEquals(ByteBuffer.wrap(new byte[]{2, 3}), nonGreedy.getGreedy().getRest());
 	}
