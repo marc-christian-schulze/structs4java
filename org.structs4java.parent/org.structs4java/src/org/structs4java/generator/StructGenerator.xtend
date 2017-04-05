@@ -228,6 +228,7 @@ class StructGenerator {
 						«IF m instanceof ComplexTypeMember»
 						{
 							java.nio.ByteBuffer slice = buf.slice();
+							slice.order(buf.order());
 							slice.limit(«tempVarForMember(findMemberDefiningSizeOf(m))»);
 							obj.«setterName(m)»(«readerMethodName(m)»(slice, true));
 						}
@@ -238,6 +239,7 @@ class StructGenerator {
 						«IF m instanceof ComplexTypeMember»
 						{
 							java.nio.ByteBuffer slice = buf.slice();
+							slice.order(buf.order());
 							slice.limit(«tempVarForMember(findMemberDefiningCountOf(m))»);
 							obj.«setterName(m)»(«readerMethodName(m)»(slice, true));
 						}

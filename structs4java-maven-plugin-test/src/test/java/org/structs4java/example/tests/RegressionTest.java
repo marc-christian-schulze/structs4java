@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.structs4java.bugs.endianess.Outer;
 import org.structs4java.example1.SimpleEnum;
 import org.structs4java.example1.SimpleStructure;
 import org.structs4java.example2.AdvancedStructure;
@@ -230,5 +231,29 @@ public class RegressionTest extends AbstractTest {
 		SelfSizedGreedy selfSizedGreedy = SelfSizedGreedy.read(buffer);
 		
 		Assert.assertEquals(ByteBuffer.wrap(new byte[]{1, 2}), selfSizedGreedy.getRest());
+	}
+	
+	@Test
+	public void testEndianessBugWhenSlicingLE() throws IOException {
+		byte[] testData = new byte[]{ 2, 1, 0, 1, 0};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		Outer outer = Outer.read(buffer);
+		
+		Assert.assertEquals(2, outer.getLength());
+		Assert.assertEquals(1, outer.getWord());
+		Assert.assertEquals(1, outer.getInner().getWord());
+	}
+	
+	@Test
+	public void testEndianessBugWhenSlicingBE() throws IOException {
+		byte[] testData = new byte[]{ 2, 0, 1, 0, 1};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.BIG_ENDIAN);
+		Outer outer = Outer.read(buffer);
+		
+		Assert.assertEquals(2, outer.getLength());
+		Assert.assertEquals(1, outer.getWord());
+		Assert.assertEquals(1, outer.getInner().getWord());
 	}
 }

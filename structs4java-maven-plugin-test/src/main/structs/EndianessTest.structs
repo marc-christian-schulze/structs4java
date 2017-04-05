@@ -1,0 +1,11 @@
+package org.structs4java.bugs.endianess;
+
+struct Outer {
+	uint8_t  length sizeof(inner);
+	uint16_t word;
+	Inner    inner;
+}
+
+struct Inner {
+	uint16_t word;
+}
