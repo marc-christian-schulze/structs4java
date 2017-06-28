@@ -7,3 +7,4 @@ xtend-gen/
 model/
 workspace/
 dependency-reduced-pom.xml
+bin/

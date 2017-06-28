@@ -2,14 +2,7 @@
 <project name="Handle p2 composite metadata from Bintray" basedir=".">
 
 	<!--
-	These must be set from outside
-	<property name="bintray.user" value="" />
-	<property name="bintray.apikey" value="" />
-	<property name="bintray.repo" value="" />
-	<property name="bintray.package" value="" />
-	<property name="bintray.releases.path" value="" />
-	<property name="bintray.composite.path" value="" />
-	<property name="bintray.zip.path" value="" />
+	http://www.lorenzobettini.it/2016/02/publish-an-eclipse-p2-composite-repository-on-bintray/
 	-->
 
 	<property name="bintray.url" value="https://dl.bintray.com/${bintray.owner}/${bintray.repo}" />
@@ -113,7 +106,7 @@
 	</target>
 
 	<target name="push-p2-repo-to-bintray">
-		<apply executable="curl" parallel="false" relative="true" addsourcefile="false">
+		<apply executable="curl" parallel="false" relative="true" addsourcefile="false" verbose="true">
 			<arg value="-XPUT" />
 			<targetfile />
 
@@ -129,7 +122,7 @@
 	</target>
 
 	<target name="push-p2-repo-zipped-to-bintray">
-		<apply executable="curl" parallel="false" relative="true" addsourcefile="false">
+		<apply executable="curl" parallel="false" relative="true" addsourcefile="false" verbose="true">
 			<arg value="-XPUT" />
 			<targetfile />
 
@@ -145,7 +138,7 @@
 	</target>
 
 	<target name="push-composite-to-bintray" depends="getMajorMinorVersion" >
-		<apply executable="curl" parallel="false" relative="true" addsourcefile="false">
+		<apply executable="curl" parallel="false" relative="true" addsourcefile="false" verbose="true">
 			<arg value="-XPUT" />
 			<targetfile />
 
@@ -161,7 +154,7 @@
 	</target>
 
 	<target name="push-main-composite-to-bintray" >
-		<apply executable="curl" parallel="false" relative="true" addsourcefile="false">
+		<apply executable="curl" parallel="false" relative="true" addsourcefile="false" verbose="true">
 			<arg value="-XPUT" />
 			<targetfile />
 

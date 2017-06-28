@@ -1,6 +1,10 @@
 <?xml version="1.0"?>
 <project name="project">
 
+	<!--
+	http://www.lorenzobettini.it/2016/02/publish-an-eclipse-p2-composite-repository-on-bintray/
+	-->
+
 	<target name="getMajorMinorVersion">
 		<script language="javascript">
 			<![CDATA[
