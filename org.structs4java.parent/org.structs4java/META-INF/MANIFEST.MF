@@ -25,5 +25,6 @@ Export-Package: org.structs4java.generator,
  org.structs4java.structs4JavaDsl.util,
  org.structs4java.validation,
  org.structs4java.serializer,
- org.structs4java.parser.antlr.internal
+ org.structs4java.parser.antlr.internal,
+ org.structs4java.formatting2
 Import-Package: org.apache.log4j

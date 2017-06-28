@@ -6,7 +6,7 @@ import org.eclipse.xtext.xtext.generator.model.project.*
 var rootPath = ".."
 
 Workflow {
-	
+
 	component = XtextGenerator {
 		configuration = {
 			project = StandardProjectConfig {
@@ -31,9 +31,11 @@ Workflow {
 		language = StandardLanguage {
 			name = "org.structs4java.Structs4JavaDsl"
 			fileExtensions = "structs"
-
 			serializer = {
 				generateStub = false
+			}
+			formatter = {
+				generateStub = true
 			}
 			validator = {
 				composedCheck = "org.eclipse.xtext.validation.NamesAreUniqueValidator"
