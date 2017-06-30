@@ -256,4 +256,115 @@ public class RegressionTest extends AbstractTest {
 		Assert.assertEquals(1, outer.getWord());
 		Assert.assertEquals(1, outer.getInner().getWord());
 	}
+	
+	@Test
+	public void testPaddedByteMember() throws IOException {
+		byte[] testData = new byte[]{ 2, 0, 0, 0, 1};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		PaddedByteMember struct = PaddedByteMember.read(buffer);
+		
+		Assert.assertEquals(2, struct.getPaddedByte());
+		Assert.assertEquals(1, struct.getFollowingByte());
+	}
+	
+	@Test
+	public void testPaddedWordMemberLE() throws IOException {
+		byte[] testData = new byte[]{ 2, 0, 0, 0, 1};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		PaddedWordMember struct = PaddedWordMember.read(buffer);
+		
+		Assert.assertEquals(2, struct.getPaddedWord());
+		Assert.assertEquals(1, struct.getFollowingByte());
+	}
+	
+	@Test
+	public void testPaddedWordMemberBE() throws IOException {
+		byte[] testData = new byte[]{ 0, 2, 0, 0, 1};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.BIG_ENDIAN);
+		PaddedWordMember struct = PaddedWordMember.read(buffer);
+		
+		Assert.assertEquals(2, struct.getPaddedWord());
+		Assert.assertEquals(1, struct.getFollowingByte());
+	}
+	
+	@Test
+	public void testPaddedDWordMemberLE() throws IOException {
+		byte[] testData = new byte[]{ 2, 0, 0, 0, 1};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		PaddedDWordMember struct = PaddedDWordMember.read(buffer);
+		
+		Assert.assertEquals(2, struct.getPaddedDWord());
+		Assert.assertEquals(1, struct.getFollowingByte());
+	}
+	
+	@Test
+	public void testPaddedDWordMemberBE() throws IOException {
+		byte[] testData = new byte[]{ 0, 0, 0, 2, 1};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.BIG_ENDIAN);
+		PaddedDWordMember struct = PaddedDWordMember.read(buffer);
+		
+		Assert.assertEquals(2, struct.getPaddedDWord());
+		Assert.assertEquals(1, struct.getFollowingByte());
+	}
+	
+	@Test
+	public void testPaddedDWordMemberAt8BytesLE() throws IOException {
+		byte[] testData = new byte[]{ 2, 0, 0, 0, 0, 0, 0, 0, 1};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		PaddedDWordMemberAt8Bytes struct = PaddedDWordMemberAt8Bytes.read(buffer);
+		
+		Assert.assertEquals(2, struct.getPaddedDWord());
+		Assert.assertEquals(1, struct.getFollowingByte());
+	}
+	
+	@Test
+	public void testPaddedDWordMemberAt8BytesBE() throws IOException {
+		byte[] testData = new byte[]{ 0, 0, 0, 2, 0, 0, 0, 0, 1};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.BIG_ENDIAN);
+		PaddedDWordMemberAt8Bytes struct = PaddedDWordMemberAt8Bytes.read(buffer);
+		
+		Assert.assertEquals(2, struct.getPaddedDWord());
+		Assert.assertEquals(1, struct.getFollowingByte());
+	}
+	
+	@Test
+	public void testPaddedFloatMemberLE() throws IOException {
+		byte[] testData = new byte[]{ 0, 0, (byte) 0x8c, (byte) 0xc1, 0, 0, 0, 0, 1};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		PaddedFloatMember struct = PaddedFloatMember.read(buffer);
+		
+		Assert.assertEquals(-17.5f, struct.getPaddedFloat(), 0.0f);
+		Assert.assertEquals(1, struct.getFollowingByte());
+	}
+	
+	@Test
+	public void testPaddedFloatMemberBE() throws IOException {
+		byte[] testData = new byte[]{ (byte) 0xc1, (byte) 0x8c, 0, 0, 0, 0, 0, 0, 1};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.BIG_ENDIAN);
+		PaddedFloatMember struct = PaddedFloatMember.read(buffer);
+		
+		Assert.assertEquals(-17.5f, struct.getPaddedFloat(), 0.0f);
+		Assert.assertEquals(1, struct.getFollowingByte());
+	}
+	
+	@Test
+	public void testPaddedDynamicByteArray() throws IOException {
+		byte[] testData = new byte[]{ 2, 3, 4, 0, 0, 1};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		PaddedDynamicByteArray struct = PaddedDynamicByteArray.read(buffer);
+		
+		Assert.assertEquals(3, struct.getArray().get());
+		Assert.assertEquals(4, struct.getArray().get());
+		Assert.assertEquals(1, struct.getFollowingByte());
+	}
 }

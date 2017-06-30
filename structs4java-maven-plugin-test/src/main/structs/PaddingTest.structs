@@ -1,0 +1,32 @@
+package org.structs4java.example.tests;
+
+struct PaddedByteMember {
+	uint8_t paddedByte padding(4);
+	uint8_t followingByte;
+}
+
+struct PaddedWordMember {
+	uint16_t paddedWord padding(4);
+	uint8_t followingByte;
+}
+
+struct PaddedDWordMember {
+	uint32_t paddedDWord padding(4);
+	uint8_t followingByte;
+}
+
+struct PaddedDWordMemberAt8Bytes {
+	uint32_t paddedDWord padding(8);
+	uint8_t followingByte;
+}
+
+struct PaddedFloatMember {
+	float paddedFloat padding(8);
+	uint8_t followingByte;
+}
+
+struct PaddedDynamicByteArray {
+	uint8_t size sizeof(array);
+	uint8_t array[] padding(4);
+	uint8_t followingByte;
+}

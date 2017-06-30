@@ -179,6 +179,10 @@ class StructGenerator {
 			«readerMethodForMember(m)»
 		«ENDFOR»
 	'''
+	
+	def isPadded(Member m) {
+		return m.padding > 0
+	}
 
 	def readerMethodForStruct(StructDeclaration struct) '''
 		public static «struct.name» read(java.nio.ByteBuffer buf) throws java.io.IOException {
@@ -418,45 +422,93 @@ class StructGenerator {
 		private static java.nio.ByteBuffer «readerMethodName(m)»(java.nio.ByteBuffer buf, boolean partialRead«IF dimensionOf(m) == 0», int sizeof«ENDIF») throws java.io.IOException {
 			byte[] buffer = new byte[«IF dimensionOf(m) == 0»sizeof«ELSE»«dimensionOf(m)»«ENDIF»];
 			buf.get(buffer);
+			«IF m.isPadded()»
+			int bytesOverlap = (buffer.length % «m.padding»);
+			if(bytesOverlap > 0) {
+				buf.position(buf.position() + «m.padding» - bytesOverlap);				
+			}
+			«ENDIF»
 			return java.nio.ByteBuffer.wrap(buffer); 
 		}
 	'''
 
 	def readerMethodForComplexTypeMember(ComplexTypeMember m) '''
 		private static «m.nativeTypeName().native2JavaType()» «m.readerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf, boolean partialRead) throws java.io.IOException {
-			return «m.nativeTypeName().native2JavaType()».read(buf, partialRead);
+			«IF m.isPadded()»
+			int beginMember = buf.position();
+			«ENDIF»
+			«m.nativeTypeName().native2JavaType()» value = «m.nativeTypeName().native2JavaType()».read(buf, partialRead);
+			«IF m.isPadded()»
+			int bytesOverlap = ((buf.position() - beginMember) % «m.padding»);
+			if(bytesOverlap > 0) {
+				buf.position(buf.position() + «m.padding» - bytesOverlap);				
+			}
+			«ENDIF»
+			return value;
 		}
 	'''
 	
 	def readerMethodForIntegerMember(IntegerMember m) '''
 		private static «m.nativeTypeName().native2JavaType()» «m.readerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf, boolean partialRead) throws java.io.IOException {
 			«IF m.typename.equals("int8_t")»
-			return buf.get();
-			«ELSEIF m.typename.equals("uint8_t")»
-			return buf.get() & 0xFF;
-			«ELSEIF m.typename.equals("int16_t")»
-			return buf.getShort();
-			«ELSEIF m.typename.equals("uint16_t")»
-			return buf.getShort() & 0xFFFF;
-			«ELSEIF m.typename.equals("int32_t")»
-			return buf.getInt();
-			«ELSEIF m.typename.equals("uint32_t")»
-			return buf.getInt() & 0xFFFFFFFF;
-			«ELSEIF m.typename.equals("int64_t")»
-			return buf.getLong();
-			«ELSEIF m.typename.equals("uint64_t")»
-			return buf.getLong() & 0xFFFFFFFFFFFFFFFFL;
+			«m.nativeTypeName().native2JavaType()» value = buf.get();
+			«IF m.isPadded()»
+			buf.position(buf.position() + «m.padding» - 1);
 			«ENDIF»
+			«ELSEIF m.typename.equals("uint8_t")»
+			«m.nativeTypeName().native2JavaType()» value = buf.get() & 0xFF;
+			«IF m.isPadded()»
+			buf.position(buf.position() + «m.padding» - 1);
+			«ENDIF»
+			«ELSEIF m.typename.equals("int16_t")»
+			«m.nativeTypeName().native2JavaType()» value = buf.getShort();
+			«IF m.isPadded()»
+			buf.position(buf.position() + «m.padding» - 2);
+			«ENDIF»
+			«ELSEIF m.typename.equals("uint16_t")»
+			«m.nativeTypeName().native2JavaType()» value = buf.getShort() & 0xFFFF;
+			«IF m.isPadded()»
+			buf.position(buf.position() + «m.padding» - 2);
+			«ENDIF»
+			«ELSEIF m.typename.equals("int32_t")»
+			«m.nativeTypeName().native2JavaType()» value = buf.getInt();
+			«IF m.isPadded()»
+			buf.position(buf.position() + «m.padding» - 4);
+			«ENDIF»
+			«ELSEIF m.typename.equals("uint32_t")»
+			«m.nativeTypeName().native2JavaType()» value = buf.getInt() & 0xFFFFFFFF;
+			«IF m.isPadded()»
+			buf.position(buf.position() + «m.padding» - 4);
+			«ENDIF»
+			«ELSEIF m.typename.equals("int64_t")»
+			«m.nativeTypeName().native2JavaType()» value = buf.getLong();
+			«IF m.isPadded()»
+			buf.position(buf.position() + «m.padding» - 8);
+			«ENDIF»
+			«ELSEIF m.typename.equals("uint64_t")»
+			«m.nativeTypeName().native2JavaType()» value = buf.getLong() & 0xFFFFFFFFFFFFFFFFL;
+			«IF m.isPadded()»
+			buf.position(buf.position() + «m.padding» - 8);
+			«ENDIF»
+			«ENDIF»
+			return value;
 		}
 	'''
 
 	def readerMethodForFloatMember(FloatMember m) '''
 		private static «m.nativeTypeName().native2JavaType()» «m.readerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf, boolean partialRead) throws java.io.IOException {
 			«IF m.typename.equals("float")»
-			return buf.getFloat();
-			«ELSEIF m.typename.equals("double")»
-			return buf.getDouble();
+			float value = buf.getFloat();
+			«IF m.isPadded()»
+			buf.position(buf.position() + «m.padding» - 4);
 			«ENDIF»
+			«ELSEIF m.typename.equals("double")»
+			double value = buf.getDouble();
+			«IF m.isPadded()»
+			buf.position(buf.position() + «m.padding» - 8);
+			«ENDIF»
+			«ENDIF»
+			return value;
 		}
 	'''
 
@@ -477,10 +529,22 @@ class StructGenerator {
 						zerosRead = 0;
 					}
 				}
+				«IF m.isPadded()»
+				int bytesOverlap = (tmp.size() % «m.padding»);
+				if(bytesOverlap > 0) {
+					buf.position(buf.position() + «m.padding» - bytesOverlap);				
+				}
+				«ENDIF»
 				return new String(tmp.toByteArray(), 0, tmp.size() - zerosRead, "«encodingOf(m)»");
 				«ELSE»
 				byte[] tmp = new byte[sizeof];
 				buf.get(tmp);
+				«IF m.isPadded()»
+				int bytesOverlap = (sizeof % «m.padding»);
+				if(bytesOverlap > 0) {
+					buf.position(buf.position() + «m.padding» - bytesOverlap);				
+				}
+				«ENDIF»
 				return new String(tmp, "«encodingOf(m)»");
 				«ENDIF»
 			«ELSE»
@@ -502,6 +566,9 @@ class StructGenerator {
 						len = i;
 					}
 				}
+				«IF m.isPadded() && (dimensionOf(m) % m.padding) > 0»
+				buf.position(buf.position() + «m.padding - (dimensionOf(m) % m.padding)»);
+				«ENDIF»
 				return new String(tmp, 0, len, "«encodingOf(m)»");
 			«ENDIF»
 			} catch(java.io.UnsupportedEncodingException e) {

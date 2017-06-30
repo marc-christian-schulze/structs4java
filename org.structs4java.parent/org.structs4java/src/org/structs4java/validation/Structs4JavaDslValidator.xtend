@@ -28,6 +28,10 @@ class Structs4JavaDslValidator extends AbstractStructs4JavaDslValidator {
 				return;
 			}
 			
+			if(getSizeOfFor(m) !== null) {
+				return;
+			}
+			
 			val struct = m.eContainer as StructDeclaration;
 			val idx = struct.members.indexOf(m)
 			

@@ -62,6 +62,7 @@ ComplexTypeMember:
 	(comments += SL_COMMENT)*
 	type=[ComplexTypeDeclaration|QualifiedName] name=ID
 	(array=ArrayDimension)?
+	('padding' '(' padding=INT ')')?
 	';'
 ;
 
@@ -74,6 +75,7 @@ IntegerMember:
 		('sizeof' '(' sizeofThis?='this' ')')? &
 		('countof' '(' countof=[Member] ')')?
 	)
+	('padding' '(' padding=INT ')')?
 	';'
 ;
 
@@ -81,6 +83,7 @@ FloatMember:
 	(comments += SL_COMMENT)*
 	typename=FLOAT_TYPE name=ID 
 	(array=ArrayDimension)?
+	('padding' '(' padding=INT ')')?
 	';'
 ;
 
@@ -89,6 +92,7 @@ StringMember:
 	typename=STRING_TYPE name=ID 
 	(array=ArrayDimension)?
 	('encoding' '(' encoding=STRING ')')?
+	('padding' '(' padding=INT ')')?
 	';'
 ;
 
