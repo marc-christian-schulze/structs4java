@@ -1,0 +1,20 @@
+package org.structs4java.example.tests;
+
+struct InnerGreedy {
+	uint16_t size sizeof(content);
+	uint8_t content[];
+}
+
+struct OuterGreedy {
+	uint16_t size sizeof(content);
+	InnerGreedy inner;
+	uint8_t content[];
+}
+
+
+struct MultipleGreedy {
+	uint8_t sizeOne sizeof(first);
+	uint8_t first[];
+	uint8_t sizeTwo sizeof(second);
+	uint8_t second[];
+}

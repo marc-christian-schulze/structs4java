@@ -363,8 +363,36 @@ public class RegressionTest extends AbstractTest {
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
 		PaddedDynamicByteArray struct = PaddedDynamicByteArray.read(buffer);
 		
+		Assert.assertEquals(2, struct.getArray().limit());
 		Assert.assertEquals(3, struct.getArray().get());
 		Assert.assertEquals(4, struct.getArray().get());
 		Assert.assertEquals(1, struct.getFollowingByte());
+	}
+	
+	@Test
+	public void testNestedGreedyStructs() throws IOException {
+		byte[] testData = new byte[]{ 1, 0, 3, 0, 1, 2, 3, 4};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		OuterGreedy struct = OuterGreedy.read(buffer);
+		
+		Assert.assertEquals(4, struct.getContent().get());
+		Assert.assertEquals(1, struct.getInner().getContent().get());
+		Assert.assertEquals(2, struct.getInner().getContent().get());
+		Assert.assertEquals(3, struct.getInner().getContent().get());
+	}
+	
+	@Test
+	public void testMultipleGreedy() throws IOException {
+		byte[] testData = new byte[]{ 2, 0, 1, 3, 2, 3, 4};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		MultipleGreedy struct = MultipleGreedy.read(buffer);
+		
+		Assert.assertEquals(0, struct.getFirst().get());
+		Assert.assertEquals(1, struct.getFirst().get());
+		Assert.assertEquals(2, struct.getSecond().get());
+		Assert.assertEquals(3, struct.getSecond().get());
+		Assert.assertEquals(4, struct.getSecond().get());
 	}
 }
