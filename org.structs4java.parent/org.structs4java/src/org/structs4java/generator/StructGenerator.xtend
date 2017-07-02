@@ -420,15 +420,17 @@ class StructGenerator {
 	
 	def readerMethodForByteBuffer(IntegerMember m) '''
 		private static java.nio.ByteBuffer «readerMethodName(m)»(java.nio.ByteBuffer buf, boolean partialRead«IF dimensionOf(m) == 0», int sizeof«ENDIF») throws java.io.IOException {
-			byte[] buffer = new byte[«IF dimensionOf(m) == 0»sizeof«ELSE»«dimensionOf(m)»«ENDIF»];
-			buf.get(buffer);
+			java.nio.ByteBuffer buffer = buf.slice();
+			buffer.order(buf.order());
+			buffer.limit(«IF dimensionOf(m) == 0»sizeof«ELSE»«dimensionOf(m)»«ENDIF»);
+			buf.position(buf.position() + «IF dimensionOf(m) == 0»sizeof«ELSE»«dimensionOf(m)»«ENDIF»);
 			«IF m.isPadded()»
-			int bytesOverlap = (buffer.length % «m.padding»);
+			int bytesOverlap = (buffer.limit() % «m.padding»);
 			if(bytesOverlap > 0) {
 				buf.position(buf.position() + «m.padding» - bytesOverlap);				
 			}
 			«ENDIF»
-			return java.nio.ByteBuffer.wrap(buffer); 
+			return buffer; 
 		}
 	'''
 
