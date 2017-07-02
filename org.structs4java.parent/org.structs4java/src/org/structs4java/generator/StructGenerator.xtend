@@ -914,7 +914,7 @@ class StructGenerator {
 			}
 			«ENDIF»
 			«IF m.isPadded()»
-			int bytesOverlap = ((buf.position() - beginMember) % «m.padding»);
+			int bytesOverlap = ((buf.position() - memberBegin) % «m.padding»);
 			if(bytesOverlap > 0) {
 				for(int i = 0; i < «m.padding» - bytesOverlap; ++i) {
 					buf.put((byte)0);	

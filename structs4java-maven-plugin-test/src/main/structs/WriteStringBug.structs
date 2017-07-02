@@ -1,0 +1,26 @@
+package org.structs4java.example.test;
+
+//
+// generated broken code:
+//
+// private void writeName(java.nio.ByteBuffer buf) throws java.io.IOException {
+//		try {
+//			int memberBegin = buf.position();
+//			byte[] encoded = getName().getBytes("UTF-8");
+//			buf.put(encoded);
+//			int bytesOverlap = ((buf.position() - beginMember) % 4);    // BUG: should be memberBegin
+//			if(bytesOverlap > 0) {
+//				for(int i = 0; i < 4 - bytesOverlap; ++i) {
+//					buf.put((byte)0);	
+//				}				
+//			}
+//		} catch(java.io.UnsupportedEncodingException e) {
+//			throw new java.io.IOException(e);
+//		}
+//	}
+//
+struct WriteStringBugStruct
+{
+	uint32_t lengthName sizeof(name);
+	char name[] padding(4);
+}
