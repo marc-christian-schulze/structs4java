@@ -1,0 +1,30 @@
+package org.structs4java.example.tests;
+
+struct StructWith64BitSizeType
+{
+	uint64_t length sizeof(content);
+	uint8_t content[];
+}
+
+struct StructWith64BitSelfSizeType
+{
+	uint64_t length sizeof(this);
+	uint8_t content[];
+}
+
+struct StructWith64BitCountType
+{
+	uint64_t length countof(content);
+	uint8_t content[];
+}
+
+struct Dummy
+{
+	char dummy[10];
+}
+
+struct DummyStructWith64BitSizeType
+{
+	uint64_t length sizeof(content);
+	Dummy content;
+}

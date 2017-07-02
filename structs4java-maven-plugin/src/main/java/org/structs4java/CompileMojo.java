@@ -16,6 +16,7 @@ import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.DirectoryScanner;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.xtext.diagnostics.Severity;
 import org.eclipse.xtext.generator.GeneratorDelegate;
 import org.eclipse.xtext.generator.JavaIoFileSystemAccess;
 import org.eclipse.xtext.generator.JavaIoFileSystemAccess.IFileCallback;
@@ -107,7 +108,8 @@ public class CompileMojo extends AbstractMojo {
 			}
 		}
 		logModelIssues(modelIssues);
-		if (modelIssues.size() > 0) {
+		if (modelIssues.values().stream().flatMap(List::stream).filter((issue) -> issue.getSeverity() == Severity.ERROR)
+				.count() > 0) {
 			throw new MojoExecutionException("Compilation stopped due to model issues.");
 		}
 	}

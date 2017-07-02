@@ -183,6 +183,22 @@ class StructGenerator {
 	def isPadded(Member m) {
 		return m.padding > 0
 	}
+	
+	def is64BitType(Member m) {
+		if(!(m instanceof IntegerMember)) {
+			return false;
+		}
+		
+		if((m as IntegerMember).typename == "uint64_t") {
+			return true;
+		}
+		
+		if((m as IntegerMember).typename == "int64_t") {
+			return true;
+		}
+		
+		return false;
+	}
 
 	def readerMethodForStruct(StructDeclaration struct) '''
 		public static «struct.name» read(java.nio.ByteBuffer buf) throws java.io.IOException {
@@ -216,6 +232,11 @@ class StructGenerator {
 							}
 						«ENDIF»
 						«attributeJavaType(m)» «tempVarForMember(m)» = «readerMethodName(m)»(buf, partialRead);
+						«IF m.is64BitType()»
+						if(«tempVarForMember(m)» > «Math.pow(2, 31) - 1» || «tempVarForMember(m)» < 0) {
+							throw new java.io.IOException("64 bit field '«m.name»' in struct '«(m.eContainer as StructDeclaration).name»' overflew the maximum supported value of 2^31-1!");
+						}
+						«ENDIF»
 						obj.«attributeName(m)» = «tempVarForMember(m)»;
 					«ENDIF»
 				«ELSE»
@@ -233,22 +254,22 @@ class StructGenerator {
 						{
 							java.nio.ByteBuffer slice = buf.slice();
 							slice.order(buf.order());
-							slice.limit(«tempVarForMember(findMemberDefiningSizeOf(m))»);
+							slice.limit((int)«tempVarForMember(findMemberDefiningSizeOf(m))»);
 							obj.«setterName(m)»(«readerMethodName(m)»(slice, true));
 						}
 						«ELSE»
-						obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, «tempVarForMember(findMemberDefiningSizeOf(m))»));
+						obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)«tempVarForMember(findMemberDefiningSizeOf(m))»));
 						«ENDIF»
 					«ELSEIF findMemberDefiningCountOf(m) != null»
 						«IF m instanceof ComplexTypeMember»
 						{
 							java.nio.ByteBuffer slice = buf.slice();
 							slice.order(buf.order());
-							slice.limit(«tempVarForMember(findMemberDefiningCountOf(m))»);
+							slice.limit((int)«tempVarForMember(findMemberDefiningCountOf(m))»);
 							obj.«setterName(m)»(«readerMethodName(m)»(slice, true));
 						}
 						«ELSE»
-						obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, «tempVarForMember(findMemberDefiningCountOf(m))»));
+						obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)«tempVarForMember(findMemberDefiningCountOf(m))»));
 						«ENDIF»
 					«ELSE»
 						«IF m.isArray() && !m.isString() && m.isGreedy()»
@@ -256,7 +277,7 @@ class StructGenerator {
 							obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)(structEndPosition - buf.position())));
 							«ELSE»
 							// greedy member
-							obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, buf.limit() - buf.position()));
+							obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)(buf.limit() - buf.position())));
 							«ENDIF»
 						«ELSE»
 						obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead));
