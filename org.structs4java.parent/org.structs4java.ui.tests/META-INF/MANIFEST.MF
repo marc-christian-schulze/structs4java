@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: org.structs4java.ui.tests
 Bundle-Vendor: My Company
-Bundle-Version: 1.0.18
+Bundle-Version: 1.0.19.qualifier
 Bundle-SymbolicName: org.structs4java.ui.tests; singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: org.structs4java.ui,
