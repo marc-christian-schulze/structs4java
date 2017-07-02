@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature id="org.structs4java.feature"
 	label="Structs4JavaDsl Feature "
-	version="1.0.20.qualifier">
+	version="1.0.20">
 	<plugin
 			id="org.structs4java"
 			download-size="0"
