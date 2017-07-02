@@ -467,4 +467,20 @@ public class RegressionTest extends AbstractTest {
 		
 		assertEqualBuffers(buffer, outBuffer);
 	}
+	
+	@Test
+	public void testNullTerminatedStringBug() throws IOException {
+		byte[] testData = new byte[]{ 5, 0, 0, 0, 'T', 'e', 's', 't', 0};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		BString str = BString.read(buffer);
+		
+		Assert.assertEquals("Test", str.getValue());
+		
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		str.write(outBuffer);
+		
+		assertEqualBuffers(buffer, outBuffer);
+	}
 }

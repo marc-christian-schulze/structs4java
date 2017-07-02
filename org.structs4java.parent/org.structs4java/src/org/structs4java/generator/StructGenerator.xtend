@@ -562,13 +562,24 @@ class StructGenerator {
 				«ELSE»
 				byte[] tmp = new byte[sizeof];
 				buf.get(tmp);
+				
+				int terminatingZeros = "\0".getBytes("«encodingOf(m)»").length;
+				int zerosRead = 0;
+				int i = 0;
+				while(zerosRead < terminatingZeros && i < sizeof) {
+					if(tmp[i++] == 0) {
+						zerosRead++;
+					} else {
+						zerosRead = 0;
+					}
+				}
 				«IF m.isPadded()»
 				int bytesOverlap = (sizeof % «m.padding»);
 				if(bytesOverlap > 0) {
 					buf.position(buf.position() + «m.padding» - bytesOverlap);				
 				}
 				«ENDIF»
-				return new String(tmp, "«encodingOf(m)»");
+				return new String(tmp, 0, i - zerosRead, "«encodingOf(m)»");
 				«ENDIF»
 			«ELSE»
 				byte[] tmp = new byte[«dimensionOf(m)»];
@@ -923,9 +934,7 @@ class StructGenerator {
 			byte[] encoded = «getterName(m)»().getBytes("«encodingOf(m)»");
 			«IF dimensionOf(m) == 0»
 			buf.put(encoded);
-			«IF findMemberDefiningSizeOf(m) == null»
 			buf.put("\0".getBytes("«encodingOf(m)»"));
-			«ENDIF»
 			«ELSE»
 			int len = Math.min(encoded.length, «dimensionOf(m)»);
 			int pad = «dimensionOf(m)» - len;
