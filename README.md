@@ -266,7 +266,7 @@ struct DynamicStructWithPadding {
 ```
 
 # Comparison to Javolution
-If you do not want to rely on code generation you should have a look at (Javolution)[http://javolution.org/] which is a plain Java implementation but more verbose.
+If you do not want to rely on code generation you should have a look at [Javolution](http://javolution.org/) which is a plain Java implementation but more verbose.
 Javolution (example taken from official documentation):
 ```Java
  public enum Gender { MALE, FEMALE };
