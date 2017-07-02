@@ -220,19 +220,27 @@ struct DynamicString {
 }
 ```
 
-## SizeOf() Attribute
+## Dynamic size (in bytes) of members or the struct itself
 The sizeof attribute defines the size of a struct member or the entire struct in bytes.
 
 For example, useful for header with optional fields at the end:
 ```C++
 struct LegacyFileHeader {
   uint32_t headerLength sizeof(this);
-  ... (optional) header fields
+  // ... (optional) header fields
 }
 ```
 
-## CountOf() Attribute
-The countof attribute defines the number of elments of an array.
+Or defining the size of an array:
+```C++
+struct BString {
+	uint32_t length sizeof(str);
+	char     str[];
+}
+```
+
+## Dynamic count of array elements
+The countof attribute defines the number of elments of an array (not the size!).
 ```C++
 struct Entry {
   ...
@@ -266,24 +274,26 @@ struct DynamicStructWithPadding {
 ```
 
 # Comparison to Javolution
-If you do not want to rely on code generation you should have a look at [Javolution](http://javolution.org/) which is a plain Java implementation but more verbose.
+If you do not want to rely on code generation you should have a look at [Javolution](http://javolution.org/) which is a plain Java implementation.  
+
 Javolution (example taken from official documentation):
 ```Java
  public enum Gender { MALE, FEMALE };
  public static class Date extends Struct {
-     public final Unsigned16 year = new Unsigned16();
-     public final Unsigned8 month = new Unsigned8();
-     public final Unsigned8 day   = new Unsigned8();
+     public final Unsigned16 year  = new Unsigned16();
+     public final Unsigned8  month = new Unsigned8();
+     public final Unsigned8  day   = new Unsigned8();
  }
  public static class Student extends Struct {
      public final Enum32<Gender>       gender = new Enum32<Gender>(Gender.values());
      public final UTF8String           name   = new UTF8String(64);
      public final Date                 birth  = inner(new Date());
      public final Float32[]            grades = array(new Float32[10]);
-     public final Reference32<Student> next   =  new Reference32<Student>();
+     public final Reference32<Student> next   = new Reference32<Student>();
  }
 ```
-Structs4Java:
+
+Structs4Java equivalent:
 ```C++
 enum Gender : uint32_t {
   MALE   = 0, 
@@ -297,12 +307,10 @@ struct Date {
 }
 
 struct Student {
-  Gender  gender;
-  // default charset is UTF-8
-  char    name[64];
-  Date    birth;
-  float   grades[10];
-  // Pointers are not supported by Structs4Java
-  // Student*    next;
+  Gender   gender;
+  char     name[64];     // default charset is UTF-8
+  Date     birth;
+  float    grades[10];
+  // Student*    next;  // Pointers are not supported by Structs4Java
 }
 ```
