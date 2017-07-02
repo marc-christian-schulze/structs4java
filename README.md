@@ -6,7 +6,8 @@
 Structs4Java is a code generator that is based on structure definitions very similiar to C/C++ but with some subtle differences. Unlike in C/C++, 
 * structs have a defined memory layout (no automatic alignment/packing), 
 * structs can have a dynamic size (we support dynamic arrays) 
-* but we do not support unions.
+* but we do not support unions.  
+
 Its purpose is to provide an easy and portable way to read/write legacy file formats that are typically described as C/C++ structures. For each `struct` and `enum` declaration the code generator will produce a corresponding Java class with a `read` and `write` method accepting a `java.nio.ByteBuffer`.
 
 ## Getting Started
@@ -81,7 +82,7 @@ fileHeader.write(buffer);
 ```
 
 ## Getting Started with the Eclipse Plugin
-Install the plugin from our Update Site:
+Install the plugin from our [Update Site](https://dl.bintray.com/marc-christian-schulze/Structs4JavaUpdateSite/updates/):
 ```
 https://dl.bintray.com/marc-christian-schulze/Structs4JavaUpdateSite/updates/
 ```
@@ -112,9 +113,8 @@ https://dl.bintray.com/marc-christian-schulze/Structs4JavaUpdateSite/updates/
 ## Unsupported
 * Unions
 * Bit-Fields
-* Pointer (and object-graphs)
+* Pointer
 * 64bit enums
-* Memory Alignment
 
 # User Guide
 
@@ -245,8 +245,8 @@ struct Directory {
 ```
 
 ## Padding
-Depending on the memory layout of the format you need to read/write you sometimes have to align fields of the structure introducing some padding bytes. Unlike in C/C++, in Structs4Java we do not explicitly align fields but provide support for padding them. Padding is always applied to the bytes following the field you set the padding for, e.g.
-```
+Depending on the memory layout of the format you need to read/write you sometimes have to align fields of the structure introducing some padding bytes.
+```C++
 struct StructWithPadding {
 	// this field uses 2 bytes for its value but is padded with 2 null-bytes
 	// offset: 0
@@ -257,7 +257,7 @@ struct StructWithPadding {
 }
 ```
 Padding can not only be applied to primitive fields but also for Strings, Structures and (dynamic) Arrays, e.g.
-```
+```C++
 struct DynamicStructWithPadding {
 	uint16_t length sizeof(content);
 	// This array has a dynamic length but always a multiple of 4 due to the padding
@@ -266,9 +266,7 @@ struct DynamicStructWithPadding {
 ```
 
 # Comparison to Javolution
-[http://javolution.org/]  
-Structs4Java is focussed solely on plain C/C++ struct reading / writing whereas Javolution brings complete JNI interoperability tooling. Therefore Structs4Java does not have any additional dependency despite the Java Runtime Environment (JRE) classes. And finally, it's less verbose...
-
+If you do not want to rely on code generation you should have a look at (Javolution)[http://javolution.org/] which is a plain Java implementation but more verbose.
 Javolution (example taken from official documentation):
 ```Java
  public enum Gender { MALE, FEMALE };
@@ -288,7 +286,7 @@ Javolution (example taken from official documentation):
 Structs4Java:
 ```C++
 enum Gender : uint32_t {
-  MALE = 0, 
+  MALE   = 0, 
   FEMALE = 1
 }
 
@@ -300,6 +298,7 @@ struct Date {
 
 struct Student {
   Gender  gender;
+  // default charset is UTF-8
   char    name[64];
   Date    birth;
   float   grades[10];
