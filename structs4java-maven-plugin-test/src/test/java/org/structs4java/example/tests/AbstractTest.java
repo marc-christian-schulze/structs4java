@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 import org.junit.Before;
 import org.junit.After;
+import org.junit.Assert;
 import org.structs4java.example1.SimpleEnum;
 import org.structs4java.example1.SimpleStructure;
 import org.structs4java.example2.AdvancedStructure;
@@ -34,8 +35,12 @@ public class AbstractTest {
 	}
 	
 	public void dumpBuffer() {
-		for(int i = 0; i < BUFFER_SIZE; ++i) {
-			System.out.print(String.format("%02X ", buffer.get(i)));
+		dumpBuffer(buffer);
+	}
+	
+	private void dumpBuffer(ByteBuffer buf) {
+		for(int i = 0; i < buf.limit(); ++i) {
+			System.out.print(String.format("%02X ", buf.get(i)));
 			if(i % 32 == 31) {
 				System.out.println();
 			}
@@ -62,5 +67,17 @@ public class AbstractTest {
 		expected.setSomeFloat_(1.234f);
 		expected.setAnArray(structs);
 		return expected;
+	}
+	
+	protected void assertEqualBuffers(ByteBuffer a, ByteBuffer b) {
+		a.position(0);
+		b.position(0);
+		if(!a.equals(b)) {
+			System.out.println("Expected:");
+			dumpBuffer(a);
+			System.out.println("Actual:");
+			dumpBuffer(b);
+			Assert.fail("ByteBuffers are not equal!");
+		}
 	}
 }

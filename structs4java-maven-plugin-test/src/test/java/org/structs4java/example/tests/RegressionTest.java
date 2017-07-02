@@ -266,6 +266,12 @@ public class RegressionTest extends AbstractTest {
 		
 		Assert.assertEquals(2, struct.getPaddedByte());
 		Assert.assertEquals(1, struct.getFollowingByte());
+		
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		struct.write(outBuffer);
+		
+		assertEqualBuffers(buffer, outBuffer);
 	}
 	
 	@Test
@@ -277,6 +283,12 @@ public class RegressionTest extends AbstractTest {
 		
 		Assert.assertEquals(2, struct.getPaddedWord());
 		Assert.assertEquals(1, struct.getFollowingByte());
+		
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		struct.write(outBuffer);
+		
+		assertEqualBuffers(buffer, outBuffer);
 	}
 	
 	@Test
@@ -288,6 +300,12 @@ public class RegressionTest extends AbstractTest {
 		
 		Assert.assertEquals(2, struct.getPaddedWord());
 		Assert.assertEquals(1, struct.getFollowingByte());
+		
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		struct.write(outBuffer);
+		
+		assertEqualBuffers(buffer, outBuffer);
 	}
 	
 	@Test
@@ -299,6 +317,12 @@ public class RegressionTest extends AbstractTest {
 		
 		Assert.assertEquals(2, struct.getPaddedDWord());
 		Assert.assertEquals(1, struct.getFollowingByte());
+		
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		struct.write(outBuffer);
+		
+		assertEqualBuffers(buffer, outBuffer);
 	}
 	
 	@Test
@@ -310,6 +334,12 @@ public class RegressionTest extends AbstractTest {
 		
 		Assert.assertEquals(2, struct.getPaddedDWord());
 		Assert.assertEquals(1, struct.getFollowingByte());
+		
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		struct.write(outBuffer);
+		
+		assertEqualBuffers(buffer, outBuffer);;
 	}
 	
 	@Test
@@ -321,6 +351,12 @@ public class RegressionTest extends AbstractTest {
 		
 		Assert.assertEquals(2, struct.getPaddedDWord());
 		Assert.assertEquals(1, struct.getFollowingByte());
+		
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		struct.write(outBuffer);
+		
+		assertEqualBuffers(buffer, outBuffer);
 	}
 	
 	@Test
@@ -332,6 +368,12 @@ public class RegressionTest extends AbstractTest {
 		
 		Assert.assertEquals(2, struct.getPaddedDWord());
 		Assert.assertEquals(1, struct.getFollowingByte());
+		
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		struct.write(outBuffer);
+		
+		assertEqualBuffers(buffer, outBuffer);
 	}
 	
 	@Test
@@ -343,6 +385,12 @@ public class RegressionTest extends AbstractTest {
 		
 		Assert.assertEquals(-17.5f, struct.getPaddedFloat(), 0.0f);
 		Assert.assertEquals(1, struct.getFollowingByte());
+		
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		struct.write(outBuffer);
+		
+		assertEqualBuffers(buffer, outBuffer);
 	}
 	
 	@Test
@@ -354,6 +402,12 @@ public class RegressionTest extends AbstractTest {
 		
 		Assert.assertEquals(-17.5f, struct.getPaddedFloat(), 0.0f);
 		Assert.assertEquals(1, struct.getFollowingByte());
+		
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		struct.write(outBuffer);
+		
+		assertEqualBuffers(buffer, outBuffer);
 	}
 	
 	@Test
@@ -367,6 +421,12 @@ public class RegressionTest extends AbstractTest {
 		Assert.assertEquals(3, struct.getArray().get());
 		Assert.assertEquals(4, struct.getArray().get());
 		Assert.assertEquals(1, struct.getFollowingByte());
+		
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		struct.write(outBuffer);
+		
+		assertEqualBuffers(buffer, outBuffer);
 	}
 	
 	@Test
@@ -380,6 +440,12 @@ public class RegressionTest extends AbstractTest {
 		Assert.assertEquals(1, struct.getInner().getContent().get());
 		Assert.assertEquals(2, struct.getInner().getContent().get());
 		Assert.assertEquals(3, struct.getInner().getContent().get());
+		
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		struct.write(outBuffer);
+		
+		assertEqualBuffers(buffer, outBuffer);
 	}
 	
 	@Test
@@ -394,5 +460,11 @@ public class RegressionTest extends AbstractTest {
 		Assert.assertEquals(2, struct.getSecond().get());
 		Assert.assertEquals(3, struct.getSecond().get());
 		Assert.assertEquals(4, struct.getSecond().get());
+		
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		struct.write(outBuffer);
+		
+		assertEqualBuffers(buffer, outBuffer);
 	}
 }

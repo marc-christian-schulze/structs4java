@@ -3,7 +3,11 @@
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.marc-christian-schulze.structs4java/structs4java-maven-plugin.svg?maxAge=3600)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.github.marc-christian-schulze.structs4java%22)
 [![license](https://img.shields.io/github/license/marc-christian-schulze/structs4java.svg?maxAge=3600)](https://github.com/marc-christian-schulze/structs4java/blob/master/LICENSE)
 
-This project brings structs known from C/C++ to the Java language to read/write plain memory. Java code is generated using a XText-based compiler that takes structures definitions (similar to C/C++ struct definitions) as source. The compiler generates for each _struct_ and _enum_ declaration a corresponding class or enum in Java that provides read and write methods that take an _java.nio.ByteBuffer_ as input. The generated classes are no wrapper but plain POJOs (that's the reason why there is no union support). If you're looking for a library that wraps native memory and applies changes to the Java classes immediately to the underlying memory have a look at the Javolution project.
+Structs4Java is a code generator that is based on structure definitions very similiar to C/C++ but with some subtle differences. Unlike in C/C++, 
+* structs have a defined memory layout (no automatic alignment/packing), 
+* structs can have a dynamic size (we support dynamic arrays) 
+* but we do not support unions.
+Its purpose is to provide an easy and portable way to read/write legacy file formats that are typically described as C/C++ structures. For each `struct` and `enum` declaration the code generator will produce a corresponding Java class with a `read` and `write` method accepting a `java.nio.ByteBuffer`.
 
 ## Getting Started
 Add the plugin to your maven build:
@@ -11,7 +15,7 @@ Add the plugin to your maven build:
 <plugin>
   <groupId>com.github.marc-christian-schulze.structs4java</groupId>
   <artifactId>structs4java-maven-plugin</artifactId>
-  <version>1.0.14</version>
+  <version>1.0.18</version>
   <executions>
     <execution>
       <id>compile-structs</id>
@@ -103,6 +107,7 @@ https://dl.bintray.com/marc-christian-schulze/Structs4JavaUpdateSite/updates/
   * arrays and 
   * nested elements
   * variable lengths
+  * padding
 
 ## Unsupported
 * Unions
@@ -236,6 +241,27 @@ struct Entry {
 struct Directory {
   uint16_t numberOfEntries countof(entries);
   Entry entries[];
+}
+```
+
+## Padding
+Depending on the memory layout of the format you need to read/write you sometimes have to align fields of the structure introducing some padding bytes. Unlike in C/C++, in Structs4Java we do not explicitly align fields but provide support for padding them. Padding is always applied to the bytes following the field you set the padding for, e.g.
+```
+struct StructWithPadding {
+	// this field uses 2 bytes for its value but is padded with 2 null-bytes
+	// offset: 0
+	uint16_t valueWithPadding padding(4);
+	// this field will be at offset 4 instead of 2 due to the padding
+	// offset: 4
+	double anotherField;
+}
+```
+Padding can not only be applied to primitive fields but also for Strings, Structures and (dynamic) Arrays, e.g.
+```
+struct DynamicStructWithPadding {
+	uint16_t length sizeof(content);
+	// This array has a dynamic length but always a multiple of 4 due to the padding
+	uint8_t content[] padding(4);
 }
 ```
 

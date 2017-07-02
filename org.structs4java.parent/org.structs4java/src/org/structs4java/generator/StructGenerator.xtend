@@ -601,7 +601,14 @@ class StructGenerator {
 					«IF m.findMemberDefiningSizeOrCountOf() != null»
 						int positionof__«attributeName(m)» = buf.position();
 						«writerMethodName(m)»(buf);
+						
+						«IF m.isArray() && m instanceof IntegerMember && (m as IntegerMember).typename == "uint8_t"»
+						«attributeJavaType(m.findMemberDefiningSizeOrCountOf())» «attributeName(m.findMemberDefiningSizeOrCountOf())» = «attributeName(m)».limit();
+						«ELSE»
 						«attributeJavaType(m.findMemberDefiningSizeOrCountOf())» «attributeName(m.findMemberDefiningSizeOrCountOf())» = («attributeJavaType(m.findMemberDefiningSizeOrCountOf())»)(buf.position() - positionof__«attributeName(m)»);
+						«ENDIF»
+						
+						
 						positionof__«attributeName(m)» = buf.position();
 						buf.position(positionof__«attributeName(m.findMemberDefiningSizeOrCountOf())»);
 						«writerMethodName(m.findMemberDefiningSizeOrCountOf())»(buf, «attributeName(m.findMemberDefiningSizeOrCountOf())»);
@@ -701,14 +708,37 @@ class StructGenerator {
 	
 	def writerMethodForByteBuffer(IntegerMember m) '''
 		private void «m.writerMethodName()»(java.nio.ByteBuffer buf) throws java.io.IOException {
+			// reset position in case someone read this buffer before
+			«getterName(m)»().position(0);
 			buf.put(«getterName(m)»());
+			«IF m.isPadded()»
+			int bytesOverlap = («getterName(m)»().limit() % «m.padding»);
+			if(bytesOverlap > 0) {
+				for(int i = 0; i < «m.padding» - bytesOverlap; ++i) {
+					buf.put((byte)0);	
+				}		
+			}
+			«ENDIF»
 		}
 	'''
 
 	def writerMethodForComplexTypeMember(ComplexTypeMember m) '''
 		private void «m.writerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf«IF m.isArray()», «m.nativeTypeName().native2JavaType()» value«ENDIF») throws java.io.IOException {
 			if(«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF» != null) {
+				«IF m.isPadded()»
+				int beginMember = buf.position();
+				«ENDIF»
+				
 				«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF».write(buf);
+				
+				«IF m.isPadded()»
+				int bytesOverlap = ((buf.position() - beginMember) % «m.padding»);
+				if(bytesOverlap > 0) {
+					for(int i = 0; i < «m.padding» - bytesOverlap; ++i) {
+						buf.put((byte)0);	
+					}
+				}
+				«ENDIF»
 			}
 		}
 	'''
@@ -720,20 +750,60 @@ class StructGenerator {
 		private void «m.writerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf) throws java.io.IOException {
 			«IF m.typename.equals("int8_t")»
 			buf.put((byte)«getterName(m)»());
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 1; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
 			«ELSEIF m.typename.equals("uint8_t")»
 			buf.put((byte)«getterName(m)»());
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 1; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
 			«ELSEIF m.typename.equals("int16_t")»
 			buf.putShort((short)«getterName(m)»());
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 2; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
 			«ELSEIF m.typename.equals("uint16_t")»
 			buf.putShort((short)«getterName(m)»());
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 2; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
 			«ELSEIF m.typename.equals("int32_t")»
 			buf.putInt(«getterName(m)»());
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 4; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
 			«ELSEIF m.typename.equals("uint32_t")»
 			buf.putInt(«getterName(m)»());
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 4; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
 			«ELSEIF m.typename.equals("int64_t")»
 			buf.putLong(«getterName(m)»());
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 8; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
 			«ELSEIF m.typename.equals("uint64_t")»
 			buf.putLong(«getterName(m)»());
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 8; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
 			«ENDIF»
 		}
 	«ENDIF»
@@ -743,20 +813,60 @@ class StructGenerator {
 		private void «m.writerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf, «m.nativeTypeName().native2JavaType()» value) throws java.io.IOException {
 			«IF m.typename.equals("int8_t")»
 			buf.put((byte)value);
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 1; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
 			«ELSEIF m.typename.equals("uint8_t")»
 			buf.put((byte)value);
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 1; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
 			«ELSEIF m.typename.equals("int16_t")»
 			buf.putShort((short)value);
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 2; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
 			«ELSEIF m.typename.equals("uint16_t")»
 			buf.putShort((short)value);
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 2; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
 			«ELSEIF m.typename.equals("int32_t")»
 			buf.putInt(value);
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 4; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
 			«ELSEIF m.typename.equals("uint32_t")»
 			buf.putInt(value);
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 4; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
 			«ELSEIF m.typename.equals("int64_t")»
 			buf.putLong(value);
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 8; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
 			«ELSEIF m.typename.equals("uint64_t")»
 			buf.putLong(value);
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 8; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
 			«ENDIF»
 		}
 	'''
@@ -765,8 +875,18 @@ class StructGenerator {
 		private void «m.writerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf«IF m.isArray()», «m.nativeTypeName().native2JavaType()» value«ENDIF») throws java.io.IOException {
 			«IF m.typename.equals("float")»
 			buf.putFloat(«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 4; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
 			«ELSEIF m.typename.equals("double")»
 			buf.putDouble(«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 8; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
 			«ENDIF»
 		}
 	'''
@@ -774,6 +894,9 @@ class StructGenerator {
 	def writerMethodForString(StringMember m) '''
 	private void «writerMethodName(m)»(java.nio.ByteBuffer buf) throws java.io.IOException {
 		try {
+			«IF m.isPadded()»
+			int memberBegin = buf.position();
+			«ENDIF»
 			byte[] encoded = «getterName(m)»().getBytes("«encodingOf(m)»");
 			«IF dimensionOf(m) == 0»
 			buf.put(encoded);
@@ -788,6 +911,14 @@ class StructGenerator {
 				for(int i = 0; i < pad; ++i) {
 					buf.put((byte)0);	
 				}
+			}
+			«ENDIF»
+			«IF m.isPadded()»
+			int bytesOverlap = ((buf.position() - beginMember) % «m.padding»);
+			if(bytesOverlap > 0) {
+				for(int i = 0; i < «m.padding» - bytesOverlap; ++i) {
+					buf.put((byte)0);	
+				}				
 			}
 			«ENDIF»
 		} catch(java.io.UnsupportedEncodingException e) {
