@@ -25,11 +25,11 @@ class EnumGenerator {
 			«reader(enumDecl)»
 			«writer(enumDecl)»
 			
-			private «enumDecl.name»(int value) {
+			private «enumDecl.name»(long value) {
 				this.value = value;
 			}
 			
-			private int value;
+			private long value;
 		}
 	'''
 	
@@ -52,7 +52,7 @@ class EnumGenerator {
 	def items(EnumDeclaration enumDecl) '''
 		«FOR i : enumDecl.items SEPARATOR "," AFTER ";"»
 			«printComments(i)»
-			«i.name»(«i.value»)
+			«i.name»(«i.value»L)
 		«ENDFOR»
 	'''
 
@@ -63,25 +63,25 @@ class EnumGenerator {
 		
 		public static «enumDecl.name» read(java.nio.ByteBuffer buf) throws java.io.IOException {
 			«read(enumDecl)»
-			switch(value) {
-				«FOR f : enumDecl.items»
-					case «f.value»: return «f.name»;
-				«ENDFOR»
-				default: throw new java.io.IOException(String.format("Unknown enum value: 0x%X", value));
+			«FOR f : enumDecl.items»
+			if(value == «f.value»L) {
+				return «f.name»;
 			}
+			«ENDFOR»
+			throw new java.io.IOException(String.format("Unknown enum value: 0x%X", value));
 		}
 	'''
 
 	def read(EnumDeclaration enumDecl) {
 		switch (enumDecl.typename) {
-			case "int8_t": '''int value = buf.get();'''
-			case "uint8_t": '''int value = buf.get() & 0xFF;'''
-			case "int16_t": '''int value = buf.getShort();'''
-			case "uint16_t": '''int value = buf.getShort() & 0xFFFF;'''
-			case "int32_t": '''int value = buf.getInt();'''
-			case "uint32_t": '''int value = buf.getInt() & 0xFFFFFFFF;'''
-			case "int64_t": throw new RuntimeException("64bit enums not supported")
-			case "uint64_t": throw new RuntimeException("64bit enums not supported")
+			case "int8_t": '''long value = buf.get();'''
+			case "uint8_t": '''long value = buf.get() & 0xFF;'''
+			case "int16_t": '''long value = buf.getShort();'''
+			case "uint16_t": '''long value = buf.getShort() & 0xFFFF;'''
+			case "int32_t": '''long value = buf.getInt();'''
+			case "uint32_t": '''long value = buf.getInt() & 0xFFFFFFFF;'''
+			case "int64_t": '''long value = buf.getLong();'''
+			case "uint64_t": '''long value = buf.getLong();'''
 		}
 	}
 
@@ -97,10 +97,10 @@ class EnumGenerator {
 			case "uint8_t": '''buf.put((byte)(this.value & 0xFF));'''
 			case "int16_t": '''buf.putShort((short)(this.value & 0xFFFF));'''
 			case "uint16_t": '''buf.putShort((short)(this.value & 0xFFFF));'''
-			case "int32_t": '''buf.putInt(this.value & 0xFFFFFFFF);'''
-			case "uint32_t": '''buf.putInt(this.value & 0xFFFFFFFF);'''
-			case "int64_t": throw new RuntimeException("64bit enums not supported")
-			case "uint64_t": throw new RuntimeException("64bit enums not supported")
+			case "int32_t": '''buf.putInt((int)(this.value & 0xFFFFFFFF));'''
+			case "uint32_t": '''buf.putInt((int)(this.value & 0xFFFFFFFF));'''
+			case "int64_t": '''buf.putLong(this.value);'''
+			case "uint64_t": '''buf.putLong(this.value);'''
 		}
 	}
 

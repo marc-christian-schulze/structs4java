@@ -55,14 +55,14 @@ EnumDeclaration:
 
 Item:
 	(comments += SL_COMMENT)*
-	name=ID '=' value=INT ','?
+	name=ID '=' value=LONG ','?
 ;
 
 ComplexTypeMember:
 	(comments += SL_COMMENT)*
 	type=[ComplexTypeDeclaration|QualifiedName] name=ID
 	(array=ArrayDimension)?
-	('padding' '(' padding=INT ')')?
+	('padding' '(' padding=LONG ')')?
 	';'
 ;
 
@@ -75,7 +75,7 @@ IntegerMember:
 		('sizeof' '(' sizeofThis?='this' ')')? &
 		('countof' '(' countof=[Member] ')')?
 	)
-	('padding' '(' padding=INT ')')?
+	('padding' '(' padding=LONG ')')?
 	';'
 ;
 
@@ -83,7 +83,7 @@ FloatMember:
 	(comments += SL_COMMENT)*
 	typename=FLOAT_TYPE name=ID 
 	(array=ArrayDimension)?
-	('padding' '(' padding=INT ')')?
+	('padding' '(' padding=LONG ')')?
 	';'
 ;
 
@@ -92,19 +92,19 @@ StringMember:
 	typename=STRING_TYPE name=ID 
 	(array=ArrayDimension)?
 	('encoding' '(' encoding=STRING ')')?
-	('padding' '(' padding=INT ')')?
+	('padding' '(' padding=LONG ')')?
 	';'
 ;
 
 ArrayDimension:
-	{ArrayDimension} '[' (dimension=INT)? ']'
+	{ArrayDimension} '[' (dimension=LONG)? ']'
 ;
 
 QualifiedName:
     ID ('.' ID)*
 ;
 
-terminal INT returns ecore::EInt: ('0'..'9')+ | '0x' ('0'..'9' | 'A'..'F' | 'a'..'f')+;
+terminal LONG returns ecore::ELong: ('0'..'9')+ | '0x' ('0'..'9' | 'A'..'F' | 'a'..'f')+;
 terminal STRING	: 
 			'"' ( '\\' . /* 'b'|'t'|'n'|'f'|'r'|'u'|'"'|"'"|'\\' */ | !('\\'|'"') )* '"' |
 			"'" ( '\\' . /* 'b'|'t'|'n'|'f'|'r'|'u'|'"'|"'"|'\\' */ | !('\\'|"'") )* "'"

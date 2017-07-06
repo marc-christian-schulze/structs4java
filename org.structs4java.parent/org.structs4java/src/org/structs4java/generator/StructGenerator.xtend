@@ -436,7 +436,7 @@ class StructGenerator {
 		if(m.array == null) {
 			return 0;
 		}
-		return m.array.dimension;
+		return m.array.dimension as int;
 	}
 	
 	def readerMethodForByteBuffer(IntegerMember m) '''

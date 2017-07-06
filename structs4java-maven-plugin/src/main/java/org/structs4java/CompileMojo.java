@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -123,8 +124,26 @@ public class CompileMojo extends AbstractMojo {
 		for (URI modelURI : modelIssues.keySet()) {
 			List<Issue> issues = modelIssues.get(modelURI);
 			for (Issue issue : issues) {
-				getLog().error(String.format("%s (Line %d, Col %d): %s", modelURI.toString(), issue.getLineNumber(),
+				Consumer<CharSequence> logMethod;
+				switch (issue.getSeverity()) {
+				case ERROR:
+					logMethod = getLog()::error;
+					break;
+				case WARNING:
+					logMethod = getLog()::warn;
+					break;
+				case INFO:
+				case IGNORE:
+				default:
+					logMethod = getLog()::info;
+				}
+				logMethod.accept(String.format("%s (Line %d, Col %d): %s", modelURI.toString(), issue.getLineNumber(),
 						issue.getColumn(), issue.getMessage()));
+				if(issue.getData() != null) {
+					for (String data : issue.getData()) {
+						logMethod.accept(data);
+					}
+				}
 			}
 		}
 	}

@@ -1,0 +1,12 @@
+package org.structs4java.example.tests;
+
+enum LargeNumberEnum32 : uint32_t {
+	SMALL = 0x40000000,
+	LARGE = 0x80000000
+}
+
+enum LargeNumberEnum64 : uint64_t {
+	SMALL = 0x40000000,
+	LARGE = 0x80000000
+	VERY_LARGE = 0x7FFFFFFFFFFFFFFF
+}
