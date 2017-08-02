@@ -20,9 +20,9 @@ import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -31,7 +31,6 @@ import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
 import org.eclipse.xtend.core.compiler.batch.BootClassLoader;
 import org.eclipse.xtend.core.macro.ProcessorInstanceForJvmTypeProvider.ProcessorClassloaderAdapter;
-import org.eclipse.xtext.EcoreUtil2;
 import org.eclipse.xtext.common.types.access.impl.ClasspathTypeProvider;
 import org.eclipse.xtext.common.types.access.impl.IndexedJvmTypeAccess;
 import org.eclipse.xtext.common.types.descriptions.IStubGenerator;
@@ -54,11 +53,6 @@ import org.eclipse.xtext.util.Strings;
 import org.eclipse.xtext.validation.CheckMode;
 import org.eclipse.xtext.validation.IResourceValidator;
 import org.eclipse.xtext.validation.Issue;
-//import org.eclipse.xtext.xbase.file.ProjectConfig;
-//import org.eclipse.xtext.xbase.file.RuntimeWorkspaceConfigProvider;
-//import org.eclipse.xtext.xbase.file.SimpleWorkspaceConfig;
-//import org.eclipse.xtext.xbase.file.WorkspaceConfig;
-import org.eclipse.xtext.xbase.resource.BatchLinkableResource;
 import org.structs4java.structs4JavaDsl.StructsFile;
 
 import com.google.common.base.Function;
@@ -71,6 +65,8 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 public class StructsBatchCompiler {
+
+	private static final Logger log = Logger.getLogger(StructsBatchCompiler.class);
 
 	private final static class SeverityFilter implements Predicate<Issue> {
 		private static final SeverityFilter WARNING = new SeverityFilter(Severity.WARNING);
@@ -103,14 +99,10 @@ public class StructsBatchCompiler {
 	private GeneratorDelegate generator;
 	@Inject
 	private IndexedJvmTypeAccess indexedJvmTypeAccess;
-	// @Inject
-	// private ProcessorInstanceForJvmTypeProvider annotationProcessorFactory;
 	@Inject
 	private IEncodingProvider.Runtime encodingProvider;
 	@Inject
 	private IResourceDescription.Manager resourceDescriptionManager;
-	// @Inject
-	// private RuntimeWorkspaceConfigProvider workspaceConfigProvider;
 	@Inject
 	private CompilerPhases compilerPhases;
 	@Inject
@@ -269,122 +261,8 @@ public class StructsBatchCompiler {
 		this.fileEncoding = encoding;
 	}
 
-	//private boolean configureWorkspace() {
-		// List<File> sourceFileList = getSourcePathFileList();
-		// File outputFile = getOutputPathFile();
-		// if (sourceFileList == null || outputFile == null) {
-		// return false;
-		// }
-		//
-		// File commonRoot = determineCommonRoot(outputFile, sourceFileList);
-		//
-		// // We don't want to use root ("/") as a workspace folder, didn't we?
-		// if (commonRoot == null || commonRoot.getParent() == null ||
-		// commonRoot.getParentFile().getParent() == null) {
-		// log.error("All source folders and the output folder should have "
-		// + "a common parent non-top level folder (like project folder)");
-		// for (File sourceFile : sourceFileList) {
-		// log.error("(Source folder: '" + sourceFile + "')");
-		// }
-		// log.error("(Output folder: '" + outputFile + "')");
-		// return false;
-		// }
-
-		// SimpleWorkspaceConfig workspaceConfig = new
-		// SimpleWorkspaceConfig(commonRoot.getParent().toString());
-		// ProjectConfig projectConfig = new
-		// ProjectConfig(commonRoot.getName());
-		//
-		// java.net.URI commonURI = commonRoot.toURI();
-		// java.net.URI relativizedTarget =
-		// commonURI.relativize(outputFile.toURI());
-		// if (relativizedTarget.isAbsolute()) {
-		// log.error("Target folder '" + outputFile + "' must be a child of the
-		// project folder '" + commonRoot + "'");
-		// return false;
-		// }
-		//
-		// for (File source : sourceFileList) {
-		// java.net.URI relativizedSrc = commonURI.relativize(source.toURI());
-		// if (relativizedSrc.isAbsolute()) {
-		// log.error("Source folder '" + source + "' must be a child of the
-		// project folder '" + commonRoot + "'");
-		// return false;
-		// }
-		// projectConfig.addSourceFolderMapping(relativizedSrc.getPath(),
-		// relativizedTarget.getPath());
-		// }
-		// workspaceConfig.addProjectConfig(projectConfig);
-		// workspaceConfigProvider.setWorkspaceConfig(workspaceConfig);
-	//	return true;
-	//}
-
-//	private File getOutputPathFile() {
-//		try {
-//			return new File(outputPath).getCanonicalFile();
-//		} catch (IOException e) {
-//			System.out.println("Invalid target folder '" + outputPath + "' (" + e.getMessage() + ")");
-//			return null;
-//		}
-//	}
-//
-//	private List<File> getSourcePathFileList() {
-//		List<File> sourceFileList = new ArrayList<File>();
-//		for (String path : getSourcePathDirectories()) {
-//			try {
-//				sourceFileList.add(new File(path).getCanonicalFile());
-//			} catch (IOException e) {
-//				System.out.println("Invalid source folder '" + path + "' (" + e.getMessage() + ")");
-//				return null;
-//			}
-//		}
-//		return sourceFileList;
-//	}
-//
-//	private File determineCommonRoot(File outputFile, List<File> sourceFileList) {
-//		List<File> pathList = new ArrayList<File>(sourceFileList);
-//		pathList.add(outputFile);
-//
-//		List<List<File>> pathParts = new ArrayList<List<File>>();
-//
-//		for (File path : pathList) {
-//			List<File> partsList = new ArrayList<File>();
-//			File subdir = path;
-//			while (subdir != null) {
-//				partsList.add(subdir);
-//				subdir = subdir.getParentFile();
-//			}
-//			pathParts.add(partsList);
-//		}
-//		int i = 1;
-//		File result = null;
-//		while (true) {
-//			File compareWith = null;
-//			for (List<File> parts : pathParts) {
-//				if (parts.size() < i) {
-//					return result;
-//				}
-//				File part = parts.get(parts.size() - i);
-//				if (compareWith == null) {
-//					compareWith = part;
-//				} else {
-//					if (!compareWith.equals(part)) {
-//						return result;
-//					}
-//				}
-//			}
-//			result = compareWith;
-//			i++;
-//		}
-//	}
-
 	public boolean compile() {
 		try {
-			// if (workspaceConfigProvider.getWorkspaceConfig() == null) {
-			// if (!configureWorkspace()) {
-			// return false;
-			// }
-			// }
 			resourceSet.addLoadOption(XtextResource.OPTION_RESOLVE_ALL, Boolean.TRUE);
 
 			File classDirectory = createTempDir("classes");
@@ -396,7 +274,7 @@ public class StructsBatchCompiler {
 				loadStructsFiles(resourceSet);
 				File sourceDirectory = createStubs(resourceSet);
 				if (!preCompileStubs(sourceDirectory, classDirectory)) {
-					System.out.println(
+					log.warn(
 							"Compilation of stubs and existing Java code had errors. This is expected and usually is not a problem.");
 				}
 			} finally {
@@ -441,7 +319,7 @@ public class StructsBatchCompiler {
 			resourceSet.getURIConverter().getURIMap().put(platformResourceURI, baseDir);
 			for (URI uri : pathes.get(src)) {
 				URI uriToUse = uri.replacePrefix(baseDir, platformResourceURI);
-				System.out.println("load structs file '" + uriToUse + "'");
+				log.info("load structs file '" + uriToUse + "'");
 				resourceSet.getResource(uriToUse, true);
 			}
 		}
@@ -483,7 +361,7 @@ public class StructsBatchCompiler {
 				return "\"" + path + "\"";
 			}
 		})));
-		System.out.println("invoke batch compiler with '" + concat(" ", commandLine) + "'");
+		log.debug("invoke batch compiler with '" + concat(" ", commandLine) + "'");
 		return BatchCompiler.compile(concat(" ", commandLine), new PrintWriter(getOutputWriter()),
 				new PrintWriter(getErrorWriter()), null);
 	}
@@ -555,7 +433,7 @@ public class StructsBatchCompiler {
 			}
 		};
 		Iterable<URL> classPathUrls = Iterables.transform(classPathEntries, toUrl);
-		System.out.println("classpath used for Struct compilation : " + classPathUrls);
+		log.debug("classpath used for Struct compilation : " + classPathUrls);
 		ClassLoader parentClassLoader;
 		if (useCurrentClassLoaderAsParent) {
 			parentClassLoader = currentClassLoader;
@@ -575,20 +453,16 @@ public class StructsBatchCompiler {
 		// a parent.
 		URLClassLoader urlClassLoaderForAnnotationProcessing = new URLClassLoader(toArray(classPathUrls, URL.class),
 				currentClassLoader);
-
 		resourceSet.eAdapters().add(new ProcessorClassloaderAdapter(urlClassLoaderForAnnotationProcessing));
-		// annotationProcessorFactory.setClassLoader(urlClassLoaderForAnnotationProcessing);
-		// System.out.println("annotationProcessorFactory:
-		// "+annotationProcessorFactory);
 	}
 
 	protected void reportIssues(Iterable<Issue> issues) {
 		for (Issue issue : issues) {
 			StringBuilder issueBuilder = createIssueMessage(issue);
 			if (Severity.ERROR == issue.getSeverity()) {
-				System.out.println(issueBuilder.toString());
+				log.error(issueBuilder.toString());
 			} else if (Severity.WARNING == issue.getSeverity()) {
-				System.out.println(issueBuilder.toString());
+				log.warn(issueBuilder.toString());
 			}
 		}
 	}
@@ -613,10 +487,9 @@ public class StructsBatchCompiler {
 		javaIoFileSystemAccess.setOutputPath(outputPath);
 		javaIoFileSystemAccess.setWriteTrace(writeTraceFiles);
 
-		System.out.println("generateJavaFiles: " + outputPath);
 		for (Resource resource : newArrayList(resourceSet.getResources())) {
 			if (resource.getContents().get(0) instanceof StructsFile) {
-				System.out.println("Generating source for: " + resource);
+				log.debug("Generating source for: " + resource);
 				generator.doGenerate(resource, javaIoFileSystemAccess);
 			}
 		}
@@ -629,7 +502,7 @@ public class StructsBatchCompiler {
 		return resourceDescriptions;
 	}
 
-	/* @Nullable */protected StructsFile getStructsFile(Resource resource) {
+	protected StructsFile getStructsFile(Resource resource) {
 		XtextResource xtextResource = (XtextResource) resource;
 		IParseResult parseResult = xtextResource.getParseResult();
 		if (parseResult != null) {
@@ -698,7 +571,7 @@ public class StructsBatchCompiler {
 		}
 		if (filter == null)
 			filter = ACCEPT_ALL_FILTER;
-		System.out.println("Cleaning folder " + parentFolder.toString());
+		log.debug("Cleaning folder " + parentFolder.toString());
 		final File[] contents = parentFolder.listFiles(filter);
 		for (int j = 0; j < contents.length; j++) {
 			final File file = contents[j];
@@ -707,7 +580,7 @@ public class StructsBatchCompiler {
 					return false;
 			} else {
 				if (!file.delete()) {
-					System.out.println("Couldn't delete " + file.getAbsolutePath());
+					log.warn("Couldn't delete " + file.getAbsolutePath());
 					if (!continueOnError)
 						return false;
 				}
@@ -715,7 +588,7 @@ public class StructsBatchCompiler {
 		}
 		if (deleteParentFolder) {
 			if (parentFolder.list().length == 0 && !parentFolder.delete()) {
-				System.out.println("Couldn't delete " + parentFolder.getAbsolutePath());
+				log.warn("Couldn't delete " + parentFolder.getAbsolutePath());
 				return false;
 			}
 		}

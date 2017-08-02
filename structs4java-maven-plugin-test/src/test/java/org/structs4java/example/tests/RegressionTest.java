@@ -483,4 +483,27 @@ public class RegressionTest extends AbstractTest {
 		
 		assertEqualBuffers(buffer, outBuffer);
 	}
+	
+	@Test
+	public void testStructWithInterfaces() throws IOException {
+		byte[] testData = new byte[]{ 1, 0, 0, 0, 2, 0, 0, 0};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		BothInterfaces obj = BothInterfaces.read(buffer);
+		
+		Assert.assertEquals(1, obj.getA());
+		Assert.assertEquals(2, obj.getB());
+		
+		InterfaceA a = (InterfaceA)obj;
+		Assert.assertEquals(1, a.getA());
+		
+		InterfaceB b = (InterfaceB)obj;
+		Assert.assertEquals(2, b.getB());
+		
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		obj.write(outBuffer);
+		
+		assertEqualBuffers(buffer, outBuffer);
+	}
 }

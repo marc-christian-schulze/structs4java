@@ -6,8 +6,6 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.naming.QualifiedName;
 import org.eclipse.xtext.scoping.impl.ImportNormalizer;
 import org.eclipse.xtext.scoping.impl.ImportedNamespaceAwareLocalScopeProvider;
-import org.structs4java.structs4JavaDsl.EnumDeclaration;
-import org.structs4java.structs4JavaDsl.StructDeclaration;
 import org.structs4java.structs4JavaDsl.StructsFile;
 
 /**
