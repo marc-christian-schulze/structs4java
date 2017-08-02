@@ -386,9 +386,6 @@ public class StructsBatchCompiler {
 	 * {@link ResourceSet}. The lookup classpath is enhanced with the given tmp
 	 * directory.
 	 * 
-	 * @deprecated use the explicit variant
-	 *             {@link #installJvmTypeProvider(ResourceSet, File, boolean)}
-	 *             instead.
 	 */
 	@Deprecated
 	protected void installJvmTypeProvider(XtextResourceSet resourceSet, File tmpClassDirectory) {
