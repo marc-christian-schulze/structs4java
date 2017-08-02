@@ -2,9 +2,10 @@ grammar org.structs4java.Structs4JavaDsl hidden(WS)
 generate structs4JavaDsl "http://www.structs4java.org/Structs4JavaDsl"
 
 import "http://www.eclipse.org/emf/2002/Ecore" as ecore
+import "http://www.eclipse.org/xtext/common/JavaVMTypes" as jvmTypes
 
-Package:
-	{Package}
+StructsFile:
+	{StructsFile}
 	
 	SL_COMMENT*
 	
@@ -34,7 +35,9 @@ ComplexTypeDeclaration:
 StructDeclaration:
 	{StructDeclaration}
 	(comments += SL_COMMENT)*
-	'struct' name=ID '{'
+	'struct' name=ID 
+	('implements' implements+=[jvmTypes::JvmType|QualifiedName] (',' implements+=[jvmTypes::JvmType|QualifiedName])*)?
+	'{'
 		(members += Member)*
 		SL_COMMENT*
 	'}'

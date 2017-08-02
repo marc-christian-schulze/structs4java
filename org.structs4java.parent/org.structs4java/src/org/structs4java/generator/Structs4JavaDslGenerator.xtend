@@ -8,7 +8,7 @@ import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 import org.structs4java.structs4JavaDsl.ComplexTypeDeclaration
-import org.structs4java.structs4JavaDsl.Package
+import org.structs4java.structs4JavaDsl.StructsFile
 
 /**
  * Generates code from your model files on save.
@@ -21,7 +21,7 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 		val enumGen = new EnumGenerator
 		val structGen = new StructGenerator
 		
-		for (pkg : resource.allContents.toIterable.filter(Package)) {
+		for (pkg : resource.allContents.toIterable.filter(StructsFile)) {
 			for (struct : pkg.structs) {
 				fsa.generateFile(javaType(struct).replace('.', '/') + ".java", structGen.compile(pkg, struct))
 			}
@@ -33,7 +33,7 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 	}
 
 	def javaType(ComplexTypeDeclaration type) {
-		val pkg = type.eContainer as Package
+		val pkg = type.eContainer as StructsFile
 		if (pkg != null && !pkg.name.empty) {
 			return pkg.name + "." + type.name
 		}

@@ -1,0 +1,5 @@
+package org.structs4java.example1;
+
+struct ImportingStruct {
+	SimpleStructure structure;
+}

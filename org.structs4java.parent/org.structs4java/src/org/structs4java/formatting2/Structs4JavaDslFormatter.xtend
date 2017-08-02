@@ -20,21 +20,21 @@ class Structs4JavaDslFormatter extends AbstractFormatter2 {
 
 	@Inject extension Structs4JavaDslGrammarAccess
 
-	def dispatch void format(org.structs4java.structs4JavaDsl.Package _package,
+	def dispatch void format(org.structs4java.structs4JavaDsl.StructsFile structsFile,
 		extension IFormattableDocument document) {
 		// TODO: format HiddenRegions around keywords, attributes, cross references, etc. 
-		for (Import imports : _package.getImports()) {
+		for (Import imports : structsFile.getImports()) {
 			imports.format;
 		}
-		for (StructDeclaration structs : _package.getStructs()) {
+		for (StructDeclaration structs : structsFile.getStructs()) {
 			structs.format;
 		}
-		for (EnumDeclaration enums : _package.getEnums()) {
+		for (EnumDeclaration enums : structsFile.getEnums()) {
 			enums.format;
 		}
 
-		_package.regionFor.keyword(";").append[newLines = 2]
-		_package.regionFor.keyword(";").prepend[noSpace]
+		structsFile.regionFor.keyword(";").append[newLines = 2]
+		structsFile.regionFor.keyword(";").prepend[noSpace]
 	}
 
 	def dispatch void format(StructDeclaration structDeclaration, extension IFormattableDocument document) {
@@ -51,7 +51,7 @@ class Structs4JavaDslFormatter extends AbstractFormatter2 {
 	}
 
 	def dispatch void format(Import imp, extension IFormattableDocument document) {
-		if ((imp.eContainer as org.structs4java.structs4JavaDsl.Package).getImports().last == imp) {
+		if ((imp.eContainer as org.structs4java.structs4JavaDsl.StructsFile).getImports().last == imp) {
 			imp.regionFor.keyword(";").prepend[noSpace].append[newLines = 2]
 		} else {
 			imp.regionFor.keyword(";").prepend[noSpace].append[newLine]

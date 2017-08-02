@@ -1,0 +1,11 @@
+package org.structs4java.example.tests;
+
+struct OneInterface implements InterfaceA {
+	uint32_t a;
+}
+
+struct BothInterfaces implements InterfaceA, InterfaceB {
+	uint32_t a;
+	uint32_t b;
+}
+

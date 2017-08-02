@@ -1,12 +1,14 @@
-package org.structs4java.example2;
+package org.structs4java.example1;
 
-import org.structs4java.example1.SimpleStructure;
-
-struct AdvancedStructure {
-	float someFloat_;
-	SimpleStructure anArray[5];
+struct SimpleStructure {
+	int16_t word1;
+	uint16_t word2;
+	uint32_t dword3;
+	char someString[32];
+	SimpleEnum enumValue;
 }
 
-struct StructureWithByteArray {
-	uint8_t someByteArray[64];
+enum SimpleEnum : uint16_t {
+	FirstItem = 0xCAFE,
+	SecondItem = 42
 }

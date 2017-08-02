@@ -8,6 +8,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<xtext.version>2.10.0</xtext.version>
 	</properties>
 
 	<name>${project.groupId}:${project.artifactId}</name>
@@ -52,7 +53,60 @@
 			<version>2.2.1</version>
 			<scope>provided</scope>
 		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.maven</groupId>
+			<artifactId>maven-core</artifactId>
+			<version>3.3.9</version>
+			<scope>provided</scope>
+		</dependency>
+		<!-- 
+		<dependency>
+		    <groupId>com.jcabi</groupId>
+		    <artifactId>jcabi-aether</artifactId>
+		    <version>0.10</version>
+		    <scope>provided</scope>
+		</dependency> -->
+		<!-- https://mvnrepository.com/artifact/org.eclipse.xtext/org.eclipse.xtext.builder.standalone -->
+<!-- <dependency>
+    <groupId>org.eclipse.xtext</groupId>
+    <artifactId>org.eclipse.xtext.builder.standalone</artifactId>
+    <version>2.12.0</version>
+</dependency>
+		 -->
+		 
+		 <!-- https://mvnrepository.com/artifact/org.eclipse.jdt.core.compiler/ecj -->
+<dependency>
+    <groupId>org.eclipse.jdt.core.compiler</groupId>
+    <artifactId>ecj</artifactId>
+    <version>4.6.1</version>
+</dependency>
+		 <!-- https://mvnrepository.com/artifact/org.eclipse.xtext/org.eclipse.xtext.xbase -->
+<dependency>
+    <groupId>org.eclipse.xtext</groupId>
+    <artifactId>org.eclipse.xtext.xbase</artifactId>
+    <version>${xtext.version}</version>
+</dependency>
+<!-- https://mvnrepository.com/artifact/org.eclipse.xtext/org.eclipse.xtext.xbase.lib -->
+<dependency>
+    <groupId>org.eclipse.xtext</groupId>
+    <artifactId>org.eclipse.xtext.xbase.lib</artifactId>
+    <version>${xtext.version}</version>
+</dependency>
 
+		 <!-- https://mvnrepository.com/artifact/org.eclipse.xtend/org.eclipse.xtend.core -->
+<dependency>
+    <groupId>org.eclipse.xtend</groupId>
+    <artifactId>org.eclipse.xtend.core</artifactId>
+    <version>${xtext.version}</version>
+</dependency>
+		 
+		 
+ <dependency>
+        <groupId>org.twdata.maven</groupId>
+        <artifactId>mojo-executor</artifactId>
+        <version>2.2.0</version>
+    </dependency>
 		<dependency>
 			<groupId>com.github.marc-christian-schulze.structs4java</groupId>
 			<artifactId>structs4java-core</artifactId>

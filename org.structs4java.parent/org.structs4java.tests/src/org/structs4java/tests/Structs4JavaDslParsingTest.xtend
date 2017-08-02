@@ -19,7 +19,7 @@ import org.structs4java.structs4JavaDsl.EnumDeclaration
 class Structs4JavaDslParsingTest{
 
 	@Inject
-	ParseHelper<org.structs4java.structs4JavaDsl.Package> parseHelper
+	ParseHelper<org.structs4java.structs4JavaDsl.StructsFile> parseHelper
 
 	@Test 
 	def void simpleEnum() {
@@ -48,6 +48,43 @@ class Structs4JavaDslParsingTest{
 	@Test 
 	def void structWithEnum() {
 		val pkg = parseHelper.parse('''
+			enum E : uint16_t {
+				B = 0xCafe
+			}
+			
+			struct A {
+				int8_t myInt;
+				E myEnum;
+			}
+		''')
+		
+		Assert.assertNotNull(pkg)
+		val struct = pkg.structs.get(0)
+		Assert.assertEquals(2, struct.members.size)
+		
+		Assert.assertNotNull(struct)
+		Assert.assertEquals("A", struct.name)
+		
+		val intMember = struct.members.get(0) as IntegerMember
+		Assert.assertEquals("myInt", intMember.name)
+		Assert.assertEquals("int8_t", intMember.typename)
+		
+		val enumMember = struct.members.get(1) as ComplexTypeMember
+		Assert.assertEquals("myEnum", enumMember.name)
+		
+		Assert.assertEquals("E", enumMember.type.name)
+		Assert.assertEquals("uint16_t", (enumMember.type as EnumDeclaration).typename)
+		
+		val items = (enumMember.type as EnumDeclaration).items
+		Assert.assertEquals("B", items.get(0).name)
+		Assert.assertEquals(0xCafe, items.get(0).value)
+	}
+	
+	@Test 
+	def void structWithEnumInPackage() {
+		val pkg = parseHelper.parse('''
+			package x.y.z;
+			
 			enum E : uint16_t {
 				B = 0xCafe
 			}
@@ -110,6 +147,8 @@ class Structs4JavaDslParsingTest{
 		val enumMember = struct.members.get(1) as ComplexTypeMember
 		Assert.assertEquals("myEnum", enumMember.name)
 		
+		println("struct: "+struct)
+		println("enumMember.type: "+enumMember.type)
 		Assert.assertEquals("E", enumMember.type.name)
 		Assert.assertEquals("uint16_t", (enumMember.type as EnumDeclaration).typename)
 		

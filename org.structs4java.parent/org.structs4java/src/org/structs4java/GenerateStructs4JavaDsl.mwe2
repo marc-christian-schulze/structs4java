@@ -40,6 +40,12 @@ Workflow {
 			validator = {
 				composedCheck = "org.eclipse.xtext.validation.NamesAreUniqueValidator"
 			}
+			fragment = scoping.ImportNamespacesScopingFragment2 {
+				generateStub = true
+			}
+			fragment = exporting.QualifiedNamesFragment2 {}
+			// provides the necessary bindings for java types integration
+			fragment = types.TypesGeneratorFragment2 {}
 		}
 	}
 }

@@ -8,7 +8,7 @@ import org.structs4java.structs4JavaDsl.ComplexTypeMember
 import org.structs4java.structs4JavaDsl.FloatMember
 import org.structs4java.structs4JavaDsl.IntegerMember
 import org.structs4java.structs4JavaDsl.Member
-import org.structs4java.structs4JavaDsl.Package
+import org.structs4java.structs4JavaDsl.StructsFile
 import org.structs4java.structs4JavaDsl.StringMember
 import org.structs4java.structs4JavaDsl.StructDeclaration
 import org.structs4java.structs4JavaDsl.EnumDeclaration
@@ -20,11 +20,11 @@ import org.structs4java.structs4JavaDsl.EnumDeclaration
  */
 class StructGenerator {
 
-	def compile(Package pkg, StructDeclaration struct) '''
-		«packageDeclaration(pkg)»
+	def compile(StructsFile structsFile, StructDeclaration struct) '''
+		«packageDeclaration(structsFile)»
 		
 		«printComments(struct)»
-		public class «struct.name» {
+		public class «struct.name» «implementedInterfaces(struct)» {
 			public «struct.name»() {
 			}
 			
@@ -45,6 +45,12 @@ class StructGenerator {
 			
 			«fields(struct)»
 		}
+	'''
+	
+	def implementedInterfaces(StructDeclaration struct) '''
+	«IF struct.implements.size > 0»
+	implements «FOR jvmType : struct.implements SEPARATOR ", "»«jvmType.qualifiedName»«ENDFOR»
+	«ENDIF»
 	'''
 	
 	def printComments(StructDeclaration struct) '''
@@ -967,9 +973,9 @@ class StructGenerator {
 		return "UTF-8";
 	}
 
-	def packageDeclaration(Package pkg) '''
-		«IF !pkg.name.empty»
-			package «pkg.name»;
+	def packageDeclaration(StructsFile structsFile) '''
+		«IF !structsFile.name.empty»
+			package «structsFile.name»;
 		«ENDIF»
 	'''
 
@@ -1080,7 +1086,7 @@ class StructGenerator {
 	}
 
 	def javaType(ComplexTypeDeclaration type) {
-		val pkg = type.eContainer as Package
+		val pkg = type.eContainer as StructsFile
 		if (pkg != null && !pkg.name.empty) {
 			return pkg.name + "." + type.name
 		}

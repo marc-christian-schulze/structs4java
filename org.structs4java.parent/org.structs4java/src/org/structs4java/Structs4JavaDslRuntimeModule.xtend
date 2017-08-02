@@ -4,14 +4,32 @@
 package org.structs4java
 
 import org.structs4java.converter.Structs4JavaDslValueConverter
+import org.structs4java.scoping.MyImportedNamespaceAwareLocalScopeProvider
+import org.eclipse.xtext.resource.impl.SimpleResourceDescriptionsBasedContainerManager
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
  */
 class Structs4JavaDslRuntimeModule extends AbstractStructs4JavaDslRuntimeModule {
-	
+
 	override bindIValueConverterService() {
 		return Structs4JavaDslValueConverter;
+	}
+
+	override bindIJvmTypeProvider$Factory() {
+		super.bindIJvmTypeProvider$Factory()
+	}
+	
+	override bindIQualifiedNameProvider() {
+		return Structs4JavaQualifiedNameProvider;
+	}
+
+	override bindIScopeProvider() {
+		return MyImportedNamespaceAwareLocalScopeProvider;
+	}
+	
+	override bindIContainer$Manager() {
+		return SimpleResourceDescriptionsBasedContainerManager;
 	}
 
 }

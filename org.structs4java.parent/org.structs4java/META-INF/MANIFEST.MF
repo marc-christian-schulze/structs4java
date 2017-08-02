@@ -13,7 +13,9 @@ Require-Bundle: org.eclipse.xtext,
  org.antlr.runtime,
  org.eclipse.xtext.util,
  org.eclipse.xtend.lib,
- org.eclipse.emf.common
+ org.eclipse.emf.common,
+ org.eclipse.xtext.common.types,
+ org.objectweb.asm;bundle-version="[5.0.1,6.0.0)";resolution:=optional
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: org.structs4java.generator,
  org.structs4java.structs4JavaDsl.impl,
@@ -26,5 +28,6 @@ Export-Package: org.structs4java.generator,
  org.structs4java.validation,
  org.structs4java.serializer,
  org.structs4java.parser.antlr.internal,
- org.structs4java.formatting2
+ org.structs4java.formatting2,
+ org.structs4java.jvmmodel
 Import-Package: org.apache.log4j

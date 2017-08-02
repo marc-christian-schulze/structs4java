@@ -4,7 +4,7 @@
 package org.structs4java.generator
 
 import org.structs4java.structs4JavaDsl.EnumDeclaration
-import org.structs4java.structs4JavaDsl.Package
+import org.structs4java.structs4JavaDsl.StructsFile
 import org.structs4java.structs4JavaDsl.Item
 
 /**
@@ -14,8 +14,8 @@ import org.structs4java.structs4JavaDsl.Item
  */
 class EnumGenerator {
 
-	def compile(Package pkg, EnumDeclaration enumDecl) '''
-		«packageDeclaration(pkg)»
+	def compile(StructsFile structsFile, EnumDeclaration enumDecl) '''
+		«packageDeclaration(structsFile)»
 		
 		«printComments(enumDecl)»
 		public enum «enumDecl.name» {
@@ -104,9 +104,9 @@ class EnumGenerator {
 		}
 	}
 
-	def packageDeclaration(Package pkg) '''
-		«IF !pkg.name.empty»
-			package «pkg.name»;
+	def packageDeclaration(StructsFile structsFile) '''
+		«IF !structsFile.name.empty»
+			package «structsFile.name»;
 		«ENDIF»
 	'''
 }
