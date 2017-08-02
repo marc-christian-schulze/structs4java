@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.marc-christian-schulze.structs4java</groupId>
 	<artifactId>build-all</artifactId>
-	<version>1.0.22-SNAPSHOT</version>
+	<version>1.0.22</version>
 	<packaging>pom</packaging>
 
 	<url>https://github.com/marc-christian-schulze/structs4java</url>
