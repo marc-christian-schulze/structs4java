@@ -10,36 +10,28 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.toolchain.Toolchain;
 import org.apache.maven.toolchain.ToolchainManager;
 import org.apache.maven.toolchain.java.DefaultJavaToolChain;
 import org.codehaus.plexus.util.DirectoryScanner;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.eclipse.emf.common.util.WrappedException;
 import org.eclipse.xtext.resource.XtextResourceSet;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 
-@Mojo(name = "compile", defaultPhase = LifecyclePhase.GENERATE_SOURCES, requiresDependencyResolution = ResolutionScope.COMPILE, requiresDependencyCollection = ResolutionScope.COMPILE)
-public class CompileMojo extends AbstractMojo {
+public abstract class AbstractCompileMojo extends AbstractMojo {
 
 	@Component
 	private MavenProject project;
@@ -50,12 +42,6 @@ public class CompileMojo extends AbstractMojo {
 	@Component
 	private BuildPluginManager pluginManager;
 
-	@Parameter(defaultValue = "${project.build.directory}/structs-gen")
-	private File outputDirectory;
-
-	@Parameter(defaultValue = "${basedir}/src/main/structs")
-	private File structsDirectory;
-
 	@Parameter
 	private String[] includes;
 
@@ -65,19 +51,15 @@ public class CompileMojo extends AbstractMojo {
 	@Inject
 	protected MavenLog4JConfigurator log4jConfigurator;
 
-	/**
-	 * @parameter expression="${maven.compiler.source}" default-value="1.6"
-	 */
-	private String compilerSourceLevel;
-
-	/**
-	 * @parameter expression="${maven.compiler.target}" default-value="1.6"
-	 */
-	private String compilerTargetLevel;
-
 	private Injector injector;
 
-	public CompileMojo() {
+	protected MavenProject getProject() {
+		return project;
+	}
+
+	protected abstract File getStructsDirectory();
+
+	public AbstractCompileMojo() {
 		injector = new MavenStructs4JavaDslStandaloneSetupGenerated().createInjectorAndDoEMFRegistration();
 		injector.injectMembers(this);
 	}
@@ -88,41 +70,25 @@ public class CompileMojo extends AbstractMojo {
 			includes[0] = "**/*.structs";
 		}
 
-		if (!structsDirectory.exists()) {
-			getLog().info("No struct files at " + structsDirectory);
+		if (!getStructsDirectory().exists()) {
+			getLog().info("No struct files at " + getStructsDirectory());
 			return;
 		}
 
 		log4jConfigurator.configureLog4j(getLog());
 
-		List<String> compileSourceRoots = Lists.newArrayList(project.getCompileSourceRoots());
-		compileSourceRoots.remove(outputDirectory);
+		List<String> compileSourceRoots = getCompileSourceRoots();
+		compileSourceRoots.remove(getOutputDirectory());
 		String classPath = concat(File.pathSeparator, getClassPath());
-		project.addCompileSourceRoot(outputDirectory.toString());
-		compile(classPath, compileSourceRoots, structsDirectory.toString(), outputDirectory.toString());
+		project.addCompileSourceRoot(getOutputDirectory().toString());
+		compile(classPath, compileSourceRoots, getStructsDirectory().toString(), getOutputDirectory().toString());
 	}
 
-	@SuppressWarnings("deprecation")
-	protected List<String> getClassPath() {
-		Set<String> classPath = Sets.newLinkedHashSet();
-		classPath.add(project.getBuild().getSourceDirectory());
-		try {
-			classPath.addAll(project.getCompileClasspathElements());
-		} catch (DependencyResolutionRequiredException e) {
-			throw new WrappedException(e);
-		}
-		addDependencies(classPath, project.getCompileArtifacts());
-		classPath.remove(project.getBuild().getOutputDirectory());
-		return newArrayList(filter(classPath, FILE_EXISTS));
-	}
+	protected abstract List<String> getCompileSourceRoots();
 
-	protected String resolveToBaseDir(final String directory) throws MojoExecutionException {
-		File outDir = new File(directory);
-		if (!outDir.isAbsolute()) {
-			outDir = new File(project.getBasedir(), directory);
-		}
-		return outDir.getAbsolutePath();
-	}
+	protected abstract List<String> getClassPath();
+
+	protected abstract File getOutputDirectory();
 
 	protected void addDependencies(Set<String> classPath, List<Artifact> dependencies) {
 		for (Artifact artifact : dependencies) {
