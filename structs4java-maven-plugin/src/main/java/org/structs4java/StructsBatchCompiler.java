@@ -485,11 +485,21 @@ public class StructsBatchCompiler {
 		javaIoFileSystemAccess.setWriteTrace(writeTraceFiles);
 
 		for (Resource resource : newArrayList(resourceSet.getResources())) {
-			if (resource.getContents().get(0) instanceof StructsFile) {
+			if (getRootEObject(resource) instanceof StructsFile) {
 				log.debug("Generating source for: " + resource);
 				generator.doGenerate(resource, javaIoFileSystemAccess);
 			}
 		}
+	}
+
+	private EObject getRootEObject(Resource resource) {
+		if (resource == null) {
+			return null;
+		}
+		if (resource.getContents() == null || resource.getContents().size() == 0) {
+			return null;
+		}
+		return resource.getContents().get(0);
 	}
 
 	protected ResourceSetBasedResourceDescriptions getResourceDescriptions(ResourceSet resourceSet) {
