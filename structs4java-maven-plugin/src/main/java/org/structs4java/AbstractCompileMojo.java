@@ -183,7 +183,7 @@ public abstract class AbstractCompileMojo extends AbstractMojo {
 
 		if (!compiler.compile()) {
 			String dir = concat(File.pathSeparator, newArrayList(filtered));
-			throw new MojoExecutionException("Error compiling xtend sources in '" + dir + "'.");
+			throw new MojoExecutionException("Error compiling struct sources in '" + dir + "'.");
 		}
 	}
 

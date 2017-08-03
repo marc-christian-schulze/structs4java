@@ -189,8 +189,8 @@ public class RegressionTest extends AbstractTest {
 	@Test
 	public void testListOfIntegers() throws IOException {
 		ListOfIntegers expected = new ListOfIntegers();
-		ArrayList<Integer> list = new ArrayList<Integer>();
-		for(int i = 0; i < 10; ++i) {
+		ArrayList<Long> list = new ArrayList<Long>();
+		for(long i = 0; i < 10; ++i) {
 			list.add(10 - i);
 		}
 		expected.setArray(list);

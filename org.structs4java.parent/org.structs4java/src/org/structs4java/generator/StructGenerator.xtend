@@ -88,24 +88,20 @@ class StructGenerator {
 		result = prime * result + ((this.«attributeName(m)» == null) ? 0 : this.«attributeName(m)».hashCode());
 		«ELSEIF m instanceof IntegerMember»
 		«IF (m as IntegerMember).typename.equals("int8_t") || (m as IntegerMember).typename.equals("uint8_t")»
-		result = prime * result + this.«attributeName(m)»;
+		result = prime * result + (int)this.«attributeName(m)»;
 		«ELSEIF (m as IntegerMember).typename.equals("int16_t") || (m as IntegerMember).typename.equals("uint16_t")»
-		result = prime * result + this.«attributeName(m)»;
+		result = prime * result + (int)this.«attributeName(m)»;
 		«ELSEIF (m as IntegerMember).typename.equals("int32_t") || (m as IntegerMember).typename.equals("uint32_t")»
-		result = prime * result + this.«attributeName(m)»;
+		result = prime * result + (int)this.«attributeName(m)»;
 		«ELSEIF (m as IntegerMember).typename.equals("int64_t") || (m as IntegerMember).typename.equals("uint64_t")»
 		result = prime * result + (int) (this.«attributeName(m)» ^ (this.«attributeName(m)» >>> 32));
 		«ENDIF»
 		«ELSEIF m instanceof FloatMember»
-		«IF (m as FloatMember).typename.equals("float")»
-		result = prime * result + Float.floatToIntBits(this.«attributeName(m)»);
-		«ELSEIF (m as FloatMember).typename.equals("double")»
 		{
 			long temp;
 			temp = Double.doubleToLongBits(this.«attributeName(m)»);
 			result = prime * result + (int) (temp ^ (temp >>> 32));
 		}
-		«ENDIF»
 		«ENDIF»	
 		«ENDIF»
 		«ENDFOR»	
@@ -133,27 +129,11 @@ class StructGenerator {
 					} else if (!this.«attributeName(m)».equals(other.«attributeName(m)»))
 						return false;
 				«ELSEIF m instanceof IntegerMember»
-					«IF (m as IntegerMember).typename.equals("int8_t") || (m as IntegerMember).typename.equals("uint8_t")»
-						if (this.«attributeName(m)» != other.«attributeName(m)»)
-							return false;
-					«ELSEIF (m as IntegerMember).typename.equals("int16_t") || (m as IntegerMember).typename.equals("uint16_t")»
-						if (this.«attributeName(m)» != other.«attributeName(m)»)
-							return false;
-					«ELSEIF (m as IntegerMember).typename.equals("int32_t") || (m as IntegerMember).typename.equals("uint32_t")»
-						if (this.«attributeName(m)» != other.«attributeName(m)»)
-							return false;
-					«ELSEIF (m as IntegerMember).typename.equals("int64_t") || (m as IntegerMember).typename.equals("uint64_t")»
-						if (this.«attributeName(m)» != other.«attributeName(m)»)
-							return false;
-					«ENDIF»
+					if (this.«attributeName(m)» != other.«attributeName(m)»)
+						return false;
 				«ELSEIF m instanceof FloatMember»
-					«IF (m as FloatMember).typename.equals("float")»
-						if (Float.floatToIntBits(this.«attributeName(m)») != Float.floatToIntBits(other.«attributeName(m)»))
-							return false;
-					«ELSEIF (m as FloatMember).typename.equals("double")»
-						if (Double.doubleToLongBits(this.«attributeName(m)») != Double.doubleToLongBits(other.«attributeName(m)»))
-							return false;
-					«ENDIF»
+					if (Double.doubleToLongBits(this.«attributeName(m)») != Double.doubleToLongBits(other.«attributeName(m)»))
+						return false;
 				«ENDIF»	
 			«ENDIF»
 		«ENDFOR»
@@ -415,11 +395,11 @@ class StructGenerator {
 	}
 	
 	def readerMethodForArrayMember(Member m) '''
-	private static java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> «m.readerMethodName()»(java.nio.ByteBuffer buf, boolean partialRead«IF dimensionOf(m) == 0», int countof«ENDIF») throws java.io.IOException {
+	private static java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> «m.readerMethodName()»(java.nio.ByteBuffer buf, boolean partialRead«IF dimensionOf(m) == 0», long countof«ENDIF») throws java.io.IOException {
 		java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> lst = new java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»>();
 		try {
 		«IF dimensionOf(m) == 0»
-		for(int i = 0; i < countof; ++i) {
+		for(long i = 0; i < countof; ++i) {
 			lst.add(«readerMethodName(m)»«arrayPostfix(m)»(buf, partialRead));
 		}
 		«ELSE»
@@ -446,11 +426,11 @@ class StructGenerator {
 	}
 	
 	def readerMethodForByteBuffer(IntegerMember m) '''
-		private static java.nio.ByteBuffer «readerMethodName(m)»(java.nio.ByteBuffer buf, boolean partialRead«IF dimensionOf(m) == 0», int sizeof«ENDIF») throws java.io.IOException {
+		private static java.nio.ByteBuffer «readerMethodName(m)»(java.nio.ByteBuffer buf, boolean partialRead«IF dimensionOf(m) == 0», long sizeof«ENDIF») throws java.io.IOException {
 			java.nio.ByteBuffer buffer = buf.slice();
 			buffer.order(buf.order());
-			buffer.limit(«IF dimensionOf(m) == 0»sizeof«ELSE»«dimensionOf(m)»«ENDIF»);
-			buf.position(buf.position() + «IF dimensionOf(m) == 0»sizeof«ELSE»«dimensionOf(m)»«ENDIF»);
+			buffer.limit(«IF dimensionOf(m) == 0»(int)sizeof«ELSE»«dimensionOf(m)»«ENDIF»);
+			buf.position(buf.position() + «IF dimensionOf(m) == 0»((int)sizeof)«ELSE»«dimensionOf(m)»«ENDIF»);
 			«IF m.isPadded()»
 			int bytesOverlap = (buffer.limit() % «m.padding»);
 			if(bytesOverlap > 0) {
@@ -464,13 +444,13 @@ class StructGenerator {
 	def readerMethodForComplexTypeMember(ComplexTypeMember m) '''
 		private static «m.nativeTypeName().native2JavaType()» «m.readerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf, boolean partialRead) throws java.io.IOException {
 			«IF m.isPadded()»
-			int beginMember = buf.position();
+			long beginMember = buf.position();
 			«ENDIF»
 			«m.nativeTypeName().native2JavaType()» value = «m.nativeTypeName().native2JavaType()».read(buf, partialRead);
 			«IF m.isPadded()»
-			int bytesOverlap = ((buf.position() - beginMember) % «m.padding»);
+			long bytesOverlap = ((buf.position() - beginMember) % «m.padding»);
 			if(bytesOverlap > 0) {
-				buf.position(buf.position() + «m.padding» - bytesOverlap);				
+				buf.position((int)(buf.position() + «m.padding» - bytesOverlap));				
 			}
 			«ENDIF»
 			return value;
@@ -566,7 +546,7 @@ class StructGenerator {
 				«ENDIF»
 				return new String(tmp.toByteArray(), 0, tmp.size() - zerosRead, "«encodingOf(m)»");
 				«ELSE»
-				byte[] tmp = new byte[sizeof];
+				byte[] tmp = new byte[(int)sizeof];
 				buf.get(tmp);
 				
 				int terminatingZeros = "\0".getBytes("«encodingOf(m)»").length;
@@ -580,7 +560,7 @@ class StructGenerator {
 					}
 				}
 				«IF m.isPadded()»
-				int bytesOverlap = (sizeof % «m.padding»);
+				int bytesOverlap = ((int)(sizeof) % «m.padding»);
 				if(bytesOverlap > 0) {
 					buf.position(buf.position() + «m.padding» - bytesOverlap);				
 				}
@@ -817,14 +797,14 @@ class StructGenerator {
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("int32_t")»
-			buf.putInt(«getterName(m)»());
+			buf.putInt((int)«getterName(m)»());
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 4; ++i) {
 				buf.put((byte)0);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint32_t")»
-			buf.putInt(«getterName(m)»());
+			buf.putInt((int)«getterName(m)»());
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 4; ++i) {
 				buf.put((byte)0);	
@@ -880,14 +860,14 @@ class StructGenerator {
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("int32_t")»
-			buf.putInt(value);
+			buf.putInt((int)value);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 4; ++i) {
 				buf.put((byte)0);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint32_t")»
-			buf.putInt(value);
+			buf.putInt((int)value);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 4; ++i) {
 				buf.put((byte)0);	
@@ -914,7 +894,7 @@ class StructGenerator {
 	def writerMethodForFloatMember(FloatMember m) '''
 		private void «m.writerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf«IF m.isArray()», «m.nativeTypeName().native2JavaType()» value«ENDIF») throws java.io.IOException {
 			«IF m.typename.equals("float")»
-			buf.putFloat(«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
+			buf.putFloat((float)«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 4; ++i) {
 				buf.put((byte)0);	
@@ -1071,16 +1051,18 @@ class StructGenerator {
 
 	def native2JavaType(String type) {
 		switch (type) {
-			case "uint8_t": "int"
-			case "int8_t": "int"
-			case "uint16_t": "int"
-			case "int16_t": "int"
-			case "int32_t": "int"
-			case "uint32_t": "int"
+			case "uint8_t": "long"
+			case "int8_t": "long"
+			case "uint16_t": "long"
+			case "int16_t": "long"
+			case "int32_t": "long"
+			case "uint32_t": "long"
 			case "int64_t": "long"
 			case "uint64_t": "long"
 			case "char": "String"
 			case "bool": "boolean"
+			case "float": "double"
+			case "double": "double"
 			default: type
 		}
 	}

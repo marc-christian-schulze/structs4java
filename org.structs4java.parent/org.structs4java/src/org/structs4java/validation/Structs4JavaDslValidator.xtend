@@ -89,7 +89,7 @@ class Structs4JavaDslValidator extends AbstractStructs4JavaDslValidator {
 		if(m instanceof IntegerMember) {
 			if(m.sizeof != null || m.countof != null || m.sizeofThis) {
 				if(m.typename.equals("uint64_t") || m.typename.equals("int64_t")) {
-					warning('64 bit types for sizeof/countof members are not fully supported!\nThey throw a RuntimeException in case the value is larger than 2^31!', m, Structs4JavaDslPackage.Literals.INTEGER_MEMBER__TYPENAME)
+					warning('64 bit types for sizeof/countof members are not fully supported!\nThey throw a RuntimeException in case the value is larger than 2^63!', m, Structs4JavaDslPackage.Literals.INTEGER_MEMBER__TYPENAME)
 				}
 			}
 		}

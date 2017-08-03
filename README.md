@@ -16,7 +16,7 @@ Add the plugin to your maven build:
 <plugin>
   <groupId>com.github.marc-christian-schulze.structs4java</groupId>
   <artifactId>structs4java-maven-plugin</artifactId>
-  <version>1.0.18</version>
+  <version>1.0.24</version>
   <executions>
     <execution>
       <id>compile-structs</id>
@@ -114,30 +114,30 @@ https://dl.bintray.com/marc-christian-schulze/Structs4JavaUpdateSite/updates/
 * Unions
 * Bit-Fields
 * Pointer
-* 64bit enums
+* 64bit enums (partial support for 63 bit)
 
 # User Guide
 
 ## Primitive Data Types
 | S4J Typename  | Java Mapping           | Description                            |
 | ------------- | ---------------------- | -------------------------------------- |
-| uint8_t       | int                    | Fixed-size 8bit unsigned integer       |
-| int8_t        | int                    | Fixed-size 8bit signed integer         |
-| uint16_t      | int                    | Fixed-size 16bit unsigned integer      |
-| int16_t       | int                    | Fixed-size 16bit signed integer        |
-| uint32_t      | int                    | Fixed-size 32bit unsigned integer      |
-| int32_t       | int                    | Fixed-size 32bit signed integer        |
+| uint8_t       | long                   | Fixed-size 8bit unsigned integer       |
+| int8_t        | long                   | Fixed-size 8bit signed integer         |
+| uint16_t      | long                   | Fixed-size 16bit unsigned integer      |
+| int16_t       | long                   | Fixed-size 16bit signed integer        |
+| uint32_t      | long                   | Fixed-size 32bit unsigned integer      |
+| int32_t       | long                   | Fixed-size 32bit signed integer        |
 | uint64_t      | long                   | Fixed-size 64bit unsigned integer      |
 | int64_t       | long                   | Fixed-size 64bit signed integer        |
-| float         | float                  | Fixed-size 32bit floating point number |
-| double        | float                  | Fixed-size 64bit floating point number |
+| float         | double                 | Fixed-size 32bit floating point number |
+| double        | double                 | Fixed-size 64bit floating point number |
 | char          | -                      | unsupported                            |
-| char[]        | String                 | String of characters                   |
+| char[]        | String                 | String of characters (max size 2^31)   |
 | uint8_t[]     | java.nio.ByteBuffer    | Raw ByteBuffer                         |
 | int8_t[]      | java.nio.ByteBuffer    | Raw ByteBuffer                         |
 
 ## Struct Files
-Struct files have the file extension `*.structs` and can contain multiple struct or enum definitions. Different to Java very struct and enum declared in a Struct file is publicly visible.
+Struct files have the file extension `*.structs` and can contain multiple struct or enum definitions. Different to Java very struct and enum declared in a Struct file is public.
 
 ## Structs
 Structs are simple Java POJOs that provide a read and write method accepting a `java.nio.ByteBuffer`. A struct can have multiple 
