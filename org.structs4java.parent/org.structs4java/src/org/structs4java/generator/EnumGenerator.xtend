@@ -25,6 +25,10 @@ class EnumGenerator {
 			«reader(enumDecl)»
 			«writer(enumDecl)»
 			
+			public long getValue() {
+				return value;
+			}
+			
 			private «enumDecl.name»(long value) {
 				this.value = value;
 			}
@@ -63,12 +67,20 @@ class EnumGenerator {
 		
 		public static «enumDecl.name» read(java.nio.ByteBuffer buf) throws java.io.IOException {
 			«read(enumDecl)»
+			try {
+				return fromValue(value);
+			} catch(IllegalArgumentException e) {
+				throw new java.io.IOException(e);
+			}
+		}
+		
+		public static «enumDecl.name» fromValue(long value) throws IllegalArgumentException {
 			«FOR f : enumDecl.items»
 			if(value == «f.value»L) {
 				return «f.name»;
 			}
 			«ENDFOR»
-			throw new java.io.IOException(String.format("Unknown enum value: 0x%X", value));
+			throw new IllegalArgumentException(String.format("Unknown enum value: 0x%X", value));
 		}
 	'''
 
