@@ -1,0 +1,39 @@
+package org.structs4java.example.tests;
+
+enum AnyEnum : uint8_t {
+	A = 0, 
+	B = 1
+}
+
+struct AnyStruct {
+	int32_t i;
+}
+
+struct CopyConstructorCases {
+	int8_t signed8;
+	uint8_t unsigned8;
+	int16_t signed16;
+	uint16_t unsigned16;
+	int32_t signed32;
+	uint32_t unsigned32;
+	int64_t signed64;
+	uint64_t unsigned64;
+	float f;
+	double d;
+	char str[10];
+	AnyEnum e;
+	AnyStruct s;
+	
+	int8_t signed8Array[5];
+	uint8_t unsigned8Array[5];
+	int16_t signed16Array[5];
+	uint16_t unsigned16Array[5];
+	int32_t signed32Array[5];
+	uint32_t unsigned32Array[5];
+	int64_t signed64Array[5];
+	uint64_t unsigned64Array[5];
+	float fArray[5];
+	double dArray[5];
+	AnyEnum eArray[5];
+	AnyStruct sArray[5];
+}

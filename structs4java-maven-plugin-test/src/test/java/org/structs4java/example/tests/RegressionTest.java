@@ -1,8 +1,10 @@
 package org.structs4java.example.tests;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
-import java.nio.ByteOrder;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 
 import org.junit.Assert;
@@ -14,13 +16,13 @@ import org.structs4java.example2.AdvancedStructure;
 import org.structs4java.example3.BString;
 import org.structs4java.example3.DynamicStruct;
 import org.structs4java.example3.DynamicStructHavingPartialNestedObject;
+import org.structs4java.example3.ListOfIntegers;
 import org.structs4java.example3.NullTerminatedString;
 import org.structs4java.example3.OptionalPart;
 import org.structs4java.example3.OptionalPart2;
-import org.structs4java.example3.ListOfIntegers;
-import org.structs4java.example4.SimpleGreedy;
 import org.structs4java.example4.NonGreedy;
 import org.structs4java.example4.SelfSizedGreedy;
+import org.structs4java.example4.SimpleGreedy;
 
 
 public class RegressionTest extends AbstractTest {
@@ -505,5 +507,62 @@ public class RegressionTest extends AbstractTest {
 		obj.write(outBuffer);
 		
 		assertEqualBuffers(buffer, outBuffer);
+	}
+	
+	@Test
+	public void testCopyConstructorEmptyObject() {
+		CopyConstructorCases obj = new CopyConstructorCases();
+		assertEquals(obj, new CopyConstructorCases(obj));
+	}
+	
+	@Test
+	public void testCopyConstructorFilledObject() {
+		CopyConstructorCases obj = createFilledObject();
+		
+		assertEquals(obj, new CopyConstructorCases(obj));
+	}
+	
+	@Test
+	public void testCloneMethodEmptyObject() {
+		CopyConstructorCases obj = new CopyConstructorCases();
+		assertEquals(obj, obj.clone());
+	}
+	
+	@Test
+	public void testCloneMethodFilledObject() {
+		CopyConstructorCases obj = createFilledObject();
+		assertEquals(obj, obj.clone());
+	}
+
+	private CopyConstructorCases createFilledObject() {
+		CopyConstructorCases obj = new CopyConstructorCases();
+		obj.setE(AnyEnum.B);
+		obj.setF(5.4);
+		obj.setD(3.14d);
+		obj.setSigned16(7);
+		obj.setSigned32(8);
+		obj.setSigned64(9);
+		obj.setUnsigned8(1);
+		obj.setUnsigned16(2);
+		obj.setUnsigned32(3);
+		obj.setUnsigned64(4);
+		obj.setDArray(new ArrayList<Double>());
+		obj.getDArray().add(8d);
+		obj.setEArray(new ArrayList<AnyEnum>());
+		obj.getEArray().add(AnyEnum.A);
+		obj.setFArray(new ArrayList<Double>());
+		obj.getFArray().add(7d);
+		obj.setSArray(new ArrayList<AnyStruct>());
+		obj.getSArray().add(new AnyStruct());
+		obj.setSigned16Array(new ArrayList<Long>());
+		obj.getSigned16Array().add(1l);
+		obj.setSigned32Array(new ArrayList<Long>());
+		obj.getSigned32Array().add(5l);
+		obj.setSigned64Array(new ArrayList<Long>());
+		obj.getSigned64Array().add(6l);
+		obj.setSigned8Array(ByteBuffer.allocate(15));
+		obj.setStr("what");
+		obj.setS(new AnyStruct());
+		return obj;
 	}
 }

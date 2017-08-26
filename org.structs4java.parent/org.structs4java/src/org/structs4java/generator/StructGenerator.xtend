@@ -28,6 +28,9 @@ class StructGenerator {
 			public «struct.name»() {
 			}
 			
+			«copyConstructor(struct)»
+			«cloneMethod(struct)»
+			
 			«readerMethodForStruct(struct)»
 			«writerMethodForStruct(struct)»
 			
@@ -45,6 +48,63 @@ class StructGenerator {
 			
 			«fields(struct)»
 		}
+	'''
+	
+	def isMemberOfTypeStruct(Member m) {
+		return m instanceof ComplexTypeMember && (m as ComplexTypeMember).type instanceof StructDeclaration;
+	}
+	
+	def isMemberOfTypeString(Member m) {
+		return m instanceof StringMember;
+	}
+	
+	def isMemberOfTypeByteBuffer(Member m) {
+		if(m.isArray()) {
+			switch (m) {
+				IntegerMember case m.typename == "uint8_t": return true
+				IntegerMember case m.typename == "int8_t": return true
+				default: return false
+			}
+		} 
+		return false
+	}
+	
+	def copyConstructor(StructDeclaration struct) '''
+	public «struct.name»(«struct.name» source) {
+		if(source == null) {
+			throw new NullPointerException("source must be non null");
+		}
+		«FOR m : struct.members»
+		«IF m.isArray() && !m.isMemberOfTypeString() && !m.isMemberOfTypeByteBuffer()»
+			«IF m.isMemberOfTypeStruct()»
+			if(source.«attributeName(m)» != null) {
+				this.«attributeName(m)» = new java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»>();
+				for(«m.nativeTypeName().native2JavaType().box()» element : source.«attributeName(m)») {
+					this.«attributeName(m)».add(new «m.nativeTypeName().native2JavaType().box()»(element));
+				}
+			}
+			«ELSE»
+			if(source.«attributeName(m)» != null) {
+				this.«attributeName(m)» = new java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»>(source.«attributeName(m)»);
+			}
+			«ENDIF»
+		«ELSE»
+			«IF m.isMemberOfTypeStruct()»
+			if(source.«attributeName(m)» != null) {
+				this.«attributeName(m)» = new «attributeJavaType(m)»(source.«attributeName(m)»);
+			}
+			«ELSE»
+			this.«attributeName(m)» = source.«attributeName(m)»;
+			«ENDIF»
+		«ENDIF»
+		«ENDFOR»	
+	}
+	'''
+	
+	def cloneMethod(StructDeclaration struct) '''
+	public «struct.name» clone() {
+		return new «struct.name»(this);
+	}
 	'''
 	
 	def implementedInterfaces(StructDeclaration struct) '''
