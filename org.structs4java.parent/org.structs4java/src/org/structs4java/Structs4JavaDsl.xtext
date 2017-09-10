@@ -44,7 +44,7 @@ StructDeclaration:
 ;
 
 Member:
-	IntegerMember | FloatMember | StringMember | ComplexTypeMember
+	IntegerMember | FloatMember | StringMember | ComplexTypeMember | BitfieldMember
 ;
 
 EnumDeclaration:
@@ -54,6 +54,19 @@ EnumDeclaration:
 		(items += Item)*
 		SL_COMMENT*
 	'}'
+;
+
+BitfieldMember:
+	(comments += SL_COMMENT)*
+	'bitfield' typename=INTEGER_TYPE (array=ArrayDimension)? ('padding' '(' padding=LONG ')')? '{'
+		(entries += BitfieldEntry)*
+	'}'
+;
+
+BitfieldEntry:
+	(comments += SL_COMMENT)* typename=INTEGER_TYPE name=ID (array=ArrayDimension)? ':' bits=LONG ';'
+|   (comments += SL_COMMENT)* typename=BOOLEAN_TYPE name=ID (array=ArrayDimension)? ':' bits=LONG ';'
+|   (comments += SL_COMMENT)* type=[EnumDeclaration] name=ID (array=ArrayDimension)? ':' bits=LONG ';'
 ;
 
 Item:
@@ -119,6 +132,10 @@ terminal WS			: (' '|'\t'|'\r'|'\n')+;
 terminal INTEGER_TYPE:
 	'uint8_t' | 'uint16_t' | 'uint32_t' | 'uint64_t' |
 	 'int8_t' | 'int16_t'  | 'int32_t'  | 'int64_t'
+;
+
+terminal BOOLEAN_TYPE:
+	'boolean'
 ;
 	
 terminal FLOAT_TYPE:

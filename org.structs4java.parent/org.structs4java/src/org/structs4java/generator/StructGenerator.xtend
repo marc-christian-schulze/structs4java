@@ -12,6 +12,8 @@ import org.structs4java.structs4JavaDsl.StructsFile
 import org.structs4java.structs4JavaDsl.StringMember
 import org.structs4java.structs4JavaDsl.StructDeclaration
 import org.structs4java.structs4JavaDsl.EnumDeclaration
+import org.structs4java.structs4JavaDsl.BitfieldMember
+import org.structs4java.structs4JavaDsl.BitfieldEntry
 
 /**
  * Generates code from your model files on save.
@@ -58,6 +60,10 @@ class StructGenerator {
 		return m instanceof StringMember;
 	}
 	
+	def isBitfield(Member m) {
+		return m instanceof BitfieldMember;
+	}
+	
 	def isMemberOfTypeByteBuffer(Member m) {
 		if(m.isArray()) {
 			switch (m) {
@@ -75,7 +81,11 @@ class StructGenerator {
 			throw new NullPointerException("source must be non null");
 		}
 		«FOR m : struct.members»
-		«IF m.isArray() && !m.isMemberOfTypeString() && !m.isMemberOfTypeByteBuffer()»
+		«IF m.isBitfield()»
+			«FOR entry : (m as BitfieldMember).entries»
+			this.«attributeName(entry)» = source.«attributeName(entry)»;
+			«ENDFOR»
+		«ELSEIF m.isArray() && !m.isMemberOfTypeString() && !m.isMemberOfTypeByteBuffer()»
 			«IF m.isMemberOfTypeStruct()»
 			if(source.«attributeName(m)» != null) {
 				this.«attributeName(m)» = new java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»>();
@@ -94,7 +104,7 @@ class StructGenerator {
 				this.«attributeName(m)» = new «attributeJavaType(m)»(source.«attributeName(m)»);
 			}
 			«ELSE»
-			this.«attributeName(m)» = source.«attributeName(m)»;
+				this.«attributeName(m)» = source.«attributeName(m)»;
 			«ENDIF»
 		«ENDIF»
 		«ENDFOR»	
@@ -129,6 +139,14 @@ class StructGenerator {
 	*/
 	'''
 	
+	def printComments(BitfieldEntry member) '''
+	/**
+	«FOR comment : member.comments»
+	* «comment.substring(2).trim()»
+	«ENDFOR»
+	*/
+	'''
+	
 	def sizeOfStructMethod(StructDeclaration struct) '''
 	«IF struct.isFixedSize()»
 	public static long getSizeOf() {
@@ -143,27 +161,35 @@ class StructGenerator {
 		final int prime = 31;
 		int result = 1;
 		«FOR m : struct.members»
-		«IF !m.hasSizeOfOrCountOfAttribute()»
-		«IF m instanceof StringMember || m instanceof ComplexTypeMember || m.isArray()»
-		result = prime * result + ((this.«attributeName(m)» == null) ? 0 : this.«attributeName(m)».hashCode());
-		«ELSEIF m instanceof IntegerMember»
-		«IF (m as IntegerMember).typename.equals("int8_t") || (m as IntegerMember).typename.equals("uint8_t")»
-		result = prime * result + (int)this.«attributeName(m)»;
-		«ELSEIF (m as IntegerMember).typename.equals("int16_t") || (m as IntegerMember).typename.equals("uint16_t")»
-		result = prime * result + (int)this.«attributeName(m)»;
-		«ELSEIF (m as IntegerMember).typename.equals("int32_t") || (m as IntegerMember).typename.equals("uint32_t")»
-		result = prime * result + (int)this.«attributeName(m)»;
-		«ELSEIF (m as IntegerMember).typename.equals("int64_t") || (m as IntegerMember).typename.equals("uint64_t")»
-		result = prime * result + (int) (this.«attributeName(m)» ^ (this.«attributeName(m)» >>> 32));
-		«ENDIF»
-		«ELSEIF m instanceof FloatMember»
-		{
-			long temp;
-			temp = Double.doubleToLongBits(this.«attributeName(m)»);
-			result = prime * result + (int) (temp ^ (temp >>> 32));
-		}
-		«ENDIF»	
-		«ENDIF»
+			«IF !m.hasSizeOfOrCountOfAttribute()»
+				«IF m.isBitfield()»
+					«FOR entry : (m as BitfieldMember).entries»
+						«IF entry.isEnumType()»
+						result = prime * result + ((this.«attributeName(entry)» == null) ? 0 : this.«attributeName(entry)».hashCode());
+						«ELSEIF entry.is64BitType()»
+						result = prime * result + (int) (this.«attributeName(entry)» ^ (this.«attributeName(entry)» >>> 32));
+						«ELSEIF entry.isBooleanType()»
+						result = prime * result + (this.«attributeName(entry)» ? 1231 : 1237);
+						«ELSE»
+						result = prime * result + (int)this.«attributeName(entry)»;
+						«ENDIF»
+					«ENDFOR»
+				«ELSEIF m instanceof StringMember || m instanceof ComplexTypeMember || m.isArray()»
+				result = prime * result + ((this.«attributeName(m)» == null) ? 0 : this.«attributeName(m)».hashCode());
+				«ELSEIF m instanceof IntegerMember»
+					«IF m.is64BitType()»
+					result = prime * result + (int) (this.«attributeName(m)» ^ (this.«attributeName(m)» >>> 32));
+					«ELSE»
+					result = prime * result + (int)this.«attributeName(m)»;
+					«ENDIF»
+				«ELSEIF m instanceof FloatMember»
+				{
+					long temp;
+					temp = Double.doubleToLongBits(this.«attributeName(m)»);
+					result = prime * result + (int) (temp ^ (temp >>> 32));
+				}
+				«ENDIF»	
+			«ENDIF»
 		«ENDFOR»	
 		return result;
 	}
@@ -182,7 +208,20 @@ class StructGenerator {
 		
 		«FOR m : struct.members»
 			«IF !m.hasSizeOfOrCountOfAttribute()»
-				«IF m instanceof StringMember || m instanceof ComplexTypeMember || m.isArray()»
+				«IF m.isBitfield()»
+					«FOR entry : (m as BitfieldMember).entries»
+						«IF entry.isEnumType()»
+						if (this.«attributeName(entry)» == null) {
+							if (other.«attributeName(entry)» != null)
+								return false;
+						} else if (!this.«attributeName(entry)».equals(other.«attributeName(entry)»))
+							return false;
+						«ELSE»
+						if (this.«attributeName(entry)» != other.«attributeName(entry)»)
+							return false;
+						«ENDIF»
+					«ENDFOR»
+				«ELSEIF m instanceof StringMember || m instanceof ComplexTypeMember || m.isArray()»
 					if (this.«attributeName(m)» == null) {
 						if (other.«attributeName(m)» != null)
 							return false;
@@ -205,7 +244,13 @@ class StructGenerator {
 	public String toString() {
 		StringBuilder buf = new StringBuilder("«javaType(struct)»[");
 		«FOR m : struct.nonTransientMembers() SEPARATOR "buf.append(\", \");"»
+			«IF m.isBitfield()»
+				«FOR entry : (m as BitfieldMember).entries SEPARATOR "buf.append(\", \");"»
+				buf.append("«attributeName(entry)»=" + «getterName(entry)»());
+				«ENDFOR»
+			«ELSE»
 			buf.append("«attributeName(m)»=" + «getterName(m)»());
+			«ENDIF»
 		«ENDFOR»
 		buf.append("]");
 		return buf.toString();
@@ -240,6 +285,34 @@ class StructGenerator {
 		}
 		
 		if((m as IntegerMember).typename == "int64_t") {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	def is64BitType(BitfieldEntry m) {
+		if(m.typename == "uint64_t") {
+			return true;
+		}
+		
+		if(m.typename == "int64_t") {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	def isBooleanType(BitfieldEntry m) {
+		if(m.typename == "boolean") {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	def isEnumType(BitfieldEntry m) {
+		if(m.type != null) {
 			return true;
 		}
 		
@@ -280,7 +353,7 @@ class StructGenerator {
 						«attributeJavaType(m)» «tempVarForMember(m)» = «readerMethodName(m)»(buf, partialRead);
 						«IF m.is64BitType()»
 						if(«tempVarForMember(m)» > «Math.pow(2, 31) - 1» || «tempVarForMember(m)» < 0) {
-							throw new java.io.IOException("64 bit field '«m.name»' in struct '«(m.eContainer as StructDeclaration).name»' overflew the maximum supported value of 2^31-1!");
+							throw new java.io.IOException("64 bit field '«attributeName(m)»' in struct '«(m.eContainer as StructDeclaration).name»' overflew the maximum supported value of 2^31-1!");
 						}
 						«ENDIF»
 						obj.«attributeName(m)» = «tempVarForMember(m)»;
@@ -318,7 +391,25 @@ class StructGenerator {
 						obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)«tempVarForMember(findMemberDefiningCountOf(m))»));
 						«ENDIF»
 					«ELSE»
-						«IF m.isArray() && !m.isString() && m.isGreedy()»
+						«IF m.isBitfield()»
+							«IF m.isArray()»
+								// TODO: array
+								throw new UnsupportedOperationException("Bitfields on top of arrays are not yet supported.");
+							«ELSE»
+							{
+								long value = «readerMethodName(m)»(buf, partialRead);
+								«FOR entry : (m as BitfieldMember).entries»
+									«IF entry.type != null»
+									obj.«setterName(entry)»(«javaType(entry.type)».fromValue((value & «computeBitmaskFor(entry)») >>> «computeBitsToShift(entry)»));
+									«ELSEIF entry.typename == "boolean"»
+									obj.«setterName(entry)»(((value & «computeBitmaskFor(entry)») >>> «computeBitsToShift(entry)») != 0);
+									«ELSE»
+									obj.«setterName(entry)»((value & «computeBitmaskFor(entry)») >>> «computeBitsToShift(entry)»);
+									«ENDIF»
+								«ENDFOR»
+							}
+							«ENDIF»	
+						«ELSEIF m.isArray() && !m.isString() && m.isGreedy()»
 							«IF struct.isSelfSized()»
 							obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)(structEndPosition - buf.position())));
 							«ELSE»
@@ -326,7 +417,7 @@ class StructGenerator {
 							obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)(buf.limit() - buf.position())));
 							«ENDIF»
 						«ELSE»
-						obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead));
+							obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead));
 						«ENDIF»
 					«ENDIF»
 				«ENDIF»
@@ -340,6 +431,35 @@ class StructGenerator {
 			return obj;
 		}
 	'''
+	
+	def computeBitmaskFor(BitfieldEntry e) {
+		var bitmask = 0;
+		for(i : 0..< e.bits as int) {
+			bitmask = bitmask.bitwiseOr(1 << i);
+		}
+		bitmask = bitmask << computeBitsToShift(e);
+		return bitmask;
+	}
+	
+	def computeBitsToShift(BitfieldEntry e) {
+		var offsetInBits = computeBitOffsetFor(e)
+		return (computeBitLengthFor(e.eContainer as BitfieldMember) - offsetInBits) as int
+	}
+	
+	def computeBitLengthFor(BitfieldMember m) {
+		return computeFixedSizeOf(m) * 8
+	}
+	
+	def computeBitOffsetFor(BitfieldEntry e) {
+		val m = e.eContainer as BitfieldMember;
+		var offsetInBits = 0L;
+		for(e2 : m.entries) {
+			offsetInBits = offsetInBits + e2.bits;
+			if(e2 === e) {
+				return offsetInBits
+			}
+		}
+	}
 	
 	def isSelfSized(StructDeclaration struct) {
 		for(Member m : struct.members) {
@@ -361,7 +481,7 @@ class StructGenerator {
 	}
 	
 	def readerMethodName(Member m) {
-		return "read" + m.name.toFirstUpper;
+		return "read" + attributeName(m).toFirstUpper;
 	}
 
 	def isArray(Member m) {
@@ -419,12 +539,44 @@ class StructGenerator {
 	def setterName(Member m) {
 		return "set" + attributeName(m).toFirstUpper();
 	}
+	
+	def setterName(BitfieldEntry m) {
+		return "set" + attributeName(m).toFirstUpper();
+	}
 
 	def getterName(Member m) {
 		return "get" + attributeName(m).toFirstUpper();
 	}
+	
+	def getterName(BitfieldEntry m) {
+		return "get" + attributeName(m).toFirstUpper();
+	}
 
 	def attributeName(Member m) {
+		switch(m) {
+			IntegerMember: m.name
+			FloatMember: m.name
+			StringMember: m.name
+			ComplexTypeMember: m.name
+			BitfieldMember: attributeName(m as BitfieldMember)
+			default: "<anonymous>"		
+		}
+	}
+	
+	def attributeName(BitfieldMember m) {
+		val struct = m.eContainer as StructDeclaration
+		var i = 0
+		for(member : struct.members) {
+			if(member.isBitfield()) {
+				if(member == m) {
+					return "bitfield_" + i
+				}
+				i = i + 1
+			}
+		}
+	}
+	
+	def attributeName(BitfieldEntry m) {
 		return m.name;
 	}
 
@@ -447,6 +599,7 @@ class StructGenerator {
 			IntegerMember: readerMethodForIntegerMember(m)
 			FloatMember: readerMethodForFloatMember(m)
 			StringMember: readerMethodForStringMember(m)
+			BitfieldMember: readerMethodForBitfieldMember(m as BitfieldMember)
 		}
 	}
 	
@@ -518,6 +671,53 @@ class StructGenerator {
 	'''
 	
 	def readerMethodForIntegerMember(IntegerMember m) '''
+		private static «m.nativeTypeName().native2JavaType()» «m.readerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf, boolean partialRead) throws java.io.IOException {
+			«IF m.typename.equals("int8_t")»
+			«m.nativeTypeName().native2JavaType()» value = buf.get();
+			«IF m.isPadded()»
+			buf.position(buf.position() + «m.padding» - 1);
+			«ENDIF»
+			«ELSEIF m.typename.equals("uint8_t")»
+			«m.nativeTypeName().native2JavaType()» value = buf.get() & 0xFF;
+			«IF m.isPadded()»
+			buf.position(buf.position() + «m.padding» - 1);
+			«ENDIF»
+			«ELSEIF m.typename.equals("int16_t")»
+			«m.nativeTypeName().native2JavaType()» value = buf.getShort();
+			«IF m.isPadded()»
+			buf.position(buf.position() + «m.padding» - 2);
+			«ENDIF»
+			«ELSEIF m.typename.equals("uint16_t")»
+			«m.nativeTypeName().native2JavaType()» value = buf.getShort() & 0xFFFF;
+			«IF m.isPadded()»
+			buf.position(buf.position() + «m.padding» - 2);
+			«ENDIF»
+			«ELSEIF m.typename.equals("int32_t")»
+			«m.nativeTypeName().native2JavaType()» value = buf.getInt();
+			«IF m.isPadded()»
+			buf.position(buf.position() + «m.padding» - 4);
+			«ENDIF»
+			«ELSEIF m.typename.equals("uint32_t")»
+			«m.nativeTypeName().native2JavaType()» value = buf.getInt() & 0xFFFFFFFF;
+			«IF m.isPadded()»
+			buf.position(buf.position() + «m.padding» - 4);
+			«ENDIF»
+			«ELSEIF m.typename.equals("int64_t")»
+			«m.nativeTypeName().native2JavaType()» value = buf.getLong();
+			«IF m.isPadded()»
+			buf.position(buf.position() + «m.padding» - 8);
+			«ENDIF»
+			«ELSEIF m.typename.equals("uint64_t")»
+			«m.nativeTypeName().native2JavaType()» value = buf.getLong() & 0xFFFFFFFFFFFFFFFFL;
+			«IF m.isPadded()»
+			buf.position(buf.position() + «m.padding» - 8);
+			«ENDIF»
+			«ENDIF»
+			return value;
+		}
+	'''
+	
+	def readerMethodForBitfieldMember(BitfieldMember m) '''
 		private static «m.nativeTypeName().native2JavaType()» «m.readerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf, boolean partialRead) throws java.io.IOException {
 			«IF m.typename.equals("int8_t")»
 			«m.nativeTypeName().native2JavaType()» value = buf.get();
@@ -665,7 +865,7 @@ class StructGenerator {
 	}
 	
 	def writerMethodName(Member m) {
-		return "write" + m.name.toFirstUpper;
+		return "write" + attributeName(m).toFirstUpper;
 	}
 
 	def writerMethodForStruct(StructDeclaration struct) '''
@@ -766,6 +966,7 @@ class StructGenerator {
 			IntegerMember: writerMethodForIntegerMember(m)
 			FloatMember: writerMethodForFloatMember(m)
 			StringMember: writerMethodForString(m)
+			BitfieldMember: writerMethodForBitfieldMember(m)
 		}
 	}
 	
@@ -889,7 +1090,135 @@ class StructGenerator {
 	«ENDIF»
 	'''
 	
+	def writerMethodForBitfieldMember(BitfieldMember m) '''
+	«IF m.isArray()»
+		«writerMethodForBitfieldMemberReceivingValue(m)»
+	«ELSE»
+		private void «m.writerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf) throws java.io.IOException {
+			«IF m.typename.equals("int8_t")»
+			buf.put((byte)«getterName(m)»());
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 1; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
+			«ELSEIF m.typename.equals("uint8_t")»
+			buf.put((byte)«getterName(m)»());
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 1; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
+			«ELSEIF m.typename.equals("int16_t")»
+			buf.putShort((short)«getterName(m)»());
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 2; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
+			«ELSEIF m.typename.equals("uint16_t")»
+			buf.putShort((short)«getterName(m)»());
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 2; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
+			«ELSEIF m.typename.equals("int32_t")»
+			buf.putInt((int)«getterName(m)»());
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 4; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
+			«ELSEIF m.typename.equals("uint32_t")»
+			buf.putInt((int)«getterName(m)»());
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 4; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
+			«ELSEIF m.typename.equals("int64_t")»
+			buf.putLong(«getterName(m)»());
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 8; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
+			«ELSEIF m.typename.equals("uint64_t")»
+			buf.putLong(«getterName(m)»());
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 8; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
+			«ENDIF»
+		}
+	«ENDIF»
+	'''
+	
 	def writerMethodForIntegerMemberReceivingValue(IntegerMember m) '''
+		private void «m.writerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf, «m.nativeTypeName().native2JavaType()» value) throws java.io.IOException {
+			«IF m.typename.equals("int8_t")»
+			buf.put((byte)value);
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 1; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
+			«ELSEIF m.typename.equals("uint8_t")»
+			buf.put((byte)value);
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 1; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
+			«ELSEIF m.typename.equals("int16_t")»
+			buf.putShort((short)value);
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 2; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
+			«ELSEIF m.typename.equals("uint16_t")»
+			buf.putShort((short)value);
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 2; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
+			«ELSEIF m.typename.equals("int32_t")»
+			buf.putInt((int)value);
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 4; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
+			«ELSEIF m.typename.equals("uint32_t")»
+			buf.putInt((int)value);
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 4; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
+			«ELSEIF m.typename.equals("int64_t")»
+			buf.putLong(value);
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 8; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
+			«ELSEIF m.typename.equals("uint64_t")»
+			buf.putLong(value);
+			«IF m.isPadded()»
+			for(int i = 0; i < «m.padding» - 8; ++i) {
+				buf.put((byte)0);	
+			}
+			«ENDIF»
+			«ENDIF»
+		}
+	'''
+	
+	def writerMethodForBitfieldMemberReceivingValue(BitfieldMember m) '''
 		private void «m.writerMethodName()»«arrayPostfix(m)»(java.nio.ByteBuffer buf, «m.nativeTypeName().native2JavaType()» value) throws java.io.IOException {
 			«IF m.typename.equals("int8_t")»
 			buf.put((byte)value);
@@ -1021,25 +1350,44 @@ class StructGenerator {
 
 	def fields(StructDeclaration struct) '''
 		«FOR m : struct.members»
+		«IF m instanceof BitfieldMember»
+			«field(m as BitfieldMember)»
+		«ELSE»
 			«field(m)»
+		«ENDIF»
 		«ENDFOR»
 	'''
 
 	def getters(StructDeclaration struct) '''
 		«FOR m : struct.members»
+		«IF m instanceof BitfieldMember»
+			«getter(m as BitfieldMember)»
+		«ELSE»
 			«getter(m)»
+		«ENDIF»
 		«ENDFOR»
 	'''
 
 	def setters(StructDeclaration struct) '''
 		«FOR m : struct.nonTransientMembers()»
+		«IF m instanceof BitfieldMember»
+			«setter(m as BitfieldMember)»
+		«ELSE»
 			«setter(m)»
+		«ENDIF»
 		«ENDFOR»
 	'''
 
 	def field(Member m) '''
 		«printComments(m)»
 		private «attributeJavaType(m)» «attributeName(m)»;
+	'''
+	
+	def field(BitfieldMember m) '''
+		«FOR entry : m.entries»
+		«printComments(entry)»
+		private «attributeJavaType(entry)» «attributeName(entry)»;
+		«ENDFOR»
 	'''
 
 	def getter(Member m) '''
@@ -1048,12 +1396,49 @@ class StructGenerator {
 			return this.«attributeName(m)»;
 		}
 	'''
+	
+	def getter(BitfieldMember m) '''
+		«FOR entry : m.entries»
+		«printComments(entry)»
+		public «attributeJavaType(entry)» «getterName(entry)»() {
+			return this.«attributeName(entry)»;
+		}
+		«ENDFOR»
+		
+		private «attributeJavaType(m)» «getterName(m)»() {
+			«IF m.isArray()»
+				// TODO: array
+				throw new UnsupportedOperationException("Bitfields on top of arrays are not yet supported.");
+			«ELSE»
+				long value = 0;
+				«FOR entry : m.entries»
+					«IF entry.isEnumType()»
+					value |= this.«attributeName(entry)».getValue() << «computeBitsToShift(entry)»;
+					«ELSEIF entry.isBooleanType()»
+					value |= (this.«attributeName(entry)» ? 1 : 0) << «computeBitsToShift(entry)»;
+					«ELSE»					
+					value |= this.«attributeName(entry)» << «computeBitsToShift(entry)»;
+					«ENDIF»
+				«ENDFOR»
+				return («attributeJavaType(m)») value;
+			«ENDIF»
+		}
+	'''
 
 	def setter(Member m) '''
 		«printComments(m)»
 		public void «setterName(m)»(«attributeJavaType(m)» «attributeName(m)») {
 			this.«attributeName(m)» = «attributeName(m)»;
 		}
+	'''
+	
+	def setter(BitfieldMember m) '''
+		«FOR entry : m.entries»
+		«printComments(entry)»
+		public void «setterName(entry)»(«attributeJavaType(entry)» «attributeName(entry)») {
+			this.«attributeName(entry)» = «attributeName(entry)»;
+		}
+		«ENDFOR»
 	'''
 
 	def attributeJavaType(Member m) {
@@ -1073,6 +1458,10 @@ class StructGenerator {
 		} else {
 			return javaType
 		}
+	}
+	
+	def attributeJavaType(BitfieldEntry m) {
+		return native2JavaType(nativeTypeName(m))
 	}
 
 	def box(String type) {
@@ -1105,7 +1494,16 @@ class StructGenerator {
 			IntegerMember: m.typename
 			FloatMember: m.typename
 			StringMember: m.typename
+			BitfieldMember: m.typename
 			default: throw new RuntimeException("Unsupported member type: " + m)
+		}
+	}
+	
+	def nativeTypeName(BitfieldEntry m) {
+		if(m.type != null) {
+			return javaType(m.type);
+		} else {
+			return m.typename;
 		}
 	}
 
@@ -1192,6 +1590,16 @@ class StructGenerator {
 			IntegerMember case m.typename == 'int32_t': return 4
 			IntegerMember case m.typename == 'uint64_t': return 8
 			IntegerMember case m.typename == 'int64_t': return 8
+			
+			BitfieldMember case m.typename == 'uint8_t': return 1
+			BitfieldMember case m.typename == 'int8_t': return 1
+			BitfieldMember case m.typename == 'uint16_t': return 2
+			BitfieldMember case m.typename == 'int16_t': return 2
+			BitfieldMember case m.typename == 'uint32_t': return 4
+			BitfieldMember case m.typename == 'int32_t': return 4
+			BitfieldMember case m.typename == 'uint64_t': return 8
+			BitfieldMember case m.typename == 'int64_t': return 8
+			
 			FloatMember case m.typename == 'float': return 4
 			FloatMember case m.typename == 'double': return 8
 			StringMember: return 1 // a char

@@ -1,0 +1,24 @@
+package org.structs4java.example.tests;
+
+enum MyEnum : uint8_t {
+	A = 5,
+	B = 7,
+	C = 1
+}
+
+struct StructWithBitfields {
+	
+	bitfield uint8_t {
+		uint8_t number  : 3;
+		boolean flag1   : 1;
+		boolean flag2   : 1;
+		int32_t number2 : 3;
+	}
+	
+	// endianess dependent bitfield
+	bitfield int32_t {
+		uint8_t highByte    : 8;
+		int16_t middleBytes : 16;
+		MyEnum  lowByte     : 8;
+	}
+}

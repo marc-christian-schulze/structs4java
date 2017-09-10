@@ -1,6 +1,8 @@
 package org.structs4java.example.tests;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -508,6 +510,76 @@ public class RegressionTest extends AbstractTest {
 		
 		assertEqualBuffers(buffer, outBuffer);
 	}
+	
+	@Test
+	public void testStructWithBitfieldsLE() throws IOException {
+		byte[] testData = new byte[]{ (byte) 0x92, 7,5,0,3};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		StructWithBitfields obj = StructWithBitfields.read(buffer);
+		
+//		bitfield uint8_t {
+//			uint8_t number  : 3;
+//			boolean flag1   : 1;
+//			boolean flag2   : 1;
+//			int32_t number2 : 3;
+//		}
+		assertEquals(4, obj.getNumber());
+		assertTrue(obj.getFlag1());
+		assertFalse(obj.getFlag2());
+		assertEquals(2, obj.getNumber2());
+		
+//		bitfield int32_t {
+//			uint8_t highByte    : 8;
+//			int16_t middleBytes : 16;
+//			MyEnum  lowByte     : 8;
+//		}
+		assertEquals(3, obj.getHighByte());
+		assertEquals(5, obj.getMiddleBytes());
+		assertEquals(MyEnum.B, obj.getLowByte());
+		
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		obj.write(outBuffer);
+		
+		assertEqualBuffers(buffer, outBuffer);
+	}
+	
+	@Test
+	public void testStructWithBitfieldsBE() throws IOException {
+		byte[] testData = new byte[]{ (byte) 0x92, 3,0,5,7};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.BIG_ENDIAN);
+		StructWithBitfields obj = StructWithBitfields.read(buffer);
+		
+//		bitfield uint8_t {
+//			uint8_t number  : 3;
+//			boolean flag1   : 1;
+//			boolean flag2   : 1;
+//			int32_t number2 : 3;
+//		}
+		assertEquals(4, obj.getNumber());
+		assertTrue(obj.getFlag1());
+		assertFalse(obj.getFlag2());
+		assertEquals(2, obj.getNumber2());
+		
+//		bitfield int32_t {
+//			uint8_t highByte    : 8;
+//			int16_t middleBytes : 16;
+//			MyEnum  lowByte     : 8;
+//		}
+		assertEquals(3, obj.getHighByte());
+		assertEquals(5, obj.getMiddleBytes());
+		assertEquals(MyEnum.B, obj.getLowByte());
+		
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		obj.write(outBuffer);
+		
+		assertEqualBuffers(buffer, outBuffer);
+	}
+	
+	
 	
 	@Test
 	public void testCopyConstructorEmptyObject() {
