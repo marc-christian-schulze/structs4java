@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.github.marc-christian-schulze.structs4java</groupId>
 		<artifactId>org.structs4java.parent</artifactId>
-		<version>1.0.28</version>
+		<version>1.0.29-SNAPSHOT</version>
 	</parent>
 	<artifactId>org.structs4java.repository</artifactId>
 	<packaging>eclipse-repository</packaging>
