@@ -87,11 +87,11 @@ class EnumGenerator {
 	def read(EnumDeclaration enumDecl) {
 		switch (enumDecl.typename) {
 			case "int8_t": '''long value = buf.get();'''
-			case "uint8_t": '''long value = buf.get() & 0xFF;'''
+			case "uint8_t": '''long value = buf.get() & 0xFFL;'''
 			case "int16_t": '''long value = buf.getShort();'''
-			case "uint16_t": '''long value = buf.getShort() & 0xFFFF;'''
+			case "uint16_t": '''long value = buf.getShort() & 0xFFFFL;'''
 			case "int32_t": '''long value = buf.getInt();'''
-			case "uint32_t": '''long value = buf.getInt() & 0xFFFFFFFF;'''
+			case "uint32_t": '''long value = buf.getInt() & 0xFFFFFFFFL;'''
 			case "int64_t": '''long value = buf.getLong();'''
 			case "uint64_t": '''long value = buf.getLong();'''
 		}
@@ -105,12 +105,12 @@ class EnumGenerator {
 
 	def write(EnumDeclaration enumDecl) {
 		switch (enumDecl.typename) {
-			case "int8_t": '''buf.put((byte)(this.value & 0xFF));'''
-			case "uint8_t": '''buf.put((byte)(this.value & 0xFF));'''
-			case "int16_t": '''buf.putShort((short)(this.value & 0xFFFF));'''
-			case "uint16_t": '''buf.putShort((short)(this.value & 0xFFFF));'''
-			case "int32_t": '''buf.putInt((int)(this.value & 0xFFFFFFFF));'''
-			case "uint32_t": '''buf.putInt((int)(this.value & 0xFFFFFFFF));'''
+			case "int8_t": '''buf.put((byte)(this.value));'''
+			case "uint8_t": '''buf.put((byte)(this.value & 0xFFL));'''
+			case "int16_t": '''buf.putShort((short)(this.value));'''
+			case "uint16_t": '''buf.putShort((short)(this.value & 0xFFFFL));'''
+			case "int32_t": '''buf.putInt((int)(this.value));'''
+			case "uint32_t": '''buf.putInt((int)(this.value & 0xFFFFFFFFL));'''
 			case "int64_t": '''buf.putLong(this.value);'''
 			case "uint64_t": '''buf.putLong(this.value);'''
 		}

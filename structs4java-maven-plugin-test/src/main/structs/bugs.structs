@@ -1,0 +1,10 @@
+package org.structs4java.bugs;
+
+struct SignessBug {
+	int32_t signed32;
+	uint32_t unsigned32;
+	int16_t signed16;
+	uint16_t unsigned16;
+	int8_t signed8;
+	uint8_t unsigned8;
+}

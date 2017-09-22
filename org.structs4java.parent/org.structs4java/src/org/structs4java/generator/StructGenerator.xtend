@@ -678,7 +678,7 @@ class StructGenerator {
 			buf.position(buf.position() + «m.padding» - 1);
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint8_t")»
-			«m.nativeTypeName().native2JavaType()» value = buf.get() & 0xFF;
+			«m.nativeTypeName().native2JavaType()» value = buf.get() & 0xFFL;
 			«IF m.isPadded()»
 			buf.position(buf.position() + «m.padding» - 1);
 			«ENDIF»
@@ -688,7 +688,7 @@ class StructGenerator {
 			buf.position(buf.position() + «m.padding» - 2);
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint16_t")»
-			«m.nativeTypeName().native2JavaType()» value = buf.getShort() & 0xFFFF;
+			«m.nativeTypeName().native2JavaType()» value = buf.getShort() & 0xFFFFL;
 			«IF m.isPadded()»
 			buf.position(buf.position() + «m.padding» - 2);
 			«ENDIF»
@@ -698,7 +698,7 @@ class StructGenerator {
 			buf.position(buf.position() + «m.padding» - 4);
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint32_t")»
-			«m.nativeTypeName().native2JavaType()» value = buf.getInt() & 0xFFFFFFFF;
+			«m.nativeTypeName().native2JavaType()» value = buf.getInt() & 0xFFFFFFFFL;
 			«IF m.isPadded()»
 			buf.position(buf.position() + «m.padding» - 4);
 			«ENDIF»
@@ -708,7 +708,7 @@ class StructGenerator {
 			buf.position(buf.position() + «m.padding» - 8);
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint64_t")»
-			«m.nativeTypeName().native2JavaType()» value = buf.getLong() & 0xFFFFFFFFFFFFFFFFL;
+			«m.nativeTypeName().native2JavaType()» value = buf.getLong();
 			«IF m.isPadded()»
 			buf.position(buf.position() + «m.padding» - 8);
 			«ENDIF»
@@ -725,7 +725,7 @@ class StructGenerator {
 			buf.position(buf.position() + «m.padding» - 1);
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint8_t")»
-			«m.nativeTypeName().native2JavaType()» value = buf.get() & 0xFF;
+			«m.nativeTypeName().native2JavaType()» value = buf.get() & 0xFFL;
 			«IF m.isPadded()»
 			buf.position(buf.position() + «m.padding» - 1);
 			«ENDIF»
@@ -735,7 +735,7 @@ class StructGenerator {
 			buf.position(buf.position() + «m.padding» - 2);
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint16_t")»
-			«m.nativeTypeName().native2JavaType()» value = buf.getShort() & 0xFFFF;
+			«m.nativeTypeName().native2JavaType()» value = buf.getShort() & 0xFFFFL;
 			«IF m.isPadded()»
 			buf.position(buf.position() + «m.padding» - 2);
 			«ENDIF»
@@ -745,7 +745,7 @@ class StructGenerator {
 			buf.position(buf.position() + «m.padding» - 4);
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint32_t")»
-			«m.nativeTypeName().native2JavaType()» value = buf.getInt() & 0xFFFFFFFF;
+			«m.nativeTypeName().native2JavaType()» value = buf.getInt() & 0xFFFFFFFFL;
 			«IF m.isPadded()»
 			buf.position(buf.position() + «m.padding» - 4);
 			«ENDIF»
@@ -755,7 +755,7 @@ class StructGenerator {
 			buf.position(buf.position() + «m.padding» - 8);
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint64_t")»
-			«m.nativeTypeName().native2JavaType()» value = buf.getLong() & 0xFFFFFFFFFFFFFFFFL;
+			«m.nativeTypeName().native2JavaType()» value = buf.getLong();
 			«IF m.isPadded()»
 			buf.position(buf.position() + «m.padding» - 8);
 			«ENDIF»

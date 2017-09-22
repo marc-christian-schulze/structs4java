@@ -25,6 +25,7 @@ import org.structs4java.example3.OptionalPart2;
 import org.structs4java.example4.NonGreedy;
 import org.structs4java.example4.SelfSizedGreedy;
 import org.structs4java.example4.SimpleGreedy;
+import org.structs4java.bugs.SignessBug;
 
 
 public class RegressionTest extends AbstractTest {
@@ -543,6 +544,26 @@ public class RegressionTest extends AbstractTest {
 		obj.write(outBuffer);
 		
 		assertEqualBuffers(buffer, outBuffer);
+	}
+	
+	@Test
+	public void testSignessBug() throws IOException {
+		byte[] testData = new byte[]{ // 
+				(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, //
+				(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, //
+				(byte) 0xFF, (byte) 0xFF, // 
+				(byte) 0xFF, (byte) 0xFF, //
+				(byte) 0xFF, // 
+				(byte) 0xFF};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		SignessBug bug = SignessBug.read(buffer);
+		
+		assertEquals(-1L, bug.getSigned32());
+		assertEquals(0xFFFFFFFFL, bug.getUnsigned32());
+		assertEquals(-1L, bug.getSigned16());
+		assertEquals(0xFFFFL, bug.getUnsigned16());
+		assertEquals(-1L, bug.getSigned8());
+		assertEquals(0xFFL, bug.getUnsigned8());
 	}
 	
 	@Test
