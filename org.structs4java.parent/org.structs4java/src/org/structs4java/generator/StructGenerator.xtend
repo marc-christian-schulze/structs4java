@@ -312,7 +312,7 @@ class StructGenerator {
 	}
 	
 	def isEnumType(BitfieldEntry m) {
-		if(m.type != null) {
+		if(m.type !== null) {
 			return true;
 		}
 		
@@ -368,7 +368,7 @@ class StructGenerator {
 						}
 					«ENDIF»
 					
-					«IF findMemberDefiningSizeOf(m) != null»
+					«IF findMemberDefiningSizeOf(m) !== null»
 						«IF m instanceof ComplexTypeMember»
 						{
 							java.nio.ByteBuffer slice = buf.slice();
@@ -379,17 +379,8 @@ class StructGenerator {
 						«ELSE»
 						obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)«tempVarForMember(findMemberDefiningSizeOf(m))»));
 						«ENDIF»
-					«ELSEIF findMemberDefiningCountOf(m) != null»
-						«IF m instanceof ComplexTypeMember»
-						{
-							java.nio.ByteBuffer slice = buf.slice();
-							slice.order(buf.order());
-							slice.limit((int)«tempVarForMember(findMemberDefiningCountOf(m))»);
-							obj.«setterName(m)»(«readerMethodName(m)»(slice, true));
-						}
-						«ELSE»
+					«ELSEIF findMemberDefiningCountOf(m) !== null»
 						obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)«tempVarForMember(findMemberDefiningCountOf(m))»));
-						«ENDIF»
 					«ELSE»
 						«IF m.isBitfield()»
 							«IF m.isArray()»
@@ -399,7 +390,7 @@ class StructGenerator {
 							{
 								long value = «readerMethodName(m)»(buf, partialRead);
 								«FOR entry : (m as BitfieldMember).entries»
-									«IF entry.type != null»
+									«IF entry.type !== null»
 									obj.«setterName(entry)»(«javaType(entry.type)».fromValue((value & «computeBitmaskFor(entry)») >>> «computeBitsToShift(entry)»));
 									«ELSEIF entry.typename == "boolean"»
 									obj.«setterName(entry)»(((value & «computeBitmaskFor(entry)») >>> «computeBitsToShift(entry)») != 0);
@@ -485,11 +476,11 @@ class StructGenerator {
 	}
 
 	def isArray(Member m) {
-		return m.array != null
+		return m.array !== null
 	}
 	
 	def isGreedy(Member m) {
-		if(m.array == null) {
+		if(m.array === null) {
 			return false;
 		}
 		
@@ -506,7 +497,7 @@ class StructGenerator {
 	
 	def findMemberDefiningSizeOrCountOf(Member m) {
 		var m2 = findMemberDefiningSizeOf(m)
-		if(m2 != null) {
+		if(m2 !== null) {
 			return m2
 		}
 		return findMemberDefiningCountOf(m)
@@ -632,7 +623,7 @@ class StructGenerator {
 	'''
 	
 	def dimensionOf(Member m) {
-		if(m.array == null) {
+		if(m.array === null) {
 			return 0;
 		}
 		return m.array.dimension as int;
@@ -782,10 +773,10 @@ class StructGenerator {
 	'''
 
 	def readerMethodForStringMember(StringMember m) '''
-		private static String «m.readerMethodName()»(java.nio.ByteBuffer buf, boolean partialRead«IF dimensionOf(m) == 0 && findMemberDefiningSizeOf(m) != null», «attributeJavaType(findMemberDefiningSizeOrCountOf(m))» sizeof«ENDIF») throws java.io.IOException {
+		private static String «m.readerMethodName()»(java.nio.ByteBuffer buf, boolean partialRead«IF dimensionOf(m) == 0 && findMemberDefiningSizeOf(m) !== null», «attributeJavaType(findMemberDefiningSizeOrCountOf(m))» sizeof«ENDIF») throws java.io.IOException {
 			try {
 			«IF dimensionOf(m) == 0»
-				«IF findMemberDefiningSizeOf(m) == null»
+				«IF findMemberDefiningSizeOf(m) === null»
 				java.io.ByteArrayOutputStream tmp = new java.io.ByteArrayOutputStream();
 				int terminatingZeros = "\0".getBytes("«encodingOf(m)»").length;
 				int zerosRead = 0;
@@ -878,7 +869,7 @@ class StructGenerator {
 				int positionof__«attributeName(m)» = buf.position();
 				buf.position(buf.position() + «computeFixedSizeOf(m)»);
 				«ELSE»
-					«IF m.findMemberDefiningSizeOrCountOf() != null»
+					«IF m.findMemberDefiningSizeOrCountOf() !== null»
 						int positionof__«attributeName(m)» = buf.position();
 						«writerMethodName(m)»(buf);
 						
@@ -931,14 +922,14 @@ class StructGenerator {
 	
 	def hasSizeOfAttribute(Member m) {
 		if(m instanceof IntegerMember) {
-			return m.sizeof != null || m.sizeofThis;
+			return m.sizeof !== null || m.sizeofThis;
 		}
 		return false;
 	}
 	
 	def hasCountOfAttribute(Member m) {
 		if(m instanceof IntegerMember) {
-			return m.countof != null;
+			return m.countof !== null;
 		}
 		return false;
 	}
@@ -1335,7 +1326,7 @@ class StructGenerator {
 	'''
 	
 	def encodingOf(StringMember m) {
-		if(m.encoding != null) {
+		if(m.encoding !== null) {
 			return m.encoding;
 		}
 		
@@ -1500,7 +1491,7 @@ class StructGenerator {
 	}
 	
 	def nativeTypeName(BitfieldEntry m) {
-		if(m.type != null) {
+		if(m.type !== null) {
 			return javaType(m.type);
 		} else {
 			return m.typename;
@@ -1527,7 +1518,7 @@ class StructGenerator {
 
 	def javaType(ComplexTypeDeclaration type) {
 		val pkg = type.eContainer as StructsFile
-		if (pkg != null && !pkg.name.empty) {
+		if (pkg !== null && !pkg.name.empty) {
 			return pkg.name + "." + type.name
 		}
 		return type.name

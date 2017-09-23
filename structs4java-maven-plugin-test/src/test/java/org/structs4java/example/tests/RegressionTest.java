@@ -26,6 +26,8 @@ import org.structs4java.example4.NonGreedy;
 import org.structs4java.example4.SelfSizedGreedy;
 import org.structs4java.example4.SimpleGreedy;
 import org.structs4java.bugs.SignessBug;
+import org.structs4java.bugs.CountOfBug;
+import org.structs4java.bugs.CountOfBug2;
 
 
 public class RegressionTest extends AbstractTest {
@@ -38,6 +40,30 @@ public class RegressionTest extends AbstractTest {
 
 		SimpleStructure actual = SimpleStructure.read(buffer);
 		Assert.assertEquals(expected, actual);
+	}
+	
+	@Test
+	public void testCountOfBug() throws IOException {
+		byte[] testData = new byte[]{ 2, 0, 1, 0, 2};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		CountOfBug bug = CountOfBug.read(buffer);
+		assertEquals(2, bug.getNum());
+		assertEquals(2, bug.getElements().size());
+		assertEquals(1, bug.getElements().get(0).getValue());
+		assertEquals(2, bug.getElements().get(1).getValue());
+	}
+	
+	@Test
+	public void testCountOfBug2() throws IOException {
+		byte[] testData = new byte[]{ 2, 0, 1, 'A', 0, 0, 2, 'B', 0};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		CountOfBug2 bug = CountOfBug2.read(buffer);
+		assertEquals(2, bug.getNum());
+		assertEquals(2, bug.getElements().size());
+		assertEquals(1, bug.getElements().get(0).getValue());
+		assertEquals("A", bug.getElements().get(0).getName());
+		assertEquals(2, bug.getElements().get(1).getValue());
+		assertEquals("B", bug.getElements().get(1).getName());
 	}
 
 	@Test

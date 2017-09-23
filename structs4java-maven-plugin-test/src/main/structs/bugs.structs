@@ -8,3 +8,23 @@ struct SignessBug {
 	int8_t signed8;
 	uint8_t unsigned8;
 }
+
+struct Element {
+	int16_t value;
+}
+
+struct CountOfBug {
+	uint8_t num countof(elements);
+	Element elements[];
+}
+
+
+struct Element2 {
+	int16_t value;
+	char    name[];
+}
+
+struct CountOfBug2 {
+	uint8_t num countof(elements);
+	Element2 elements[];
+}
