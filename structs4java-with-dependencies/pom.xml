@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.marc-christian-schulze.structs4java</groupId>
 	<artifactId>structs4java-with-dependencies</artifactId>
-	<version>1.0.31-SNAPSHOT</version>
+	<version>1.0.31</version>
 	<packaging>jar</packaging>
 
 	<properties>
