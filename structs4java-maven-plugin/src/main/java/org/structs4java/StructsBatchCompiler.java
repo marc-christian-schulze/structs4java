@@ -108,8 +108,7 @@ public class StructsBatchCompiler {
 	@Inject
 	private IStubGenerator stubGenerator;
 
-	private Writer outputWriter;
-	private Writer errorWriter;
+	private Writer debugWriter;
 	private String sourcePath;
 	private String classPath;
 	private String structSourceRoot;
@@ -164,14 +163,14 @@ public class StructsBatchCompiler {
 		this.deleteTempDirectory = deletetempDirectory;
 	}
 
-	public Writer getOutputWriter() {
-		if (outputWriter == null) {
-			outputWriter = new Writer() {
+	public Writer getDebugWriter() {
+		if (debugWriter == null) {
+			debugWriter = new Writer() {
 				@Override
 				public void write(char[] data, int offset, int count) throws IOException {
 					String message = String.copyValueOf(data, offset, count);
 					if (!Strings.isEmpty(message.trim())) {
-						System.out.println(message);
+						log.debug(message);
 					}
 				}
 
@@ -184,38 +183,7 @@ public class StructsBatchCompiler {
 				}
 			};
 		}
-		return outputWriter;
-	}
-
-	public void setOutputWriter(Writer ouputWriter) {
-		this.outputWriter = ouputWriter;
-	}
-
-	public Writer getErrorWriter() {
-		if (errorWriter == null) {
-			errorWriter = new Writer() {
-				@Override
-				public void write(char[] data, int offset, int count) throws IOException {
-					String message = String.copyValueOf(data, offset, count);
-					if (!Strings.isEmpty(message.trim())) {
-						System.out.println(message);
-					}
-				}
-
-				@Override
-				public void flush() throws IOException {
-				}
-
-				@Override
-				public void close() throws IOException {
-				}
-			};
-		}
-		return errorWriter;
-	}
-
-	public void setErrorWriter(Writer errorWriter) {
-		this.errorWriter = errorWriter;
+		return debugWriter;
 	}
 
 	public void setClassPath(String classPath) {
@@ -275,7 +243,7 @@ public class StructsBatchCompiler {
 				File sourceDirectory = createStubs(resourceSet);
 				if (!preCompileStubs(sourceDirectory, classDirectory)) {
 					log.warn(
-							"Compilation of stubs and existing Java code had errors. This is expected and usually is not a problem.");
+							"Compilation of stubs and existing Java code had errors. This is expected and usually is not a problem. To view the compilation errors re-run the build with debug enabled (-X).");
 				}
 			} finally {
 				compilerPhases.setIndexing(resourceSet, false);
@@ -362,8 +330,8 @@ public class StructsBatchCompiler {
 			}
 		})));
 		log.debug("invoke batch compiler with '" + concat(" ", commandLine) + "'");
-		return BatchCompiler.compile(concat(" ", commandLine), new PrintWriter(getOutputWriter()),
-				new PrintWriter(getErrorWriter()), null);
+		return BatchCompiler.compile(concat(" ", commandLine), new PrintWriter(getDebugWriter()),
+				new PrintWriter(getDebugWriter()), null);
 	}
 
 	protected List<Issue> validate(ResourceSet resourceSet) {
