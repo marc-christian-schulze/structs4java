@@ -28,3 +28,10 @@ struct CountOfBug2 {
 	uint8_t num countof(elements);
 	Element2 elements[];
 }
+
+struct FixedSizeByteBuffer {
+    // due to a defect, if the buffer is not exactly 8 bytes when written 
+	uint8_t fixed_size_buffer[8];
+	// the following test field will be at a different location in the binary stream
+	char    test[4];
+}

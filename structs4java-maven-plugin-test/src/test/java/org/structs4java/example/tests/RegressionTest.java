@@ -28,6 +28,7 @@ import org.structs4java.example4.SimpleGreedy;
 import org.structs4java.bugs.SignessBug;
 import org.structs4java.bugs.CountOfBug;
 import org.structs4java.bugs.CountOfBug2;
+import org.structs4java.bugs.FixedSizeByteBuffer;
 
 
 public class RegressionTest extends AbstractTest {
@@ -651,6 +652,42 @@ public class RegressionTest extends AbstractTest {
 	public void testCloneMethodFilledObject() {
 		CopyConstructorCases obj = createFilledObject();
 		assertEquals(obj, obj.clone());
+	}
+	
+	@Test
+	public void testFixedSizeByteBufferBug_WithSmallerBufferSize() throws IOException {
+		ByteBuffer outBuffer = ByteBuffer.allocate((int) FixedSizeByteBuffer.getSizeOf());
+		FixedSizeByteBuffer obj = new FixedSizeByteBuffer();
+		obj.setFixed_size_buffer(ByteBuffer.wrap(new byte[]{'1', '2', '3'}));
+		obj.setTest("ABCD");
+		
+		obj.write(outBuffer);
+		
+		assertEqualBuffers(ByteBuffer.wrap(new byte[]{ '1', '2', '3', 0, 0, 0, 0, 0, 'A', 'B', 'C', 'D'}), outBuffer);
+	}
+	
+	@Test
+	public void testFixedSizeByteBufferBug_WithLargerBufferSize() throws IOException {
+		ByteBuffer outBuffer = ByteBuffer.allocate((int) FixedSizeByteBuffer.getSizeOf());
+		FixedSizeByteBuffer obj = new FixedSizeByteBuffer();
+		obj.setFixed_size_buffer(ByteBuffer.wrap(new byte[]{'1', '2', '3', '4', '5', '6', '7', '8', '9', '1'}));
+		obj.setTest("ABCD");
+		
+		obj.write(outBuffer);
+		
+		assertEqualBuffers(ByteBuffer.wrap(new byte[]{ '1', '2', '3', '4', '5', '6', '7', '8', 'A', 'B', 'C', 'D'}), outBuffer);
+	}
+
+	@Test
+	public void testFixedSizeByteBufferBug_WithExactBufferSize() throws IOException {
+		ByteBuffer outBuffer = ByteBuffer.allocate((int) FixedSizeByteBuffer.getSizeOf());
+		FixedSizeByteBuffer obj = new FixedSizeByteBuffer();
+		obj.setFixed_size_buffer(ByteBuffer.wrap(new byte[]{'1','2','3','4','5','6','7','8'}));
+		obj.setTest("ABCD");
+		
+		obj.write(outBuffer);
+		
+		assertEqualBuffers(ByteBuffer.wrap(new byte[]{ '1', '2', '3', '4', '5', '6', '7', '8', 'A', 'B', 'C', 'D'}), outBuffer);
 	}
 
 	private CopyConstructorCases createFilledObject() {

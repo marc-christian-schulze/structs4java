@@ -982,7 +982,25 @@ class StructGenerator {
 		private void «m.writerMethodName()»(java.nio.ByteBuffer buf) throws java.io.IOException {
 			// reset position in case someone read this buffer before
 			«getterName(m)»().position(0);
+
+			«IF dimensionOf(m) > 0»
+			// we need to slice the buffer in order to limit its written size
+			java.nio.ByteBuffer slicedBuffer = «getterName(m)»().slice();
+			if(slicedBuffer.limit() > «dimensionOf(m)») {
+				slicedBuffer.limit(«dimensionOf(m)»);
+			}
+			buf.put(slicedBuffer);
+			int bytesToFill = («dimensionOf(m)» - slicedBuffer.limit());
+			if(bytesToFill > 0) {
+				for(int i = 0; i < bytesToFill; ++i) {
+					buf.put((byte)0);	
+				}		
+			}
+			«ELSE»
+			// buffer has unbound / dynamic size
 			buf.put(«getterName(m)»());
+			«ENDIF»
+			
 			«IF m.isPadded()»
 			int bytesOverlap = («getterName(m)»().limit() % «m.padding»);
 			if(bytesOverlap > 0) {
