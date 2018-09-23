@@ -16,7 +16,7 @@ Add the plugin to your maven build:
 <plugin>
   <groupId>com.github.marc-christian-schulze.structs4java</groupId>
   <artifactId>structs4java-maven-plugin</artifactId>
-  <version>1.0.24</version>
+  <version>1.0.31</version>
   <executions>
     <execution>
       <id>compile-structs</id>
@@ -314,3 +314,18 @@ struct Student {
   // Student*    next;  // Pointers are not supported by Structs4Java
 }
 ```
+
+# Developing Structs4Java
+
+**Requirements:**
+- Git
+- Docker
+
+In order to get started simply clone the repo to your local drive and start the compilation:
+```
+$ ./build.sh
+```
+First, a docker container is built containing the required build tools (JDK, Maven, etc.). Afterwards the sources are compiled inside of the container. During the compilation maven will create a dedicated M2-Repo in your workspace.
+
+## Creating a new Release
+todo

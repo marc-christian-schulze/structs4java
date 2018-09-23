@@ -4,9 +4,9 @@
 package org.structs4java.tests
 
 import com.google.inject.Inject
-import org.eclipse.xtext.junit4.InjectWith
-import org.eclipse.xtext.junit4.XtextRunner
-import org.eclipse.xtext.junit4.util.ParseHelper
+import org.eclipse.xtext.testing.InjectWith
+import org.eclipse.xtext.testing.XtextRunner
+import org.eclipse.xtext.testing.util.ParseHelper
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -14,7 +14,7 @@ import org.structs4java.structs4JavaDsl.IntegerMember
 import org.structs4java.structs4JavaDsl.ComplexTypeMember
 import org.structs4java.structs4JavaDsl.EnumDeclaration
 
-@RunWith(XtextRunner)
+@RunWith(XtextRunner) 
 @InjectWith(Structs4JavaDslInjectorProvider)
 class Structs4JavaDslParsingTest{
 
