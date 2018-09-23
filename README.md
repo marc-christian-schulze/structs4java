@@ -328,4 +328,10 @@ $ ./build.sh
 First, a docker container is built containing the required build tools (JDK, Maven, etc.). Afterwards the sources are compiled inside of the container. During the compilation maven will create a dedicated M2-Repo in your workspace.
 
 ## Creating a new Release
-todo
+```
+$ docker run -it --rm -v "$(pwd)":/workspace --user "$(id -u):$(id -g)" buildbox bash
+```
+
+```
+docker-container$ ./perform_release.sh 1.0.32 "Marc-Christian Schulze" "Marc.Christian.Schulze@gmail.com"
+```

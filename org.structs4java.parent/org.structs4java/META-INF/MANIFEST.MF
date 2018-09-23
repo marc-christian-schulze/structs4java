@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: org.structs4java
 Bundle-Vendor: My Company
-Bundle-Version: 1.0.32.qualifier
+Bundle-Version: 1.0.32
 Bundle-SymbolicName: org.structs4java; singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: org.eclipse.xtext,
