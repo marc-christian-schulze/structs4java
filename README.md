@@ -430,7 +430,12 @@ struct Student {
   char     name[64];     // default charset is UTF-8
   Date     birth;
   float    grades[10];
-  // Student*    next;  // Pointers are not supported by Structs4Java
+  // Student*    next;  // Pointers are not supported by Structs4Java ...
+}
+
+// ... but if they are stored just in a sequence:
+struct FileWithStudents {
+  Student students[];
 }
 ```
 
