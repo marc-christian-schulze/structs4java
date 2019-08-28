@@ -1,7 +1,7 @@
 language: java
 script: mvn install
 jdk:
-- oraclejdk8
+- oraclejdk11
 before_script:
 - sh -e /etc/init.d/xvfb start
 only:

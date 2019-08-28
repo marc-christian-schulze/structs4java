@@ -249,15 +249,6 @@
 		<super type="org.eclipse.xtext.ui.check.expensive"/>
 		<persistent value="true"/>
 	</extension>
-	<extension point="org.eclipse.ui.preferencePages">
-		<page
-			category="org.structs4java.Structs4JavaDsl"
-			class="org.structs4java.ui.Structs4JavaDslExecutableExtensionFactory:org.eclipse.xtext.ui.validation.ValidatorPreferencePage"
-			id="org.structs4java.Structs4JavaDsl.validator.preferencePage"
-			name="Errors/Warnings">
-			<keywordReference id="org.structs4java.ui.keyword_Structs4JavaDsl"/>
-		</page>
-	</extension>
 	<extension point="org.eclipse.xtext.builder.participant">
 		<participant
 			class="org.structs4java.ui.Structs4JavaDslExecutableExtensionFactory:org.eclipse.xtext.builder.IXtextBuilderParticipant"
