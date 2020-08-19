@@ -2,8 +2,8 @@ language: java
 script: mvn install
 jdk:
 - oraclejdk11
-before_script:
-- sh -e /etc/init.d/xvfb start
+services:
+- xvfb
 only:
 - master
 cache:
