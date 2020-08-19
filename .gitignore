@@ -10,3 +10,4 @@ dependency-reduced-pom.xml
 bin/
 /.metadata/
 .m2/
+*.gpg
