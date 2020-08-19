@@ -13,7 +13,4 @@ cd structs4java-core          && "$GPG_DIR/publish.sh"         && cd ..
 echo "Deploying Structs4Java Maven Plugin..."
 cd structs4java-maven-plugin  && "$GPG_DIR/publish.sh"         && cd ..
 
-echo "Deploying Structs4Java Eclipse Plugin..."
-cd org.structs4java.parent    && "$GPG_DIR/publish_bintray.sh" && cd ..
-
 echo "Deployment done."
