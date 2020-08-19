@@ -109,6 +109,7 @@ StringMember:
 	(array=ArrayDimension)?
 	('encoding' '(' encoding=STRING ')')?
 	('padding' '(' padding=LONG ')')?
+	(nullTerminated='null-terminated')?
 	';'
 ;
 

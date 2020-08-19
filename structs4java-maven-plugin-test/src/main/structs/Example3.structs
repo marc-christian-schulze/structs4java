@@ -6,7 +6,7 @@ struct NullTerminatedString {
 
 struct BString {
 	uint32_t size sizeof(value);
-	char value[];
+	char value[] null-terminated;
 }
 
 struct DynamicStruct {

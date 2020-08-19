@@ -175,7 +175,7 @@ Variable-sized structures contain at least one array field which dimension is de
 ```C++
 struct BString { // no getSizeOf()
   uint32_t  length   sizeOf(value);
-  char      value[]  encoding("UCS-2");
+  char      value[]  encoding("UCS-2") null-terminated;
 }
 ```
 In the given example no explicit dimension of field `value` is provided. Instead the field `length` is marked with the `sizeOf` keyword indicating that it's value will provide the size of the overall array `value` in bytes. You can also use the `countOf` keyword to provide the count of elements an array will contain, e.g.
@@ -286,6 +286,13 @@ Variable-length but not null-terminated strings can be represented like the foll
 struct DynamicString { // no getSizeOf()
   uint32_t length sizeof(value);
   char     value[];
+}
+```
+And finally, there's a way to create a variable-sized null-terminated string. In this case the length field includes the terminating zeros:
+```C++
+struct DynamicStringWithNullTermination { // no getSizeOf()
+  uint32_t length sizeof(value);
+  char     value[] null-terminated;
 }
 ```
 

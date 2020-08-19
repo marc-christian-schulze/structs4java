@@ -797,26 +797,24 @@ class StructGenerator {
 				«ENDIF»
 				return new String(tmp.toByteArray(), 0, tmp.size() - zerosRead, "«encodingOf(m)»");
 				«ELSE»
+
 				byte[] tmp = new byte[(int)sizeof];
 				buf.get(tmp);
-				
-				int terminatingZeros = "\0".getBytes("«encodingOf(m)»").length;
-				int zerosRead = 0;
-				int i = 0;
-				while(zerosRead < terminatingZeros && i < sizeof) {
-					if(tmp[i++] == 0) {
-						zerosRead++;
-					} else {
-						zerosRead = 0;
-					}
-				}
+
 				«IF m.isPadded()»
 				int bytesOverlap = ((int)(sizeof) % «m.padding»);
 				if(bytesOverlap > 0) {
 					buf.position(buf.position() + «m.padding» - bytesOverlap);				
 				}
 				«ENDIF»
-				return new String(tmp, 0, i - zerosRead, "«encodingOf(m)»");
+
+				«IF m.getNullTerminated() == null»
+				return new String(tmp, 0, (int)sizeof, "«encodingOf(m)»");
+				«ELSE»
+				int terminatingZeros = "\0".getBytes("«encodingOf(m)»").length;
+				return new String(tmp, 0, (int)(sizeof - terminatingZeros), "«encodingOf(m)»");
+				«ENDIF»
+
 				«ENDIF»
 			«ELSE»
 				byte[] tmp = new byte[«dimensionOf(m)»];
@@ -1318,7 +1316,14 @@ class StructGenerator {
 			byte[] encoded = «getterName(m)»().getBytes("«encodingOf(m)»");
 			«IF dimensionOf(m) == 0»
 			buf.put(encoded);
+			«IF findMemberDefiningSizeOf(m) === null»
 			buf.put("\0".getBytes("«encodingOf(m)»"));
+			«ELSE»
+			«IF m.getNullTerminated() != null»
+			buf.put("\0".getBytes("«encodingOf(m)»"));
+			«ENDIF»
+			«ENDIF»
+
 			«ELSE»
 			int len = Math.min(encoded.length, «dimensionOf(m)»);
 			int pad = «dimensionOf(m)» - len;

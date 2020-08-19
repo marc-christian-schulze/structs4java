@@ -29,6 +29,7 @@ import org.structs4java.bugs.SignessBug;
 import org.structs4java.bugs.CountOfBug;
 import org.structs4java.bugs.CountOfBug2;
 import org.structs4java.bugs.FixedSizeByteBuffer;
+import org.structs4java.example.test.DynamicString;
 
 
 public class RegressionTest extends AbstractTest {
@@ -506,6 +507,22 @@ public class RegressionTest extends AbstractTest {
 		ByteBuffer buffer = ByteBuffer.wrap(testData);
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
 		BString str = BString.read(buffer);
+		
+		Assert.assertEquals("Test", str.getValue());
+		
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		str.write(outBuffer);
+		
+		assertEqualBuffers(buffer, outBuffer);
+	}
+
+	@Test
+	public void testVarStringNotNullTerminated() throws IOException {
+		byte[] testData = new byte[]{ 4, 0, 0, 0, 'T', 'e', 's', 't'};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		DynamicString str = DynamicString.read(buffer);
 		
 		Assert.assertEquals("Test", str.getValue());
 		

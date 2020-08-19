@@ -1,0 +1,6 @@
+package org.structs4java.example.test;
+
+struct DynamicString {
+  uint32_t length sizeof(value);
+  char     value[];
+}
