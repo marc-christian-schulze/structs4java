@@ -30,6 +30,7 @@ import org.structs4java.bugs.CountOfBug;
 import org.structs4java.bugs.CountOfBug2;
 import org.structs4java.bugs.FixedSizeByteBuffer;
 import org.structs4java.example.test.DynamicString;
+import org.structs4java.example.test.PaddedWithCustomByte;
 
 
 public class RegressionTest extends AbstractTest {
@@ -529,6 +530,36 @@ public class RegressionTest extends AbstractTest {
 		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
 		outBuffer.order(buffer.order());
 		str.write(outBuffer);
+		
+		assertEqualBuffers(buffer, outBuffer);
+	}
+
+	@Test
+	public void testPaddingWithCustomByte() throws IOException {
+		byte[] testData = new byte[]{ 
+			1, (byte)0xFF, (byte)0xFF, (byte)0xFF,                      // uint8_t value1 padding(4, using = 0xFF);
+			1, 0, (byte)0xFF, (byte)0xFF,                               // uint16_t value2 padding(4, using = 0xFF);
+			1, 0, 0, 0, (byte)0xFF, (byte)0xFF, (byte)0xFF, (byte)0xFF, // uint32_t value3 padding(8, using = 0xFF);
+			1, 0, 0, 0, 0, 0, 0, 0, (byte)0xFF, (byte)0xFF,             // uint64_t value4 padding(10, using = 0xFF);
+			'T', 'e', 's', 't', (byte)0xFF,                             // char value5[4] padding(5, using = 0xFF);
+			0, 0, (byte) 0x8c, (byte) 0xc1, (byte)0xFF,                 // float value6 padding(5, using = 0xFF);
+			0, 0, 0, 0, 0, 0, 0, (byte) 0xc0, (byte)0xFF                // double value7 padding(9, using = 0xFF);
+		};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		PaddedWithCustomByte struct = PaddedWithCustomByte.read(buffer);
+		
+		Assert.assertEquals(1, struct.getValue1());
+		Assert.assertEquals(1, struct.getValue2());
+		Assert.assertEquals(1, struct.getValue3());
+		Assert.assertEquals(1, struct.getValue4());
+		Assert.assertEquals("Test", struct.getValue5());
+		Assert.assertEquals(-17.5f, struct.getValue6(), 0.01f);
+		Assert.assertEquals(-2d, struct.getValue7(), 0.01f);
+		
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		struct.write(outBuffer);
 		
 		assertEqualBuffers(buffer, outBuffer);
 	}

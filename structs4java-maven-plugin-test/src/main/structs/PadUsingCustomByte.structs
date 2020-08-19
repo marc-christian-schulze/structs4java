@@ -1,0 +1,11 @@
+package org.structs4java.example.test;
+
+struct PaddedWithCustomByte {
+    uint8_t value1 padding(4, using = 0xFF);
+    uint16_t value2 padding(4, using = 0xFF);
+    uint32_t value3 padding(8, using = 0xFF);
+    uint64_t value4 padding(10, using = 0xFF);
+    char value5[4] padding(5, using = 0xFF);
+    float value6 padding(5, using = 0xFF);
+    double value7 padding(9, using = 0xFF);
+}

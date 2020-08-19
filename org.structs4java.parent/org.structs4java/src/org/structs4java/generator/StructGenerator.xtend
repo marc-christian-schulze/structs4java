@@ -1003,7 +1003,7 @@ class StructGenerator {
 			int bytesOverlap = («getterName(m)»().limit() % «m.padding»);
 			if(bytesOverlap > 0) {
 				for(int i = 0; i < «m.padding» - bytesOverlap; ++i) {
-					buf.put((byte)0);	
+					buf.put((byte)«m.getUsing()»);	
 				}		
 			}
 			«ENDIF»
@@ -1023,7 +1023,7 @@ class StructGenerator {
 				int bytesOverlap = ((buf.position() - beginMember) % «m.padding»);
 				if(bytesOverlap > 0) {
 					for(int i = 0; i < «m.padding» - bytesOverlap; ++i) {
-						buf.put((byte)0);	
+						buf.put((byte)«m.getUsing()»);	
 					}
 				}
 				«ENDIF»
@@ -1040,56 +1040,56 @@ class StructGenerator {
 			buf.put((byte)«getterName(m)»());
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 1; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint8_t")»
 			buf.put((byte)«getterName(m)»());
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 1; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("int16_t")»
 			buf.putShort((short)«getterName(m)»());
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 2; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint16_t")»
 			buf.putShort((short)«getterName(m)»());
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 2; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("int32_t")»
 			buf.putInt((int)«getterName(m)»());
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 4; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint32_t")»
 			buf.putInt((int)«getterName(m)»());
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 4; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("int64_t")»
 			buf.putLong(«getterName(m)»());
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 8; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint64_t")»
 			buf.putLong(«getterName(m)»());
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 8; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ENDIF»
@@ -1106,56 +1106,56 @@ class StructGenerator {
 			buf.put((byte)«getterName(m)»());
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 1; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint8_t")»
 			buf.put((byte)«getterName(m)»());
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 1; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("int16_t")»
 			buf.putShort((short)«getterName(m)»());
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 2; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint16_t")»
 			buf.putShort((short)«getterName(m)»());
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 2; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("int32_t")»
 			buf.putInt((int)«getterName(m)»());
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 4; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint32_t")»
 			buf.putInt((int)«getterName(m)»());
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 4; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("int64_t")»
 			buf.putLong(«getterName(m)»());
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 8; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint64_t")»
 			buf.putLong(«getterName(m)»());
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 8; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ENDIF»
@@ -1169,56 +1169,56 @@ class StructGenerator {
 			buf.put((byte)value);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 1; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint8_t")»
 			buf.put((byte)value);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 1; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("int16_t")»
 			buf.putShort((short)value);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 2; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint16_t")»
 			buf.putShort((short)value);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 2; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("int32_t")»
 			buf.putInt((int)value);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 4; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint32_t")»
 			buf.putInt((int)value);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 4; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("int64_t")»
 			buf.putLong(value);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 8; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint64_t")»
 			buf.putLong(value);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 8; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ENDIF»
@@ -1231,56 +1231,56 @@ class StructGenerator {
 			buf.put((byte)value);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 1; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint8_t")»
 			buf.put((byte)value);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 1; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("int16_t")»
 			buf.putShort((short)value);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 2; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint16_t")»
 			buf.putShort((short)value);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 2; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("int32_t")»
 			buf.putInt((int)value);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 4; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint32_t")»
 			buf.putInt((int)value);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 4; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("int64_t")»
 			buf.putLong(value);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 8; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("uint64_t")»
 			buf.putLong(value);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 8; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ENDIF»
@@ -1293,14 +1293,14 @@ class StructGenerator {
 			buf.putFloat((float)«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 4; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ELSEIF m.typename.equals("double")»
 			buf.putDouble(«IF m.isArray()»value«ELSE»«getterName(m)»()«ENDIF»);
 			«IF m.isPadded()»
 			for(int i = 0; i < «m.padding» - 8; ++i) {
-				buf.put((byte)0);	
+				buf.put((byte)«m.getUsing()»);	
 			}
 			«ENDIF»
 			«ENDIF»
@@ -1326,11 +1326,11 @@ class StructGenerator {
 
 			«ELSE»
 			int len = Math.min(encoded.length, «dimensionOf(m)»);
-			int pad = «dimensionOf(m)» - len;
+			int bytesToFill = «dimensionOf(m)» - len;
 			buf.put(encoded, 0, len);
-			if(pad > 0) {
-				for(int i = 0; i < pad; ++i) {
-					buf.put((byte)0);	
+			if(bytesToFill > 0) {
+				for(int i = 0; i < bytesToFill; ++i) {
+					buf.put((byte)0);
 				}
 			}
 			«ENDIF»
@@ -1338,8 +1338,8 @@ class StructGenerator {
 			int bytesOverlap = ((buf.position() - memberBegin) % «m.padding»);
 			if(bytesOverlap > 0) {
 				for(int i = 0; i < «m.padding» - bytesOverlap; ++i) {
-					buf.put((byte)0);	
-				}				
+					buf.put((byte)«m.getUsing()»);
+				}
 			}
 			«ENDIF»
 		} catch(java.io.UnsupportedEncodingException e) {

@@ -58,7 +58,7 @@ EnumDeclaration:
 
 BitfieldMember:
 	(comments += SL_COMMENT)*
-	'bitfield' typename=INTEGER_TYPE (array=ArrayDimension)? ('padding' '(' padding=LONG ')')? '{'
+	'bitfield' typename=INTEGER_TYPE (array=ArrayDimension)? ('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')? '{'
 		(entries += BitfieldEntry)*
 	'}'
 ;
@@ -78,7 +78,7 @@ ComplexTypeMember:
 	(comments += SL_COMMENT)*
 	type=[ComplexTypeDeclaration|QualifiedName] name=ID
 	(array=ArrayDimension)?
-	('padding' '(' padding=LONG ')')?
+	('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')?
 	';'
 ;
 
@@ -91,7 +91,7 @@ IntegerMember:
 		('sizeof' '(' sizeofThis?='this' ')')? &
 		('countof' '(' countof=[Member] ')')?
 	)
-	('padding' '(' padding=LONG ')')?
+	('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')?
 	';'
 ;
 
@@ -99,7 +99,7 @@ FloatMember:
 	(comments += SL_COMMENT)*
 	typename=FLOAT_TYPE name=ID 
 	(array=ArrayDimension)?
-	('padding' '(' padding=LONG ')')?
+	('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')?
 	';'
 ;
 
@@ -108,7 +108,7 @@ StringMember:
 	typename=STRING_TYPE name=ID 
 	(array=ArrayDimension)?
 	('encoding' '(' encoding=STRING ')')?
-	('padding' '(' padding=LONG ')')?
+	('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')?
 	(nullTerminated='null-terminated')?
 	';'
 ;
