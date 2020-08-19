@@ -267,6 +267,14 @@ struct Person { // getSizeOf() = 20
   char name[20];
 }
 ```
+By default, a fixed sized string is capped or filled (using 0x0) if the given value is shorter or longer than the char array.
+You can change the default filler byte using:
+```C++
+struct Person { // getSizeOf() = 20
+  char name[20] filler(0x20); // blank-filled char array
+}
+```
+
 By default UTF-8 is choosen as encoding but can be specified explicitily using the encoding attribute
 ```C++
 struct Person { // getSizeOf() = 20

@@ -1,0 +1,5 @@
+package org.structs4java.example.test;
+
+struct FixSizedStringWithCustomFiller {
+  char     value[4] filler(0x20);
+}

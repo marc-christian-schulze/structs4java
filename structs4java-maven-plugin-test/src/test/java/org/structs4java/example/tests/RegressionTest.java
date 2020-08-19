@@ -31,6 +31,7 @@ import org.structs4java.bugs.CountOfBug2;
 import org.structs4java.bugs.FixedSizeByteBuffer;
 import org.structs4java.example.test.DynamicString;
 import org.structs4java.example.test.PaddedWithCustomByte;
+import org.structs4java.example.test.FixSizedStringWithCustomFiller;
 
 
 public class RegressionTest extends AbstractTest {
@@ -560,6 +561,23 @@ public class RegressionTest extends AbstractTest {
 		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
 		outBuffer.order(buffer.order());
 		struct.write(outBuffer);
+		
+		assertEqualBuffers(buffer, outBuffer);
+	}
+
+	@Test
+	public void testFixSizedStringWithCustomFiller() throws IOException {
+		byte[] testData = new byte[]{'T', 'e', 's', ' '};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		FixSizedStringWithCustomFiller str = FixSizedStringWithCustomFiller.read(buffer);
+		
+		Assert.assertEquals("Tes ", str.getValue());
+		str.setValue("Tes"); // ensure we test the custom filler byte
+		
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		str.write(outBuffer);
 		
 		assertEqualBuffers(buffer, outBuffer);
 	}

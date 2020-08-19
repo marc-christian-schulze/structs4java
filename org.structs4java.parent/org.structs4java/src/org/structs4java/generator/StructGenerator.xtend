@@ -1330,7 +1330,7 @@ class StructGenerator {
 			buf.put(encoded, 0, len);
 			if(bytesToFill > 0) {
 				for(int i = 0; i < bytesToFill; ++i) {
-					buf.put((byte)0);
+					buf.put((byte)«m.getFiller()»);
 				}
 			}
 			«ENDIF»
