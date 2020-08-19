@@ -13,7 +13,7 @@ cache:
   - "$HOME/.m2"
 deploy:
   provider: script
-  script: travis_wait bash ./deploy/deploy.sh
+  script: travis_wait bash "$TRAVIS_BUILD_DIR/deploy/deploy.sh"
   on:
     tags: true
 env:
