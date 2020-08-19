@@ -27,17 +27,12 @@
 	<property name="local.p2.repository" value="target/repository" />
 
 	<target name="getMajorMinorVersion">
-		<script language="javascript">
-			<![CDATA[
-
-	                // getting the value
-	                buildnumber = project.getProperty("unqualifiedVersion");
-	                index = buildnumber.lastIndexOf(".");
-	                counter = buildnumber.substring(0, index);
-	    			project.setProperty("majorMinorVersion",counter);
-
-	            ]]>
-		</script>
+		<groovy>
+		def buildnumber = project.getProperty("unqualifiedVersion")
+		def index = buildnumber.lastIndexOf(".")
+		def counter = buildnumber.substring(0, index)
+		project.setProperty("majorMinorVersion", counter)
+		</groovy>
 	</target>
 
 	<!-- Take from the remote URL the possible existing metadata -->
