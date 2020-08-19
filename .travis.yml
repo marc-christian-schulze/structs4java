@@ -1,5 +1,7 @@
 language: java
-script: mvn install
+script: 
+- mvn install
+- chmod +x ./deploy/deploy.sh
 jdk:
 - oraclejdk11
 services:
