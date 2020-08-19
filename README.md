@@ -325,6 +325,14 @@ This will introduce 2 filler bytes (zeros) after the structure.
 | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
 |   x   | filler|   x   | filler|   z   | filler  |
 ```
+You can customize the padding byte as well:
+```C++
+struct Coordinate { // getSizeOf() = 12
+  uint16_t  x  padding(4, using = 0xFF);
+  uint16_t  y  padding(4);
+  uint16_t  z  padding(4);
+}
+```
 
 Padding can not only be applied to primitive fields but also for Strings, Structures and (dynamic) Arrays, e.g.
 ```C++
