@@ -8,4 +8,4 @@ docker run -i --rm \
     -e DISPLAY=unix:0.0 \
     -v /tmp/.X11-unix:/tmp/.X11-unix:ro \
     buildbox \
-    mvn clean install -Dmaven.repo.local=/workspace/.m2
+    bash -c "Xvfb :1 -screen 0 1024x768x16 &> xvfb.log & DISPLAY=:1.0 mvn clean install -Dmaven.repo.local=/workspace/.m2"
