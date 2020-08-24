@@ -1,0 +1,5 @@
+_XSERVTransmkdir: Mode of /tmp/.X11-unix should be set to 1777
+_XSERVTransmkdir: this may cause subsequent errors
+_XSERVTransSocketCreateListener: failed to bind listener
+_XSERVTransSocketUNIXCreateListener: ...SocketCreateListener() failed
+_XSERVTransMakeAllCOTSServerListeners: failed to create listener for unix
