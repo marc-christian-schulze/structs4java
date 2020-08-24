@@ -40,7 +40,7 @@ public class RegressionTest extends AbstractTest {
 	public void testSimpleStructure() throws IOException {
 		SimpleStructure expected = createSimpleStruct();
 		expected.write(buffer);
-		buffer.position(0);
+		buffer.flip();
 
 		SimpleStructure actual = SimpleStructure.read(buffer);
 		Assert.assertEquals(expected, actual);
@@ -73,7 +73,7 @@ public class RegressionTest extends AbstractTest {
 	@Test
 	public void testEnum() throws IOException {
 		SimpleEnum.SecondItem.write(buffer);
-		buffer.position(0);
+		buffer.flip();
 
 		SimpleEnum actual = SimpleEnum.read(buffer);
 
@@ -85,7 +85,7 @@ public class RegressionTest extends AbstractTest {
 		AdvancedStructure expected = createAdvancedStruct();
 
 		expected.write(buffer);
-		buffer.position(0);
+		buffer.flip();
 
 		AdvancedStructure actual = AdvancedStructure.read(buffer);
 		Assert.assertEquals(expected, actual);
@@ -121,7 +121,7 @@ public class RegressionTest extends AbstractTest {
 
 		buffer.order(ByteOrder.BIG_ENDIAN);
 		expected.write(buffer);
-		buffer.position(0);
+		buffer.flip();
 
 		AdvancedStructure actual = AdvancedStructure.read(buffer);
 		Assert.assertEquals(expected, actual);
@@ -133,7 +133,7 @@ public class RegressionTest extends AbstractTest {
 
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
 		expected.write(buffer);
-		buffer.position(0);
+		buffer.flip();
 
 		AdvancedStructure actual = AdvancedStructure.read(buffer);
 		Assert.assertEquals(expected, actual);
@@ -143,7 +143,7 @@ public class RegressionTest extends AbstractTest {
 	public void testMixedEndian() throws IOException {
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
 		SimpleEnum.SecondItem.write(buffer);
-		buffer.position(0);
+		buffer.flip();
 		buffer.order(ByteOrder.BIG_ENDIAN);
 
 		SimpleEnum.read(buffer);
@@ -155,7 +155,7 @@ public class RegressionTest extends AbstractTest {
 		expected.setValue("A string of theoretically variable length!");
 		
 		expected.write(buffer);
-		buffer.position(0);
+		buffer.flip();
 
 		BString actual = BString.read(buffer);
 		Assert.assertEquals(expected, actual);
@@ -173,7 +173,7 @@ public class RegressionTest extends AbstractTest {
 		expected.setOptionalFields(optionalFields);
 		
 		expected.write(buffer);
-		buffer.position(0);
+		buffer.flip();
 		
 		DynamicStruct actual = DynamicStruct.read(buffer);
 		
@@ -186,7 +186,7 @@ public class RegressionTest extends AbstractTest {
 		DynamicStruct expected = new DynamicStruct();
 		
 		expected.write(buffer);
-		buffer.position(0);
+		buffer.flip();
 		
 		DynamicStruct actual = DynamicStruct.read(buffer);
 		
@@ -199,9 +199,23 @@ public class RegressionTest extends AbstractTest {
 		expected.setValue("A string of theoretically variable length!");
 		
 		expected.write(buffer);
-		buffer.position(0);
+		buffer.flip();
 
 		NullTerminatedString actual = NullTerminatedString.read(buffer);
+		Assert.assertEquals(expected, actual);
+	}
+
+	@Test
+	public void testPartialReadOfNullTerminatedString() throws IOException {
+		NullTerminatedString expected = new NullTerminatedString();
+		expected.setValue("A string of theoretically variable length!");
+		
+		expected.write(buffer);
+		buffer.flip();
+		// truncate terminating zero
+		buffer.limit(buffer.limit() - 1);
+
+		NullTerminatedString actual = NullTerminatedString.read(buffer, true);
 		Assert.assertEquals(expected, actual);
 	}
 	
@@ -214,7 +228,7 @@ public class RegressionTest extends AbstractTest {
 		expected.setOptionalFields(optionalFields);
 		
 		expected.write(buffer);
-		buffer.position(0);
+		buffer.flip();
 		
 		DynamicStructHavingPartialNestedObject actual = DynamicStructHavingPartialNestedObject.read(buffer);
 		
@@ -231,7 +245,7 @@ public class RegressionTest extends AbstractTest {
 		expected.setArray(list);
 		
 		expected.write(buffer);
-		buffer.position(0);
+		buffer.flip();
 		
 		ListOfIntegers actual = ListOfIntegers.read(buffer);
 		

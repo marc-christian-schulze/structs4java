@@ -774,12 +774,14 @@ class StructGenerator {
 
 	def readerMethodForStringMember(StringMember m) '''
 		private static String «m.readerMethodName()»(java.nio.ByteBuffer buf, boolean partialRead«IF dimensionOf(m) == 0 && findMemberDefiningSizeOf(m) !== null», «attributeJavaType(findMemberDefiningSizeOrCountOf(m))» sizeof«ENDIF») throws java.io.IOException {
+			«IF dimensionOf(m) == 0 && findMemberDefiningSizeOf(m) === null»
+			java.io.ByteArrayOutputStream tmp = new java.io.ByteArrayOutputStream();
+			int zerosRead = 0;
+			«ENDIF»
 			try {
 			«IF dimensionOf(m) == 0»
 				«IF findMemberDefiningSizeOf(m) === null»
-				java.io.ByteArrayOutputStream tmp = new java.io.ByteArrayOutputStream();
 				int terminatingZeros = "\0".getBytes("«encodingOf(m)»").length;
-				int zerosRead = 0;
 				while(zerosRead < terminatingZeros) {
 					int b = buf.get();
 					tmp.write(b);
@@ -843,6 +845,14 @@ class StructGenerator {
 			} catch(java.io.UnsupportedEncodingException e) {
 				throw new java.io.IOException(e);
 			}
+			«IF dimensionOf(m) == 0 && findMemberDefiningSizeOf(m) === null»
+			catch(java.nio.BufferUnderflowException e) {
+				if(!partialRead) {
+					throw e;
+				}
+				return new String(tmp.toByteArray(), 0, tmp.size() - zerosRead, "«encodingOf(m)»");
+			}
+			«ENDIF»
 		}
 	'''
 	
