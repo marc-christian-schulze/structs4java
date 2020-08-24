@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.github.marc-christian-schulze.structs4java</groupId>
 		<artifactId>org.structs4java.parent</artifactId>
-		<version>1.0.45</version>
+		<version>1.0.46-SNAPSHOT</version>
 	</parent>
 	<artifactId>org.structs4java.tests</artifactId>
 	<packaging>eclipse-test-plugin</packaging>
