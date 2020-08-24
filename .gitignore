@@ -11,3 +11,5 @@ bin/
 /.metadata/
 .m2/
 *.gpg
+xvfb.log
+\?/

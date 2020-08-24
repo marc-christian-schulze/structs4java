@@ -3,7 +3,7 @@ script:
 - mvn install
 - chmod +x ./deploy/deploy.sh
 jdk:
-- oraclejdk11
+- openjdk11
 services:
 - xvfb
 only:
