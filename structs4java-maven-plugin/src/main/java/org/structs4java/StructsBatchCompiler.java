@@ -241,10 +241,8 @@ public class StructsBatchCompiler {
 				installJvmTypeProvider(resourceSet, classDirectory, true);
 				loadStructsFiles(resourceSet);
 				File sourceDirectory = createStubs(resourceSet);
-				if (!preCompileStubs(sourceDirectory, classDirectory)) {
-					log.warn(
-							"Compilation of stubs and existing Java code had errors. This is expected and usually is not a problem. To view the compilation errors re-run the build with debug enabled (-X).");
-				}
+				preCompileStubs(sourceDirectory, classDirectory);
+					
 			} finally {
 				compilerPhases.setIndexing(resourceSet, false);
 			}
