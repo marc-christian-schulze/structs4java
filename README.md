@@ -1,5 +1,5 @@
 # Structs4Java
-[![master status](https://img.shields.io/travis/marc-christian-schulze/structs4java/master.svg?maxAge=3600)](https://travis-ci.org/marc-christian-schulze/structs4java)
+[![master status](https://img.shields.io/travis/marc-christian-schulze/structs4java/master.svg?maxAge=3600)](https://travis-ci.com/marc-christian-schulze/structs4java)
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.marc-christian-schulze.structs4java/structs4java-maven-plugin.svg?maxAge=3600)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.github.marc-christian-schulze.structs4java%22)
 [![license](https://img.shields.io/github/license/marc-christian-schulze/structs4java.svg?maxAge=3600)](https://github.com/marc-christian-schulze/structs4java/blob/master/LICENSE)
 
