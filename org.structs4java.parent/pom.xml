@@ -49,6 +49,17 @@
 		<module>org.structs4java.tests</module>
 		<module>org.structs4java.ui.tests</module>
 	</modules>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.eclipse.xtext</groupId>
+				<artifactId>xtext-dev-bom</artifactId>
+				<version>${xtextVersion}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<build>
 		<plugins>
 			<plugin>
@@ -144,13 +155,6 @@
 							</goals>
 						</execution>
 					</executions>
-					<dependencies>
-						<dependency>
-						    <groupId>org.eclipse.platform</groupId>
-						    <artifactId>org.eclipse.equinox.common</artifactId>
-						    <version>3.10.0</version>
-						</dependency>
-					</dependencies>
 					<configuration>
 						<outputDirectory>${basedir}/xtend-gen</outputDirectory>
 						<testOutputDirectory>${basedir}/xtend-gen</testOutputDirectory>
