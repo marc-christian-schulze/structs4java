@@ -16,7 +16,7 @@ Add the plugin to your maven build:
 <plugin>
   <groupId>com.github.marc-christian-schulze.structs4java</groupId>
   <artifactId>structs4java-maven-plugin</artifactId>
-  <version>1.0.32</version>
+  <version>${s4j.version}</version>
   <executions>
     <execution>
       <id>compile-structs</id>
