@@ -469,5 +469,5 @@ $ docker run -it --rm -v "$(pwd)":/workspace --user "$(id -u):$(id -g)" buildbox
 ```
 
 ```
-docker-container$ ./perform_release.sh 1.0.49 "Marc-Christian Schulze" "Marc.Christian.Schulze@gmail.com"
+docker-container$ ./perform_release.sh 1.0.50 "Marc-Christian Schulze" "Marc.Christian.Schulze@gmail.com"
 ```
