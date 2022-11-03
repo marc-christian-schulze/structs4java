@@ -1,11 +1,11 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 RUN apt-get update && \
     apt-get install -y software-properties-common 
 
 RUN add-apt-repository ppa:openjdk-r/ppa 
 RUN apt-get update && \
-    apt-get install -y openjdk-11-jdk
+    apt-get install -y openjdk-17-jdk
 
 RUN apt-get update && \
     apt-get install -y \
@@ -15,7 +15,7 @@ RUN apt-get update && \
 
 RUN apt-get install -y xvfb
 
-ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 
 RUN mkdir /workspace
 WORKDIR /workspace

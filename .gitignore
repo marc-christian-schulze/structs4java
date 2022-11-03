@@ -1,6 +1,7 @@
 target/
 .settings/
 .project
+.idea/
 .classpath
 src-gen/
 xtend-gen/

@@ -8,7 +8,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<xtext.version>2.18.0</xtext.version>
+		<xtext.version>2.28.0</xtext.version>
 	</properties>
 
 	<name>${project.groupId}:${project.artifactId}</name>
