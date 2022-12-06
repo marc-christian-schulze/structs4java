@@ -1323,7 +1323,7 @@ class StructGenerator {
 			«IF m.isPadded()»
 			int memberBegin = buf.position();
 			«ENDIF»
-			byte[] encoded = «getterName(m)»().getBytes("«encodingOf(m)»");
+			byte[] encoded = («getterName(m)»() != null) ? «getterName(m)»().getBytes("«encodingOf(m)»") : new byte[]{};
 			«IF dimensionOf(m) == 0»
 			buf.put(encoded);
 			«IF findMemberDefiningSizeOf(m) === null»
@@ -1404,7 +1404,11 @@ class StructGenerator {
 
 	def field(Member m) '''
 		«printComments(m)»
+		«IF m instanceof StringMember»
+		private «attributeJavaType(m)» «attributeName(m)» = "";
+		«ELSE»
 		private «attributeJavaType(m)» «attributeName(m)»;
+		«ENDIF»
 	'''
 	
 	def field(BitfieldMember m) '''

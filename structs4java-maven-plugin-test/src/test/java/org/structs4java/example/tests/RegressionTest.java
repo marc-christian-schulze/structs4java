@@ -770,6 +770,20 @@ public class RegressionTest extends AbstractTest {
 		assertEqualBuffers(ByteBuffer.wrap(new byte[]{ '1', '2', '3', '4', '5', '6', '7', '8', 'A', 'B', 'C', 'D'}), outBuffer);
 	}
 
+	@Test
+	public void testSerializationOfNullString() throws IOException {
+		ByteBuffer buffer = ByteBuffer.allocate(512);
+		NullTerminatedString obj = new NullTerminatedString();
+
+		obj.write(buffer);
+
+		buffer.flip();
+
+		NullTerminatedString obj2 = NullTerminatedString.read(buffer);
+
+		assertEquals(obj, obj2);
+	}
+
 	private CopyConstructorCases createFilledObject() {
 		CopyConstructorCases obj = new CopyConstructorCases();
 		obj.setE(AnyEnum.B);
