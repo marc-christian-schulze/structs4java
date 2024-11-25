@@ -404,6 +404,26 @@ struct SomeStruct implements MyJavaInterface {
 }
 ```
 
+## Plugin configuration
+
+Below is a full example configuration, including the default values, of the plugin:
+```XML
+<configuration>
+  <!-- if 'skip' is set to true the plugin execution is skipped -->
+  <skip>false</skip>
+  <!-- Path where the code generator shall search for *.structs files as input -->
+  <structsDirectory>${basedir}/src/main/structs</structsDirectory>
+  <!-- Path where the code generator shall output the Java files to-->
+  <outputDirectory>${project.build.directory}/structs-gen</outputDirectory>
+  <!-- Include patterns for struct files -->
+  <includes>
+    <include>**/*.structs</include>
+  </includes>
+  <!-- Exclude patterns for struct files (empty by default) -->
+  <excludes/>
+</configuration>
+```
+
 # Comparison to Javolution
 If you do not want to rely on code generation you should have a look at [Javolution](http://javolution.org/) which is a plain Java implementation.  
 

@@ -43,6 +43,9 @@ public abstract class AbstractCompileMojo extends AbstractMojo {
 	private BuildPluginManager pluginManager;
 
 	@Parameter
+	private boolean skip;
+
+	@Parameter
 	private String[] includes;
 
 	@Parameter
@@ -65,6 +68,11 @@ public abstract class AbstractCompileMojo extends AbstractMojo {
 	}
 
 	public void execute() throws MojoExecutionException {
+		if(skip) {
+			getLog().info("Skipping plugin execution due to configuration parameter 'skip' set to true.");
+			return;
+		}
+
 		if (includes == null || includes.length == 0) {
 			includes = new String[1];
 			includes[0] = "**/*.structs";
