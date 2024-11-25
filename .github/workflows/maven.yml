@@ -29,7 +29,8 @@ jobs:
         cache: maven
     - name: Build with Maven
       uses: GabrielBB/xvfb-action@v1
-      run: mvn install
+      with:
+        run: mvn install
 
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
     - name: Update dependency graph
