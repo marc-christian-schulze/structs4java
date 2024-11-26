@@ -1,6 +1,7 @@
 # Structs4Java
 [![master](https://github.com/marc-christian-schulze/structs4java/actions/workflows/pull-request.closed.yml/badge.svg?branch=master)](https://github.com/marc-christian-schulze/structs4java/actions/workflows/pull-request.closed.yml)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.marc-christian-schulze.structs4java/structs4java-maven-plugin/badge.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.github.marc-christian-schulze.structs4java%22)
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.marc-christian-schulze.structs4java/structs4java-maven-plugin
+)](https://central.sonatype.com/search?q=g:com.github.marc-christian-schulze.structs4java&smo=true)
 [![license](https://img.shields.io/github/license/marc-christian-schulze/structs4java.svg?maxAge=3600)](https://github.com/marc-christian-schulze/structs4java/blob/master/LICENSE)
 
 Structs4Java is a code generator that is based on structure definitions very similiar to C/C++ but with some subtle differences. Unlike in C/C++, 
