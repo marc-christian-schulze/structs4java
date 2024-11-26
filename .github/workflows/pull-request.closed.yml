@@ -1,0 +1,64 @@
+name: Release workflow when pull-request gets merged into master branch
+
+#on:
+#  pull_request:
+#    types: closed
+#    branches:
+#      - master
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # required for github-action-get-previous-tag
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.9.6
+
+      - name: Get previous tag
+        id: previoustag
+        uses: 'WyriHaximus/github-action-get-previous-tag@v1'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get next minor version
+        id: semver
+        uses: 'WyriHaximus/github-action-next-semvers@v1'
+        with:
+          version: ${{ steps.previoustag.outputs.tag }}
+
+      - name: Set version in Maven and Tycho
+        run: |
+          mvn -f $(pwd)/org.structs4java.parent/pom.xml org.eclipse.tycho:tycho-versions-plugin:1.0.0:set-version -DnewVersion=${{ steps.semver.outputs.minor }} -Dmaven.repo.local=./.m2
+  
+          mvn versions:set -DnewVersion=${{ steps.semver.outputs.minor }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
+          mvn -f $(pwd)/org.structs4java.parent/pom.xml versions:set -DnewVersion=${{ steps.semver.outputs.minor }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
+          mvn -f $(pwd)/structs4java-with-dependencies/pom.xml versions:set -DnewVersion=${{ steps.semver.outputs.minor }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
+          mvn -f $(pwd)/structs4java-core/pom.xml versions:set -DnewVersion=${{ steps.semver.outputs.minor }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
+          mvn -f $(pwd)/structs4java-maven-plugin/pom.xml versions:set -DnewVersion=${{ steps.semver.outputs.minor }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
+          mvn -f $(pwd)/structs4java-maven-plugin-test/pom.xml versions:set -DnewVersion=${{ steps.semver.outputs.minor }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
+          
+          mvn versions:use-releases -DallowSnapshots=true -DexcludeReactor=false -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
+
+      - name: Build with Maven
+        uses: GabrielBB/xvfb-action@v1
+        with:
+          run: mvn clean install -Dmaven.repo.local=./.m2 -Declipse.p2.mirrors=false
+
