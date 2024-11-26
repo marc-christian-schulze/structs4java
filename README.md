@@ -1,6 +1,6 @@
 # Structs4Java
-[![master status](https://img.shields.io/travis/marc-christian-schulze/structs4java/master.svg?maxAge=3600)](https://travis-ci.com/marc-christian-schulze/structs4java)
-[![Maven Central](https://img.shields.io/maven-central/v/com.github.marc-christian-schulze.structs4java/structs4java-maven-plugin.svg?maxAge=3600)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.github.marc-christian-schulze.structs4java%22)
+[![master](https://github.com/marc-christian-schulze/structs4java/actions/workflows/pull-request.closed.yml/badge.svg?branch=master)](https://github.com/marc-christian-schulze/structs4java/actions/workflows/pull-request.closed.yml)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.marc-christian-schulze.structs4java/structs4java-maven-plugin/badge.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.github.marc-christian-schulze.structs4java%22)
 [![license](https://img.shields.io/github/license/marc-christian-schulze/structs4java.svg?maxAge=3600)](https://github.com/marc-christian-schulze/structs4java/blob/master/LICENSE)
 
 Structs4Java is a code generator that is based on structure definitions very similiar to C/C++ but with some subtle differences. Unlike in C/C++, 
@@ -475,19 +475,19 @@ struct FileWithStudents {
 
 **Requirements:**
 - Git
-- Docker
+- Maven 3.9
+- Java 17
+- Docker (optional, to avoid local Maven and Java installation)
 
-In order to get started simply clone the repo to your local drive and start the compilation:
+When you do have Java and Maven installed locally you can use Maven to compile and test your changes:
+```
+$ mvn clean install
+```
+In case you don't want to install Java and Maven locally, you can use Docker (if installed locally) to compile and test your changes in a container:
 ```
 $ ./build.sh
 ```
 First, a docker container is built containing the required build tools (JDK, Maven, etc.). Afterwards the sources are compiled inside of the container. During the compilation maven will create a dedicated M2-Repo in your workspace.
 
-## Creating a new Release
-```
-$ docker run -it --rm -v "$(pwd)":/workspace --user "$(id -u):$(id -g)" buildbox bash
-```
-
-```
-docker-container$ ./perform_release.sh 1.0.51 "Marc-Christian Schulze" "Marc.Christian.Schulze@gmail.com"
-```
+# Integrating Changes
+The integration and releasing process is fully automated in Github Actions. Hence, simply open a pull request from your fork to the master branch and wait for it to be merged.

@@ -1,4 +1,4 @@
-name: Release workflow when pull-request gets merged into master branch
+name: CI/CD on master
 
 #on:
 #  pull_request:
