@@ -33,7 +33,7 @@ jobs:
     - name: Build with Maven
       uses: GabrielBB/xvfb-action@v1
       with:
-        run: mvn clean install
+        run: mvn clean install -Dmaven.repo.local=./.m2
 
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
     - name: Update dependency graph
