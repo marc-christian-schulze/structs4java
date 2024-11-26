@@ -46,14 +46,14 @@ jobs:
 
       - name: Set version in Maven and Tycho
         run: |
-          mvn -f $(pwd)/org.structs4java.parent/pom.xml org.eclipse.tycho:tycho-versions-plugin:1.0.0:set-version -DnewVersion=${{ steps.semver.outputs.minor }} -Dmaven.repo.local=./.m2
+          mvn -f $(pwd)/org.structs4java.parent/pom.xml org.eclipse.tycho:tycho-versions-plugin:1.0.0:set-version -DnewVersion=${{ steps.semver.outputs.patch }} -Dmaven.repo.local=./.m2
   
-          mvn versions:set -DnewVersion=${{ steps.semver.outputs.minor }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
-          mvn -f $(pwd)/org.structs4java.parent/pom.xml versions:set -DnewVersion=${{ steps.semver.outputs.minor }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
-          mvn -f $(pwd)/structs4java-with-dependencies/pom.xml versions:set -DnewVersion=${{ steps.semver.outputs.minor }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
-          mvn -f $(pwd)/structs4java-core/pom.xml versions:set -DnewVersion=${{ steps.semver.outputs.minor }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
-          mvn -f $(pwd)/structs4java-maven-plugin/pom.xml versions:set -DnewVersion=${{ steps.semver.outputs.minor }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
-          mvn -f $(pwd)/structs4java-maven-plugin-test/pom.xml versions:set -DnewVersion=${{ steps.semver.outputs.minor }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
+          mvn versions:set -DnewVersion=${{ steps.semver.outputs.patch }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
+          mvn -f $(pwd)/org.structs4java.parent/pom.xml versions:set -DnewVersion=${{ steps.semver.outputs.patch }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
+          mvn -f $(pwd)/structs4java-with-dependencies/pom.xml versions:set -DnewVersion=${{ steps.semver.outputs.patch }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
+          mvn -f $(pwd)/structs4java-core/pom.xml versions:set -DnewVersion=${{ steps.semver.outputs.patch }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
+          mvn -f $(pwd)/structs4java-maven-plugin/pom.xml versions:set -DnewVersion=${{ steps.semver.outputs.patch }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
+          mvn -f $(pwd)/structs4java-maven-plugin-test/pom.xml versions:set -DnewVersion=${{ steps.semver.outputs.patch }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
           
           mvn versions:use-releases -DallowSnapshots=true -DexcludeReactor=false -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
 
