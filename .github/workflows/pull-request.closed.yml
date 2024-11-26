@@ -81,6 +81,9 @@ jobs:
           gpg --list-secret-keys --keyid-format LONG
 
       - name: Deploy to Maven Central
+        env:
+          OSSRH_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
         run: |
           cd structs4java-core          && mvn deploy -Prelease --settings ../deploy/settings.xml -Dmaven.repo.local=../.m2 -Drelease-composite=true -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}   && cd ..
           cd structs4java-maven-plugin  && mvn deploy -Prelease --settings ../deploy/settings.xml -Dmaven.repo.local=../.m2 -Drelease-composite=true -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}   && cd ..
