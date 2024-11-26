@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 docker build -t buildbox .
 
 docker run -i --rm \
