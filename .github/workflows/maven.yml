@@ -17,16 +17,7 @@ on:
 jobs:
   build:
 
-    strategy:
-      matrix:
-        distribution: [ temurin ]
-        java-version: [ 17 ]
-        maven-version: [ 3.9 ]
-        os: [ ubuntu-22.04 ]
-
-    runs-on: ${{ matrix.os }}
-    container:
-      image: maven:${{ matrix.maven-version }}
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
@@ -35,6 +26,10 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+    - name: Set up Maven
+      uses: stCarolas/setup-maven@v5
+      with:
+        maven-version: 3.9.6
     - name: Build with Maven
       uses: GabrielBB/xvfb-action@v1
       with:
