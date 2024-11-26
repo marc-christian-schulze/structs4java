@@ -17,7 +17,16 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        distribution: [ temurin ]
+        java-version: [ 17 ]
+        maven-version: [ 3.9 ]
+        os: [ ubuntu-22.04 ]
+
+    runs-on: ${{ matrix.os }}
+    container:
+      image: maven:${{ matrix.maven-version }}
 
     steps:
     - uses: actions/checkout@v4
