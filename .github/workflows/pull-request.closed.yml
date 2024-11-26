@@ -82,6 +82,6 @@ jobs:
 
       - name: Deploy to Maven Central
         run: |
-          cd structs4java-core          && mvn install -Prelease --settings ../deploy/settings.xml -Dmaven.repo.local=../.m2 -Drelease-composite=true -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}   && cd ..
-          cd structs4java-maven-plugin  && mvn install -Prelease --settings ../deploy/settings.xml -Dmaven.repo.local=../.m2 -Drelease-composite=true -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}   && cd ..
+          cd structs4java-core          && mvn deploy -Prelease --settings ../deploy/settings.xml -Dmaven.repo.local=../.m2 -Drelease-composite=true -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}   && cd ..
+          cd structs4java-maven-plugin  && mvn deploy -Prelease --settings ../deploy/settings.xml -Dmaven.repo.local=../.m2 -Drelease-composite=true -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}   && cd ..
 
