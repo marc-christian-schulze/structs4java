@@ -73,3 +73,15 @@ jobs:
               sha: context.sha
             })
 
+      - name: Install GPG key
+        run: |
+          # Install gpg secret key
+          cat <(echo -e "${{ secrets.OSSRH_GPG_SECRET_KEY }}") | gpg --batch --import
+          # Verify gpg secret key
+          gpg --list-secret-keys --keyid-format LONG
+
+      - name: Deploy to Maven Central
+        run: |
+          cd structs4java-core          && mvn verify -Prelease --settings ../deploy/settings.xml -Drelease-composite=true -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}   && cd ..
+          cd structs4java-maven-plugin  && mvn verify -Prelease --settings ../deploy/settings.xml -Drelease-composite=true -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}   && cd ..
+
