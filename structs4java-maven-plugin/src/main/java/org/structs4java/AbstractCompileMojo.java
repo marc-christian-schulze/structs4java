@@ -30,6 +30,8 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
+import org.eclipse.xtext.util.Strings;
+import org.eclipse.xtext.validation.Issue;
 
 public abstract class AbstractCompileMojo extends AbstractMojo {
 
@@ -79,7 +81,7 @@ public abstract class AbstractCompileMojo extends AbstractMojo {
 		}
 
 		if (!getStructsDirectory().exists()) {
-			getLog().info("No struct files at " + getStructsDirectory());
+			getLog().info("Structs source directory does not exist: " + getStructsDirectory());
 			return;
 		}
 
@@ -166,11 +168,6 @@ public abstract class AbstractCompileMojo extends AbstractMojo {
 		Log log = getLog();
 		compiler.setResourceSet(injector.getInstance(XtextResourceSet.class));
 		Iterable<String> filtered = filter(sourcePaths, FILE_EXISTS);
-		if (Iterables.isEmpty(filtered)) {
-			String dir = Iterables.toString(sourcePaths);
-			log.info("skip compiling sources because the configured directory '" + dir + "' does not exists.");
-			return;
-		}
 		log.debug("Set DeleteTempDirectory: " + false);
 		compiler.setDeleteTempDirectory(false);
 		log.debug("Set classpath: " + classPath);
@@ -190,8 +187,7 @@ public abstract class AbstractCompileMojo extends AbstractMojo {
 		compiler.setWriteTraceFiles(writeTraceFiles);
 
 		if (!compiler.compile()) {
-			String dir = concat(File.pathSeparator, newArrayList(filtered));
-			throw new MojoExecutionException("Error compiling struct sources in '" + dir + "'.");
+			throw new MojoExecutionException("Compilation of structs sources failed.");
 		}
 	}
 
