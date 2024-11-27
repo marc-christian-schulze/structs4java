@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.9.6
+
+      - name: Set version in Maven and Tycho
+        run: |
+          mvn -f $(pwd)/org.structs4java.parent/pom.xml org.eclipse.tycho:tycho-versions-plugin:1.0.0:set-version -DnewVersion=${{ github.event.release.tag_name }} -Dmaven.repo.local=./.m2
+  
+          mvn versions:set -DnewVersion=${{ github.event.release.tag_name }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
+          mvn -f $(pwd)/org.structs4java.parent/pom.xml versions:set -DnewVersion=${{ github.event.release.tag_name }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
+          mvn -f $(pwd)/structs4java-with-dependencies/pom.xml versions:set -DnewVersion=${{ github.event.release.tag_name }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
+          mvn -f $(pwd)/structs4java-core/pom.xml versions:set -DnewVersion=${{ github.event.release.tag_name }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
+          mvn -f $(pwd)/structs4java-maven-plugin/pom.xml versions:set -DnewVersion=${{ github.event.release.tag_name }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
+          mvn -f $(pwd)/structs4java-maven-plugin-test/pom.xml versions:set -DnewVersion=${{ github.event.release.tag_name }} -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
+          
+          mvn versions:use-releases -DallowSnapshots=true -DexcludeReactor=false -DgenerateBackupPoms=false -Dmaven.repo.local=./.m2
+
+      - name: Build with Maven
+        uses: GabrielBB/xvfb-action@v1
+        with:
+          run: mvn clean install -Dmaven.repo.local=./.m2 -Declipse.p2.mirrors=false
+
+      - name: Install GPG key
+        run: |
+          # Install gpg secret key
+          cat <(echo -e "${{ secrets.OSSRH_GPG_SECRET_KEY }}") | gpg --batch --import
+          # Verify gpg secret key
+          gpg --list-secret-keys --keyid-format LONG
+
+      - name: Deploy to Maven Central
+        env:
+          OSSRH_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+        run: |
+          cd structs4java-core          && mvn deploy -Prelease --settings ../deploy/settings.xml -Dmaven.repo.local=../.m2 -Drelease-composite=true -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}   && cd ..
+          cd structs4java-maven-plugin  && mvn deploy -Prelease --settings ../deploy/settings.xml -Dmaven.repo.local=../.m2 -Drelease-composite=true -Dgpg.passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD }}   && cd ..
+

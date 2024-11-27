@@ -1,0 +1,60 @@
+name: CI on master
+
+on:
+  pull_request:
+    branches: [ "master" ]
+  push:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0 # required for github-action-get-previous-tag
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Set up Maven
+      uses: stCarolas/setup-maven@v5
+      with:
+        maven-version: 3.9.6
+
+    - name: Build with Maven
+      uses: GabrielBB/xvfb-action@v1
+      with:
+        run: mvn clean install -Dmaven.repo.local=./.m2 -Declipse.p2.mirrors=false
+
+    - name: Get previous tag
+      id: previoustag
+      if: github.event_name == 'push'
+      uses: 'WyriHaximus/github-action-get-previous-tag@v1'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Get next minor version
+      id: semver
+      if: github.event_name == 'push'
+      uses: 'WyriHaximus/github-action-next-semvers@v1'
+      with:
+        version: ${{ steps.previoustag.outputs.tag }}
+
+    - name: Create tag
+      if: github.event_name == 'push'
+      uses: actions/github-script@v5
+      with:
+        script: |
+          github.rest.git.createRef({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref: 'refs/tags/${{ steps.semver.outputs.patch }}',
+            sha: context.sha
+          })
