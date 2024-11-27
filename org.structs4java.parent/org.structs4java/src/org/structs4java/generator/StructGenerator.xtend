@@ -599,16 +599,23 @@ class StructGenerator {
 	}
 	
 	def readerMethodForArrayMember(Member m) '''
-	private static java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> «m.readerMethodName()»(java.nio.ByteBuffer buf, boolean partialRead«IF dimensionOf(m) == 0», long countof«ENDIF») throws java.io.IOException {
+	private static java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> «m.readerMethodName()»(java.nio.ByteBuffer buf, boolean partialRead«IF findMemberDefiningCountOf(m) != null», long countof«ENDIF») throws java.io.IOException {
 		java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> lst = new java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»>();
+
 		try {
 		«IF dimensionOf(m) == 0»
-		for(long i = 0; i < countof; ++i) {
-			lst.add(«readerMethodName(m)»«arrayPostfix(m)»(buf, partialRead));
-		}
+		«IF findMemberDefiningCountOf(m) != null»
+        for(long i = 0; i < countof; ++i) {
+            lst.add(«readerMethodName(m)»«arrayPostfix(m)»(buf, partialRead));
+        }
+		«ELSE»
+        while(buf.hasRemaining()) {
+            lst.add(«readerMethodName(m)»«arrayPostfix(m)»(buf, partialRead));
+        }
+		«ENDIF»
 		«ELSE»
 		«FOR i : 0 ..< dimensionOf(m)»
-		lst.add(«readerMethodName(m)»«arrayPostfix(m)»(buf, partialRead));
+        lst.add(«readerMethodName(m)»«arrayPostfix(m)»(buf, partialRead));
 		«ENDFOR»
 		«ENDIF»
 		} catch(java.nio.BufferUnderflowException e) {
@@ -616,6 +623,7 @@ class StructGenerator {
 				throw e;
 			}
 		}
+
 		return lst;
 	}
 	

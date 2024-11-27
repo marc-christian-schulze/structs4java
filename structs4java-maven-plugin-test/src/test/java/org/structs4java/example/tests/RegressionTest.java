@@ -36,6 +36,24 @@ import org.structs4java.example.test.FixSizedStringWithCustomFiller;
 
 public class RegressionTest extends AbstractTest {
 
+	public void testSizeOfArray() throws IOException {
+		byte[] testData = new byte[]{ 2, 1, 0, 1, 0};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		org.structs4java.example.tests.sizeofarray.Outer outer = org.structs4java.example.tests.sizeofarray.Outer.read(buffer);
+
+		Assert.assertEquals(2, outer.getLength());
+		Assert.assertEquals(2, outer.getFields().size());
+		Assert.assertEquals(1, outer.getFields().get(0).getLength());
+		Assert.assertEquals(2, outer.getFields().get(1).getLength());
+
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		outer.write(outBuffer);
+
+		assertEqualBuffers(buffer, outBuffer);
+	}
+
 	@Test
 	public void testSimpleStructure() throws IOException {
 		SimpleStructure expected = createSimpleStruct();
