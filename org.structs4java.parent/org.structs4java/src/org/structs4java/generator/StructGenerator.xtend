@@ -303,13 +303,21 @@ class StructGenerator {
 		return false;
 	}
 	
-	def isBooleanType(BitfieldEntry m) {
-		if(m.typename == "boolean") {
-			return true;
-		}
-		
-		return false;
-	}
+	def isBooleanType(Member m) {
+        if(nativeTypeName(m) == "boolean") {
+            return true;
+        }
+
+        return false;
+    }
+
+    def isBooleanType(BitfieldEntry m) {
+        if(m.typename == "boolean") {
+            return true;
+        }
+
+        return false;
+    }
 	
 	def isEnumType(BitfieldEntry m) {
 		if(m.type !== null) {
@@ -982,13 +990,25 @@ class StructGenerator {
 	private void «m.writerMethodName()»(java.nio.ByteBuffer buf) throws java.io.IOException {
 		java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> lst = «getterName(m)»();
 		«IF dimensionOf(m) == 0»
+		if(lst == null) {
+            return;
+        }
 		for(«m.nativeTypeName().native2JavaType().box()» item : lst) {
 			«writerMethodName(m)»«arrayPostfix(m)»(buf, item);
 		}
 		«ELSE»
-		«FOR i : 0 ..< dimensionOf(m)»
-		«writerMethodName(m)»«arrayPostfix(m)»(buf, lst.get(«i»));
-		«ENDFOR»
+		if(lst.size() > «dimensionOf(m)») {
+		    throw new java.io.IOException("Field '«attributeName(m)»' contains " + lst.size() + " element which can't be serialized into structure with limit of «dimensionOf(m)» elements!");
+		}
+
+		for(int i = 0; i < lst.size(); ++i) {
+		    «writerMethodName(m)»«arrayPostfix(m)»(buf, lst.get(i));
+		}
+
+		// if there are less elements than expected, we fill with default constructed
+		for(int i = lst.size(); i < «dimensionOf(m)»; ++i) {
+		    «writerMethodName(m)»«arrayPostfix(m)»(buf, «defaultConstructArrayItem(m)»);
+		}
 		«ENDIF»
 	}
 	
@@ -997,12 +1017,19 @@ class StructGenerator {
 	
 	def writerMethodForByteBuffer(IntegerMember m) '''
 		private void «m.writerMethodName()»(java.nio.ByteBuffer buf) throws java.io.IOException {
+		    java.nio.ByteBuffer buffer = «getterName(m)»();
+
+		    // null buffers serialize like empty buffers
+		    if(buffer == null) {
+		        buffer = java.nio.ByteBuffer.wrap(new byte[]{});
+		    }
+
 			// reset position in case someone read this buffer before
-			«getterName(m)»().position(0);
+			buffer.position(0);
 
 			«IF dimensionOf(m) > 0»
 			// we need to slice the buffer in order to limit its written size
-			java.nio.ByteBuffer slicedBuffer = «getterName(m)»().slice();
+			java.nio.ByteBuffer slicedBuffer = buffer.slice();
 			if(slicedBuffer.limit() > «dimensionOf(m)») {
 				slicedBuffer.limit(«dimensionOf(m)»);
 			}
@@ -1015,11 +1042,11 @@ class StructGenerator {
 			}
 			«ELSE»
 			// buffer has unbound / dynamic size
-			buf.put(«getterName(m)»());
+			buf.put(buffer);
 			«ENDIF»
 			
 			«IF m.isPadded()»
-			int bytesOverlap = («getterName(m)»().limit() % «m.padding»);
+			int bytesOverlap = (buffer.limit() % «m.padding»);
 			if(bytesOverlap > 0) {
 				for(int i = 0; i < «m.padding» - bytesOverlap; ++i) {
 					buf.put((byte)«m.getUsing()»);	
@@ -1413,11 +1440,7 @@ class StructGenerator {
 
 	def field(Member m) '''
 		«printComments(m)»
-		«IF m instanceof StringMember»
-		private «attributeJavaType(m)» «attributeName(m)» = "";
-		«ELSE»
-		private «attributeJavaType(m)» «attributeName(m)»;
-		«ENDIF»
+		private «attributeJavaType(m)» «attributeName(m)» = «defaultConstruct(m)»;
 	'''
 	
 	def field(BitfieldMember m) '''
@@ -1478,6 +1501,61 @@ class StructGenerator {
 		«ENDFOR»
 	'''
 
+	def defaultConstructArrayItem(Member m) {
+	    if(!m.isArray()) {
+	        throw new RuntimeException("compiler-error: non-array member passed to defaultConstructArrayItem()")
+	    }
+
+	    switch (m) {
+            ComplexTypeMember: {
+                if(m.type instanceof EnumDeclaration) {
+                    return "null"
+                }
+                "new " + javaType(m.type) + "()"
+            }
+            IntegerMember: "0"
+            FloatMember: "0.0f"
+            default: throw new RuntimeException("Unsupported member type: " + m)
+        }
+	}
+
+	def defaultConstruct(Member m) {
+	    if(m.isArray()) {
+
+	        if(doesAttributeJavaTypeMapToByteBuffer(m)) {
+	            return "java.nio.ByteBuffer.wrap(new byte[]{})"
+	        }
+
+	        if(m instanceof StringMember) {
+                return "\"\""
+            }
+
+            val nativeType = nativeTypeName(m)
+            val javaType = native2JavaType(nativeType)
+	        return "new java.util.ArrayList<" + box(javaType) + ">()"
+	    }
+
+	    if(m instanceof IntegerMember) {
+	        return "0"
+	    }
+
+	    if(m instanceof FloatMember) {
+	        return "0.0f"
+	    }
+
+	    if(isBooleanType(m)) {
+	        return "false"
+	    }
+
+        if(m instanceof ComplexTypeMember) {
+	        if(m.type instanceof EnumDeclaration) {
+                return "null"
+            }
+	    }
+
+	    return "new " + attributeJavaType(m) + "()"
+	}
+
 	def attributeJavaType(Member m) {
 		val nativeType = nativeTypeName(m)
 		val javaType = native2JavaType(nativeType)
@@ -1495,6 +1573,23 @@ class StructGenerator {
 		} else {
 			return javaType
 		}
+	}
+
+	def doesAttributeJavaTypeMapToByteBuffer(Member m) {
+	    val nativeType = nativeTypeName(m)
+        val javaType = native2JavaType(nativeType)
+
+        if (!isArray(m)) {
+            return false
+        }
+
+        if(m instanceof IntegerMember) {
+            if(m.typename.equals("uint8_t") || m.typename.equals("int8_t")) {
+                return true
+            }
+        }
+
+        return false
 	}
 	
 	def attributeJavaType(BitfieldEntry m) {

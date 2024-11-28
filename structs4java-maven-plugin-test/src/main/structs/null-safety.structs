@@ -1,0 +1,13 @@
+package org.structs4java.example.tests.nullsafety;
+
+struct StructWithByteBuffer {
+    uint8_t buffer[10];
+}
+
+struct StructWithInt32Array {
+    int32_t array[10];
+}
+
+struct StructWithStructArray {
+    StructWithInt32Array array[10];
+}
