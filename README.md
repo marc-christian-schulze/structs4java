@@ -397,13 +397,36 @@ This will automatically transform the endianess of all fields having types that 
 ## Implementing Java Interfaces
 
 Although `struct`s can not form any inheritance relationship you can let them implement interfaces from your Java code, e.g.:
-```C++
+```
 import org.myproject.MyJavaInterface;
 
 struct SomeStruct implements MyJavaInterface {
   // ...
 }
 ```
+
+## Default Values
+
+You can assign fields within structures a default value which is taken when the structure is default constructed:
+```
+struct SomeStruct {
+  uint8_t  int8  = 1;
+  uint16_t int16 = 0x45;
+  uint32_t int32 = 7;
+  uint64_t int64 = 0x20;
+  float    f     = 7.534;
+  double   d     = 9.75142476
+  char     str[] = "my default";
+  SomeEnum e     = SomeEnum.B;
+}
+
+enum SomeEnum : uint8_t {
+  A = 0xCAFE,
+  B = 123,
+  C = 42
+}
+```
+You can NOT define default values for fields within a bitfield, though.
 
 ## Plugin configuration
 
