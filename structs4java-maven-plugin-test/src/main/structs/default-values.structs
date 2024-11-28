@@ -1,0 +1,38 @@
+package org.structs4java.example.tests.defaultvalues;
+
+struct StructWithIntegerDefaultValue {
+    uint8_t  int8 = 1;
+    uint16_t int16 = 2;
+    uint32_t int32 = 3;
+    uint64_t int64 = 4;
+}
+
+struct StructWithFloatDefaultValue {
+    float  f = 1.0;
+    double d = 2.0;
+}
+
+struct StructWithStringDefaultValue {
+    char str[] = "default";
+}
+
+enum Int8Enum : uint8_t {
+    A = 0x01,
+    B = 0x02,
+    C = 0x03
+}
+
+struct StructWithBitfield {
+    bitfield uint16_t {
+        boolean b : 1;
+        uint8_t int8 : 2;
+        uint16_t int16 : 2;
+        uint32_t int32 : 2;
+        uint64_t int64 : 2;
+        Int8Enum int8Enum : 7;
+    }
+}
+
+struct StructWithEnum {
+    Int8Enum int8Enum = Int8Enum.B;
+}

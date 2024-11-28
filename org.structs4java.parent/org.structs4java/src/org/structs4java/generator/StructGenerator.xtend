@@ -1509,12 +1509,15 @@ class StructGenerator {
 	    switch (m) {
             ComplexTypeMember: {
                 if(m.type instanceof EnumDeclaration) {
-                    return "null"
+                    if(m.defaultValue == null) {
+                        return "null"
+                    }
+                    return attributeJavaType(m) + "." + m.defaultValue.name
                 }
                 "new " + javaType(m.type) + "()"
             }
-            IntegerMember: "0"
-            FloatMember: "0.0f"
+            IntegerMember: "" + m.defaultValue
+            FloatMember: m.defaultValue + "f"
             default: throw new RuntimeException("Unsupported member type: " + m)
         }
 	}
@@ -1527,7 +1530,7 @@ class StructGenerator {
 	        }
 
 	        if(m instanceof StringMember) {
-                return "\"\""
+                return "\"" + m.defaultValue + "\""
             }
 
             val nativeType = nativeTypeName(m)
@@ -1536,11 +1539,11 @@ class StructGenerator {
 	    }
 
 	    if(m instanceof IntegerMember) {
-	        return "0"
+	        return "" + m.defaultValue
 	    }
 
 	    if(m instanceof FloatMember) {
-	        return "0.0f"
+	        return m.defaultValue + "f"
 	    }
 
 	    if(isBooleanType(m)) {
@@ -1549,7 +1552,10 @@ class StructGenerator {
 
         if(m instanceof ComplexTypeMember) {
 	        if(m.type instanceof EnumDeclaration) {
-                return "null"
+	            if(m.defaultValue == null) {
+	                return "null"
+	            }
+                return attributeJavaType(m) + "." + m.defaultValue.name
             }
 	    }
 

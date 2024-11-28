@@ -27,10 +27,6 @@ Import:
 QualifiedNameWithWildcard:
     QualifiedName '.*'?
 ;
-
-ComplexTypeDeclaration:
-	StructDeclaration | EnumDeclaration
-;
 	
 StructDeclaration:
 	{StructDeclaration}
@@ -56,6 +52,11 @@ EnumDeclaration:
 	'}'
 ;
 
+Item:
+	(comments += SL_COMMENT)*
+	name=ID '=' value=LONG ','?
+;
+
 BitfieldMember:
 	(comments += SL_COMMENT)*
 	'bitfield' typename=INTEGER_TYPE (array=ArrayDimension)? ('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')? '{'
@@ -69,9 +70,8 @@ BitfieldEntry:
 |   (comments += SL_COMMENT)* type=[EnumDeclaration] name=ID (array=ArrayDimension)? ':' bits=LONG ';'
 ;
 
-Item:
-	(comments += SL_COMMENT)*
-	name=ID '=' value=LONG ','?
+ComplexTypeDeclaration:
+    StructDeclaration | EnumDeclaration
 ;
 
 ComplexTypeMember:
@@ -80,6 +80,13 @@ ComplexTypeMember:
 	(array=ArrayDimension)?
 	('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')?
 	';'
+	|
+	(comments += SL_COMMENT)*
+    type=[EnumDeclaration|QualifiedName] name=ID
+    (array=ArrayDimension)?
+    ('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')?
+    '=' defaultValue=[Item|QualifiedName]
+    ';'
 ;
 
 IntegerMember:
@@ -92,6 +99,7 @@ IntegerMember:
 		('countof' '(' countof=[Member] ')')?
 	)
 	('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')?
+	('=' defaultValue=LONG)?
 	';'
 ;
 
@@ -100,6 +108,7 @@ FloatMember:
 	typename=FLOAT_TYPE name=ID 
 	(array=ArrayDimension)?
 	('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')?
+	('=' defaultValue=FLOAT)?
 	';'
 ;
 
@@ -111,6 +120,7 @@ StringMember:
 	('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')?
 	('filler' '(' filler=LONG ')')?
 	(nullTerminated='null-terminated')?
+	('=' defaultValue=STRING)?
 	';'
 ;
 
@@ -122,6 +132,7 @@ QualifiedName:
     ID ('.' ID)*
 ;
 
+terminal FLOAT returns ecore::EFloat: ('0'..'9')+ '.' ('0'..'9')+;
 terminal LONG returns ecore::ELong: ('0'..'9')+ | '0x' ('0'..'9' | 'A'..'F' | 'a'..'f')+;
 terminal STRING	: 
 			'"' ( '\\' . /* 'b'|'t'|'n'|'f'|'r'|'u'|'"'|"'"|'\\' */ | !('\\'|'"') )* '"' |

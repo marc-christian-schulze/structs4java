@@ -106,6 +106,7 @@ fileHeader.write(buffer);
   * padding
   * bit fields
   * implement Java interfaces
+  * default values
 
 ## Unsupported
 * Unions
@@ -373,7 +374,7 @@ struct AnotherBitset
 {
   // any other fields ...
   bitfield uint8_t {
-    int32_t   number : 4; // 2^7, 2^6, 2^5, 2^4; value range 0 .. 16
+    int32_t   number : 4; // 2^7, 2^6, 2^5, 2^4; value range 0 .. 15
     boolean   flag   : 1; // 2^3
     SomeEnum  myEnum : 3; // 2^2, 2^1, 2^0
   }
@@ -397,13 +398,36 @@ This will automatically transform the endianess of all fields having types that 
 ## Implementing Java Interfaces
 
 Although `struct`s can not form any inheritance relationship you can let them implement interfaces from your Java code, e.g.:
-```C++
+```
 import org.myproject.MyJavaInterface;
 
 struct SomeStruct implements MyJavaInterface {
   // ...
 }
 ```
+
+## Default Values
+
+You can assign fields within structures a default value which is taken when the structure is default constructed:
+```
+struct SomeStruct {
+  uint8_t  int8  = 1;
+  uint16_t int16 = 0x45;
+  uint32_t int32 = 7;
+  uint64_t int64 = 0x20;
+  float    f     = 7.534;
+  double   d     = 9.75142476
+  char     str[] = "my default";
+  SomeEnum e     = SomeEnum.B;
+}
+
+enum SomeEnum : uint8_t {
+  A = 0xCAFE,
+  B = 123,
+  C = 42
+}
+```
+You can NOT define default values for fields within a bitfield, though.
 
 ## Plugin configuration
 
