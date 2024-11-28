@@ -427,8 +427,8 @@ Below is a full example configuration, including the default values, of the plug
 
 # Examples
 
-* [examples/zip-file-format - ZipFileReadingTest](blob/master/examples/zip-file-format/src/test/java/examples/zip/ZipFileReadingTest.java) - Shows how to read a ZIP file using structs4java
-* [examples/zip-file-format - ZipFileWritingTest](blob/master/examples/zip-file-format/src/test/java/examples/zip/ZipFileWritingTest.java) - Shows how to write a ZIP files using structs4java
+* [examples/zip-file-format - ZipFileReadingTest](examples/zip-file-format/src/test/java/examples/zip/ZipFileReadingTest.java) - Shows how to read a ZIP file using structs4java
+* [examples/zip-file-format - ZipFileWritingTest](examples/zip-file-format/src/test/java/examples/zip/ZipFileWritingTest.java) - Shows how to write a ZIP files using structs4java
 
 # Comparison to Javolution
 If you do not want to rely on code generation you should have a look at [Javolution](http://javolution.org/) which is a plain Java implementation.  
