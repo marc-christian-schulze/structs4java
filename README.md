@@ -373,7 +373,7 @@ struct AnotherBitset
 {
   // any other fields ...
   bitfield uint8_t {
-    int32_t   number : 4; // 2^7, 2^6, 2^5, 2^4; value range 0 .. 16
+    int32_t   number : 4; // 2^7, 2^6, 2^5, 2^4; value range 0 .. 15
     boolean   flag   : 1; // 2^3
     SomeEnum  myEnum : 3; // 2^2, 2^1, 2^0
   }
