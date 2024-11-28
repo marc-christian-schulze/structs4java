@@ -1,5 +1,5 @@
 # Structs4Java
-[![master](https://github.com/marc-christian-schulze/structs4java/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/marc-christian-schulze/structs4java/actions/workflows/pull-request.closed.yml)
+[![master](https://github.com/marc-christian-schulze/structs4java/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/marc-christian-schulze/structs4java/actions/workflows/ci.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.marc-christian-schulze.structs4java/structs4java-maven-plugin
 )](https://central.sonatype.com/search?q=g:com.github.marc-christian-schulze.structs4java&smo=true)
 [![license](https://img.shields.io/github/license/marc-christian-schulze/structs4java.svg?maxAge=3600)](https://github.com/marc-christian-schulze/structs4java/blob/master/LICENSE)
