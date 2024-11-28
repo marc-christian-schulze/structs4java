@@ -37,6 +37,37 @@ import org.structs4java.example.test.FixSizedStringWithCustomFiller;
 public class RegressionTest extends AbstractTest {
 
 	@Test
+	public void testSizeOfArray() throws IOException {
+		byte[] testData = new byte[]{ 5, 1, 0, 2, 0, 0};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		org.structs4java.example.tests.sizeofarray.Outer outer = org.structs4java.example.tests.sizeofarray.Outer.read(buffer);
+
+		Assert.assertEquals(5, outer.getLength());
+		Assert.assertEquals(2, outer.getFields().size());
+		Assert.assertEquals(1, outer.getFields().get(0).getLength());
+		Assert.assertEquals(2, outer.getFields().get(1).getLength());
+
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		outer.write(outBuffer);
+
+		assertEqualBuffers(buffer, outBuffer);
+	}
+
+	@Test
+	public void testSizeOfArrayWithAdditionalDataBehind() throws IOException {
+		byte[] testData = new byte[]{ 5, 1, 0, 2, 0, 0 /* last byte of outer struct */, 4};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		org.structs4java.example.tests.sizeofarray.Outer outer = org.structs4java.example.tests.sizeofarray.Outer.read(buffer);
+		// ensure that the next read operation on the buffer actually returns the data behind the already read structure
+		// this is especially important for the case the the last element using a sizeof member is of type uint8_t
+		// and therefore actually not read but mapped to another ByteBuffer
+		assertEquals(4, buffer.get());
+	}
+
+	@Test
 	public void testSimpleStructure() throws IOException {
 		SimpleStructure expected = createSimpleStruct();
 		expected.write(buffer);

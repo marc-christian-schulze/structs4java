@@ -33,5 +33,6 @@
 		<module>structs4java-core</module>
 		<module>structs4java-maven-plugin</module>
 		<module>structs4java-maven-plugin-test</module>
+		<module>examples</module>
 	</modules>
 </project>

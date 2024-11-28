@@ -1,0 +1,11 @@
+package org.structs4java.example.tests.sizeofarray;
+
+struct Outer {
+    uint8_t length sizeof(fields);
+    Inner    fields[];
+}
+
+struct Inner {
+    uint8_t length sizeof(data);
+    uint8_t data[];
+}

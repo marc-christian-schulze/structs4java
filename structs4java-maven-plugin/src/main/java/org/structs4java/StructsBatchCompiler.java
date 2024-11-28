@@ -280,13 +280,16 @@ public class StructsBatchCompiler {
 		});
 		for (String src : pathes.keySet()) {
 			URI baseDir = URI.createFileURI(src + "/");
+
 			String identifier = Joiner.on("_").join(baseDir.segments());
 			URI platformResourceURI = URI.createPlatformResourceURI(identifier + "/", true);
+
 			resourceSet.getURIConverter().getURIMap().put(platformResourceURI, baseDir);
+
 			for (URI uri : pathes.get(src)) {
 				URI uriToUse = uri.replacePrefix(baseDir, platformResourceURI);
-				log.info("load structs file '" + uriToUse + "'");
-				resourceSet.getResource(uriToUse, true);
+				log.info("loading structs file '" + uri.toFileString() + "'");
+				resourceSet.getResource(uri, true);
 			}
 		}
 		return resourceSet;
@@ -430,19 +433,43 @@ public class StructsBatchCompiler {
 		}
 	}
 
-	private StringBuilder createIssueMessage(Issue issue) {
-		StringBuilder issueBuilder = new StringBuilder("\n");
-		issueBuilder.append(issue.getSeverity()).append(": \t");
-		URI uriToProblem = issue.getUriToProblem();
-		if (uriToProblem != null) {
-			URI resourceUri = uriToProblem.trimFragment();
-			issueBuilder.append(resourceUri.lastSegment()).append(" - ");
-			if (resourceUri.isFile()) {
-				issueBuilder.append(resourceUri.toFileString());
-			}
+	private String getFilePath(URI uri) {
+		if(uri.isFile()) {
+			return uri.toFileString();
 		}
-		issueBuilder.append("\n").append(issue.getLineNumber()).append(": ").append(issue.getMessage());
+
+		if(uri.trimFragment().isPlatform()) {
+			return uri.trimFragment().toPlatformString(true);
+		}
+
+		return uri.trimFragment().toString();
+	}
+
+	private StringBuilder createIssueMessage(Issue issue) {
+		StringBuilder issueBuilder = new StringBuilder();
+
+		String filePath = getFilePath(issue.getUriToProblem());
+
+		issueBuilder.append(filePath).append(":").append(issue.getLineNumber()).append(" ").append(issue.getMessage()).append("\n");
+
+		String sourceLineWithIssue = readLineFromResource(filePath, issue.getLineNumber());
+		issueBuilder.append(sourceLineWithIssue).append("\n");
+		issueBuilder.append(com.google.common.base.Strings.repeat(" ", issue.getColumn() - 1)).append("^");
+		int colLength = issue.getColumnEnd() - issue.getColumn();
+		if(colLength > 1) {
+			issueBuilder.append(com.google.common.base.Strings.repeat("-", colLength - 1));
+		}
 		return issueBuilder;
+	}
+
+	private String readLineFromResource(String filePath, int line) {
+		JavaIoFileSystemAccess fileSystemAccess = javaIoFileSystemAccessProvider.get();
+		// if you don't set the output path before using you end up with below exception
+		// compile failed: A slot with name 'DEFAULT_OUTPUT' has not been configured.
+		fileSystemAccess.setOutputPath("");
+		String fileContent = fileSystemAccess.readTextFile(filePath).toString();
+		List<String> lines = Strings.split(fileContent, "\n");
+		return lines.get(line - 1);
 	}
 
 	protected void generateJavaFiles(ResourceSet resourceSet) {
