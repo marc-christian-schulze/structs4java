@@ -1,0 +1,62 @@
+package examples.zip;
+
+struct LocalFileHeader {
+    uint8_t  signature[4];
+    uint16_t version;
+    bitfield uint16_t {
+        uint16_t generalPurposeFlags : 16;
+    }
+    uint16_t compressionMethod;
+    uint16_t lastModificationTime;
+    uint16_t lastModificationDate;
+    uint32_t crc32OfUncompressedData;
+    uint32_t compressedSizeInBytes;
+    uint32_t uncompressedSizeInBytes;
+    uint16_t fileNameLengthInBytes sizeof(fileName);
+    uint16_t extraFieldLengthInBytes sizeof(extraFields);
+    char     fileName[];
+    ExtraFieldRecord extraFields[];
+}
+
+struct ExtraFieldRecord {
+    uint8_t  signature[2];
+    uint16_t length sizeof(data);
+    uint8_t  data[];
+}
+
+struct CentralDirectoryFileHeader {
+    uint8_t signature[4];
+    uint16_t versionMadeBy;
+    uint16_t versionNeededToExtract;
+    bitfield uint16_t {
+        uint16_t generalPurposeFlags : 16;
+    }
+    uint16_t compressionMethod;
+    uint16_t fileLastModificationTime;
+    uint16_t fileLastModificationDate;
+    uint32_t crc32OfUncompressedData;
+    uint32_t compressedSizeInBytes;
+    uint32_t uncompressedSizeInBytes;
+    uint16_t fileNameLengthInBytes sizeof(fileName);
+    uint16_t extraFieldLengthInBytes sizeof(extraFields);
+    uint16_t fileCommentLengthInBytes sizeof(fileComment);
+    uint16_t diskNumber;
+    uint16_t internalAttributes;
+    uint32_t externalAttributes;
+    uint32_t relativeOffsetOfLocalFileHeader;
+    char fileName[];
+    uint8_t extraFields[];
+    uint8_t fileComment[];
+}
+
+struct EndOfCentralDirectoryRecord {
+    uint8_t signature[4];
+    uint16_t diskNumber;
+    uint16_t diskWhereCentralDirectoryStarts;
+    uint16_t numberOfCentralDirectoryRecordsOnThisDisk;
+    uint16_t totalNumberOfCentralDirectoryRecords;
+    uint32_t sizeOfCentralDirectoryInBytes;
+    uint32_t offsetOfStartOfCentralDirectory;
+    uint16_t commentLength sizeof(comment);
+    uint8_t comment[];
+}
