@@ -375,6 +375,7 @@ class StructGenerator {
 							slice.order(buf.order());
 							slice.limit((int)«tempVarForMember(findMemberDefiningSizeOf(m))»);
 							obj.«setterName(m)»(«readerMethodName(m)»(slice, true));
+							buf.position(buf.position() + (int)«tempVarForMember(findMemberDefiningSizeOf(m))»);
 						}
 						«ELSE»
 						obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)«tempVarForMember(findMemberDefiningSizeOf(m))»));
