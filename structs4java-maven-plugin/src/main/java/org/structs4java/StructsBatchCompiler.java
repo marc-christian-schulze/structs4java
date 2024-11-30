@@ -453,13 +453,31 @@ public class StructsBatchCompiler {
 		issueBuilder.append(filePath).append(":").append(issue.getLineNumber()).append(" ").append(issue.getMessage()).append("\n");
 
 		String sourceLineWithIssue = readLineFromResource(filePath, issue.getLineNumber());
-		issueBuilder.append(sourceLineWithIssue).append("\n");
-		issueBuilder.append(com.google.common.base.Strings.repeat(" ", issue.getColumn() - 1)).append("^");
+		int numTabsBeforeColStart = countTabsTillColumnStart(sourceLineWithIssue, issue.getColumn());
+		// 1 \t replaced by 4 spaces = 3 additional spaces / tab
+		int spacesIntroducedOnTopByReplacingTabsWithSpaces = 3 * numTabsBeforeColStart;
+
+		issueBuilder.append(replaceTabsWith4Spaces(sourceLineWithIssue)).append("\n");
+		issueBuilder.append(com.google.common.base.Strings.repeat(" ", issue.getColumn() - 1 + spacesIntroducedOnTopByReplacingTabsWithSpaces)).append("^");
 		int colLength = issue.getColumnEnd() - issue.getColumn();
 		if(colLength > 1) {
 			issueBuilder.append(com.google.common.base.Strings.repeat("-", colLength - 1));
 		}
 		return issueBuilder;
+	}
+
+	private int countTabsTillColumnStart(String str, int colStart) {
+		int count = 0;
+		for(int i = 0; i < colStart; ++i) {
+			if(str.charAt(i) == '\t') {
+				count++;
+			}
+		}
+		return count;
+	}
+
+	private String replaceTabsWith4Spaces(String str) {
+		return str.replaceAll("\t", "    ");
 	}
 
 	private String readLineFromResource(String filePath, int line) {

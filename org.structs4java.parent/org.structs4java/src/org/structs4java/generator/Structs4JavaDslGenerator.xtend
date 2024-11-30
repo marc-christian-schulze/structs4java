@@ -34,7 +34,7 @@ class Structs4JavaDslGenerator extends AbstractGenerator {
 
 	def javaType(ComplexTypeDeclaration type) {
 		val pkg = type.eContainer as StructsFile
-		if (pkg != null && !pkg.name.empty) {
+		if (pkg !== null && !pkg.name.empty) {
 			return pkg.name + "." + type.name
 		}
 		return type.name

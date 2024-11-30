@@ -13,7 +13,6 @@ import org.structs4java.structs4JavaDsl.Member
 import org.structs4java.structs4JavaDsl.StructDeclaration
 import org.structs4java.structs4JavaDsl.Item
 import org.structs4java.structs4JavaDsl.Structs4JavaDslPackage
-import org.eclipse.xtext.formatting2.regionaccess.ILineRegion
 import org.eclipse.xtext.EcoreUtil2
 
 class Structs4JavaDslFormatter extends AbstractFormatter2 {

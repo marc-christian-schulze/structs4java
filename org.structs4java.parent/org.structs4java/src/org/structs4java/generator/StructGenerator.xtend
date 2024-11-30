@@ -15,6 +15,8 @@ import org.structs4java.structs4JavaDsl.EnumDeclaration
 import org.structs4java.structs4JavaDsl.BitfieldMember
 import org.structs4java.structs4JavaDsl.BitfieldEntry
 
+import java.util.stream.Collectors
+
 /**
  * Generates code from your model files on save.
  * 
@@ -558,7 +560,7 @@ class StructGenerator {
 			FloatMember: m.name
 			StringMember: m.name
 			ComplexTypeMember: m.name
-			BitfieldMember: attributeName(m as BitfieldMember)
+			BitfieldMember: attributeName(m)
 			default: "<anonymous>"		
 		}
 	}
@@ -599,7 +601,7 @@ class StructGenerator {
 			IntegerMember: readerMethodForIntegerMember(m)
 			FloatMember: readerMethodForFloatMember(m)
 			StringMember: readerMethodForStringMember(m)
-			BitfieldMember: readerMethodForBitfieldMember(m as BitfieldMember)
+			BitfieldMember: readerMethodForBitfieldMember(m)
 		}
 	}
 	
@@ -608,12 +610,12 @@ class StructGenerator {
 	}
 	
 	def readerMethodForArrayMember(Member m) '''
-	private static java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> «m.readerMethodName()»(java.nio.ByteBuffer buf, boolean partialRead«IF findMemberDefiningCountOf(m) != null», long countof«ENDIF») throws java.io.IOException {
+	private static java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> «m.readerMethodName()»(java.nio.ByteBuffer buf, boolean partialRead«IF findMemberDefiningCountOf(m) !== null», long countof«ENDIF») throws java.io.IOException {
 		java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> lst = new java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»>();
 
 		try {
 		«IF dimensionOf(m) == 0»
-		«IF findMemberDefiningCountOf(m) != null»
+		«IF findMemberDefiningCountOf(m) !== null»
         for(long i = 0; i < countof; ++i) {
             lst.add(«readerMethodName(m)»«arrayPostfix(m)»(buf, partialRead));
         }
@@ -827,7 +829,7 @@ class StructGenerator {
 				}
 				«ENDIF»
 
-				«IF m.getNullTerminated() == null»
+				«IF m.getNullTerminated() === null»
 				return new String(tmp, 0, (int)sizeof, "«encodingOf(m)»");
 				«ELSE»
 				int terminatingZeros = "\0".getBytes("«encodingOf(m)»").length;
@@ -941,7 +943,7 @@ class StructGenerator {
 		«ENDFOR»
 	'''
 	
-	def hasSizeOfOrCountOfAttribute(Member m) {
+    def hasSizeOfOrCountOfAttribute(Member m) {
 		return m.hasSizeOfAttribute() || m.hasCountOfAttribute()
 	}
 	
@@ -1365,7 +1367,7 @@ class StructGenerator {
 			«IF findMemberDefiningSizeOf(m) === null»
 			buf.put("\0".getBytes("«encodingOf(m)»"));
 			«ELSE»
-			«IF m.getNullTerminated() != null»
+			«IF m.getNullTerminated() !== null»
 			buf.put("\0".getBytes("«encodingOf(m)»"));
 			«ENDIF»
 			«ENDIF»
@@ -1411,7 +1413,7 @@ class StructGenerator {
 	def fields(StructDeclaration struct) '''
 		«FOR m : struct.members»
 		«IF m instanceof BitfieldMember»
-			«field(m as BitfieldMember)»
+			«field(m)»
 		«ELSE»
 			«field(m)»
 		«ENDIF»
@@ -1421,7 +1423,7 @@ class StructGenerator {
 	def getters(StructDeclaration struct) '''
 		«FOR m : struct.members»
 		«IF m instanceof BitfieldMember»
-			«getter(m as BitfieldMember)»
+			«getter(m)»
 		«ELSE»
 			«getter(m)»
 		«ENDIF»
@@ -1431,7 +1433,7 @@ class StructGenerator {
 	def setters(StructDeclaration struct) '''
 		«FOR m : struct.nonTransientMembers()»
 		«IF m instanceof BitfieldMember»
-			«setter(m as BitfieldMember)»
+			«setter(m)»
 		«ELSE»
 			«setter(m)»
 		«ENDIF»
@@ -1509,7 +1511,7 @@ class StructGenerator {
 	    switch (m) {
             ComplexTypeMember: {
                 if(m.type instanceof EnumDeclaration) {
-                    if(m.defaultValue == null) {
+                    if(m.defaultValue === null) {
                         return "null"
                     }
                     return attributeJavaType(m) + "." + m.defaultValue.name
@@ -1525,8 +1527,17 @@ class StructGenerator {
 	def defaultConstruct(Member m) {
 	    if(m.isArray()) {
 
-	        if(doesAttributeJavaTypeMapToByteBuffer(m)) {
-	            return "java.nio.ByteBuffer.wrap(new byte[]{})"
+	        if(m instanceof IntegerMember) {
+	            if(doesAttributeJavaTypeMapToByteBuffer(m)) {
+
+                    if(m.defaultValues === null) {
+                        return "java.nio.ByteBuffer.wrap(new byte[]{})"
+                    }
+
+                    val initList = m.defaultValues.items.join(", ")
+
+                    return "java.nio.ByteBuffer.wrap(new byte[]{" + initList + "})"
+	            }
 	        }
 
 	        if(m instanceof StringMember) {
@@ -1535,6 +1546,17 @@ class StructGenerator {
 
             val nativeType = nativeTypeName(m)
             val javaType = native2JavaType(nativeType)
+
+            if(m instanceof IntegerMember) {
+                if(m.defaultValues !== null) {
+                    return "new java.util.ArrayList<" + box(javaType) + ">(java.util.Arrays.<Long>asList(" + m.defaultValues.items.stream().map(v | v + "L").collect(Collectors.joining(", ")) + "))"
+                }
+            } else if(m instanceof FloatMember) {
+                if(m.defaultValues !== null) {
+                    return "new java.util.ArrayList<" + box(javaType) + ">(java.util.Arrays.<Double>asList(" + m.defaultValues.items.join(', ') + "))"
+                }
+            }
+
 	        return "new java.util.ArrayList<" + box(javaType) + ">()"
 	    }
 
@@ -1552,7 +1574,7 @@ class StructGenerator {
 
         if(m instanceof ComplexTypeMember) {
 	        if(m.type instanceof EnumDeclaration) {
-	            if(m.defaultValue == null) {
+	            if(m.defaultValue === null) {
 	                return "null"
 	            }
                 return attributeJavaType(m) + "." + m.defaultValue.name
@@ -1582,9 +1604,6 @@ class StructGenerator {
 	}
 
 	def doesAttributeJavaTypeMapToByteBuffer(Member m) {
-	    val nativeType = nativeTypeName(m)
-        val javaType = native2JavaType(nativeType)
-
         if (!isArray(m)) {
             return false
         }
