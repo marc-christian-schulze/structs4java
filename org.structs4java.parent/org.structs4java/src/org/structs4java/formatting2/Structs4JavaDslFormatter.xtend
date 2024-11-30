@@ -3,10 +3,8 @@
  */
 package org.structs4java.formatting2
 
-import com.google.inject.Inject
 import org.eclipse.xtext.formatting2.AbstractFormatter2
 import org.eclipse.xtext.formatting2.IFormattableDocument
-import org.structs4java.services.Structs4JavaDslGrammarAccess
 import org.structs4java.structs4JavaDsl.EnumDeclaration
 import org.structs4java.structs4JavaDsl.Import
 import org.structs4java.structs4JavaDsl.Member
@@ -16,8 +14,6 @@ import org.structs4java.structs4JavaDsl.Structs4JavaDslPackage
 import org.eclipse.xtext.EcoreUtil2
 
 class Structs4JavaDslFormatter extends AbstractFormatter2 {
-
-	@Inject extension Structs4JavaDslGrammarAccess
 
 	def dispatch void format(org.structs4java.structs4JavaDsl.StructsFile structsFile,
 		extension IFormattableDocument document) {
@@ -50,7 +46,7 @@ class Structs4JavaDslFormatter extends AbstractFormatter2 {
 	}
 
 	def dispatch void format(Import imp, extension IFormattableDocument document) {
-		if ((imp.eContainer as org.structs4java.structs4JavaDsl.StructsFile).getImports().last == imp) {
+		if ((imp.eContainer as org.structs4java.structs4JavaDsl.StructsFile).getImports().lastOrNull == imp) {
 			imp.regionFor.keyword(";").prepend[noSpace].append[newLines = 2]
 		} else {
 			imp.regionFor.keyword(";").prepend[noSpace].append[newLine]

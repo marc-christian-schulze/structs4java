@@ -3,7 +3,6 @@
  */
 package org.structs4java.jvmmodel
 
-import com.google.inject.Inject
 import org.eclipse.xtext.xbase.jvmmodel.AbstractModelInferrer
 import org.eclipse.xtext.xbase.jvmmodel.IJvmDeclaredTypeAcceptor
 
