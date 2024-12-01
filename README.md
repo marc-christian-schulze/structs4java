@@ -42,7 +42,7 @@ struct FileHeader {
 struct FileSection {
   SectionType type;
   char        name[32];
-  uint32_t    length sizeof(sectionContent);
+  uint32_t    length sizeof(content);
   uint8_t     content[];
 }
 
