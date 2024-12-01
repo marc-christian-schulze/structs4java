@@ -98,6 +98,7 @@ IntegerMember:
 		('countof' '(' countof=[Member] ')')?
 	)
 	('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')?
+	(constant='const')?
 	('=' defaultValue=LONG)?
 	';'
 	|
@@ -110,6 +111,7 @@ IntegerMember:
         ('countof' '(' countof=[Member] ')')?
     )
     ('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')?
+    (constant='const')?
     ('=' defaultValues=IntInitializerList)?
     ';'
 ;
@@ -118,6 +120,7 @@ FloatMember:
 	(comments += SL_COMMENT)*
 	typename=FLOAT_TYPE name=ID
 	('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')?
+	(constant='const')?
 	('=' defaultValue=FLOAT)?
 	';'
 	|
@@ -125,6 +128,7 @@ FloatMember:
     typename=FLOAT_TYPE name=ID
     array=ArrayDimension
     ('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')?
+    (constant='const')?
     ('=' defaultValues=FloatInitializerList)?
     ';'
 ;
@@ -137,6 +141,7 @@ StringMember:
 	('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')?
 	('filler' '(' filler=LONG ')')?
 	(nullTerminated='null-terminated')?
+	(constant='const')?
 	('=' defaultValue=STRING)?
 	';'
 ;

@@ -1,0 +1,129 @@
+package org.structs4java.example.tests;
+
+import org.junit.Test;
+import org.structs4java.example.tests.constants.StructWithArrayConstants;
+import org.structs4java.example.tests.constants.StructWithPrimitiveConstants;
+import org.structs4java.example.tests.constants.StructWithStringConstant;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
+public class ConstantTest {
+
+    @Test(expected = IOException.class)
+    public void testStructWithPrimitiveConstantsFailsOnIntegerMember() throws IOException {
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[]{
+                0x00,
+                0x00,
+                0x00, 0x00,
+                0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        StructWithPrimitiveConstants.read(buffer);
+    }
+
+    @Test(expected = IOException.class)
+    public void testStructWithPrimitiveConstantsFailsOnFloatMember() throws IOException {
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[]{
+                0x01,
+                0x02,
+                0x03, 0x00,
+                0x04, 0x00,
+                0x05, 0x00, 0x00, 0x00,
+                0x06, 0x00, 0x00, 0x00,
+                0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, (byte)0x80, 0x3F,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        StructWithPrimitiveConstants.read(buffer);
+    }
+
+    @Test(expected = IOException.class)
+    public void testStructWithArrayConstantsFailsOnIntegerMember() throws IOException {
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[]{
+                0x00,
+                0x00,
+                0x00, 0x00,
+                0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        StructWithArrayConstants.read(buffer);
+    }
+
+    @Test(expected = IOException.class)
+    public void testStructWithArrayConstantsFailsOnFloatMember() throws IOException {
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[]{
+                0x01,
+                0x02,
+                0x03, 0x00,
+                0x04, 0x00,
+                0x05, 0x00, 0x00, 0x00,
+                0x06, 0x00, 0x00, 0x00,
+                0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, (byte)0x80, 0x3F,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        StructWithArrayConstants.read(buffer);
+    }
+
+    @Test(expected = IOException.class)
+    public void testStructWithStringConstantFails() throws IOException {
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[]{0x74, 0x61, 0x73, 0x74});
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        StructWithStringConstant.read(buffer);
+    }
+
+    @Test
+    public void testStructWithPrimitiveConstantsPasses() throws IOException {
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[]{
+                0x01,
+                0x02,
+                0x03, 0x00,
+                0x04, 0x00,
+                0x05, 0x00, 0x00, 0x00,
+                0x06, 0x00, 0x00, 0x00,
+                0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, (byte)0x80, 0x3F,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40 });
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        StructWithPrimitiveConstants.read(buffer);
+    }
+
+    @Test
+    public void testStructWithArrayConstantsPasses() throws IOException {
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[]{
+                0x01,
+                0x02,
+                0x03, 0x00,
+                0x04, 0x00,
+                0x05, 0x00, 0x00, 0x00,
+                0x06, 0x00, 0x00, 0x00,
+                0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, (byte)0x80, 0x3F,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40 });
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        StructWithArrayConstants.read(buffer);
+    }
+
+    @Test
+    public void testStructWithStringConstantPasses() throws IOException {
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[]{0x74, 0x65, 0x73, 0x74});
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        StructWithStringConstant.read(buffer);
+    }
+}

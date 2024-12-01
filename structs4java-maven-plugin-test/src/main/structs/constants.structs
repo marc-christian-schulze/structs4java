@@ -1,0 +1,31 @@
+package org.structs4java.example.tests.constants;
+
+struct StructWithPrimitiveConstants {
+    int8_t   a const = 1;
+    uint8_t  b const = 2;
+    int16_t  c const = 3;
+    uint16_t d const = 4;
+    int32_t  e const = 5;
+    uint32_t f const = 6;
+    int64_t  g const = 7;
+    uint64_t h const = 8;
+    float    i const = 1.0;
+    double   j const = 2.0;
+}
+
+struct StructWithArrayConstants {
+    int8_t   a[1] const = { 1 };
+    uint8_t  b[1] const = { 2 };
+    int16_t  c[1] const = { 3 };
+    uint16_t d[1] const = { 4 };
+    int32_t  e[1] const = { 5 };
+    uint32_t f[1] const = { 6 };
+    int64_t  g[1] const = { 7 };
+    uint64_t h[1] const = { 8 };
+    float    i[1] const = { 1.0 };
+    double   j[1] const = { 2.0 };
+}
+
+struct StructWithStringConstant {
+    char str[4] const = "test";
+}
