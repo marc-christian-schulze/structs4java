@@ -34,7 +34,7 @@ Define some structures you would like to read/write in a `*.structs` file under 
 package com.mycompany.projectx;
 
 struct FileHeader {
-  uint8_t     magic[4];
+  uint8_t     magic[4] const = { 0x50, 0x4b, 0x01, 0x02 };
   uint16_t    numberSections countof(sections);
   FileSection sections[];
 }
