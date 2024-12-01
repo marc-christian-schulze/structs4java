@@ -107,6 +107,7 @@ fileHeader.write(buffer);
   * bit fields
   * implement Java interfaces
   * default values
+  * constants
 
 ## Unsupported
 * Unions
