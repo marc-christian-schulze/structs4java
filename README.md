@@ -166,7 +166,7 @@ Variable-sized structures contain at least one array field which dimension is de
 ```C++
 struct BString { // no getSizeOf()
   uint32_t  length   sizeOf(value);
-  char      value[]  encoding("UCS-2") null-terminated;
+  char      value[]  encoding("UTF-16LE") null-terminated;
 }
 ```
 In the given example no explicit dimension of field `value` is provided. Instead the field `length` is marked with the `sizeOf` keyword indicating that it's value will provide the size of the overall array `value` in bytes. You can also use the `countOf` keyword to provide the count of elements an array will contain, e.g.
