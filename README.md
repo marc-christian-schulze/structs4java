@@ -34,7 +34,7 @@ Define some structures you would like to read/write in a `*.structs` file under 
 package com.mycompany.projectx;
 
 struct FileHeader {
-  uint8_t     magic[4];
+  uint8_t     magic[4] const = { 0x50, 0x4b, 0x01, 0x02 };
   uint16_t    numberSections countof(sections);
   FileSection sections[];
 }
@@ -42,7 +42,7 @@ struct FileHeader {
 struct FileSection {
   SectionType type;
   char        name[32];
-  uint32_t    length sizeof(sectionContent);
+  uint32_t    length sizeof(content);
   uint8_t     content[];
 }
 
@@ -107,6 +107,7 @@ fileHeader.write(buffer);
   * bit fields
   * implement Java interfaces
   * default values
+  * constants
 
 ## Unsupported
 * Unions
@@ -120,7 +121,7 @@ fileHeader.write(buffer);
 The following table shows the built-in data types of Structs4Java. They can be used to compose more advanced types.
 
 | S4J Typename  | Java Mapping           | Size (bytes) | Subject to Endianess | Description                            |
-| ------------- | ---------------------- | ------------ | ---------------------| -------------------------------------- |
+| ------------- | ---------------------- | ------------ | ---------------------|----------------------------------------|
 | uint8_t       | long                   | 1            | no                   | Fixed-size 8bit unsigned integer       |
 | int8_t        | long                   | 1            | no                   | Fixed-size 8bit signed integer         |
 | uint16_t      | long                   | 2            | yes                  | Fixed-size 16bit unsigned integer      |
@@ -131,11 +132,16 @@ The following table shows the built-in data types of Structs4Java. They can be u
 | int64_t       | long                   | 8            | yes                  | Fixed-size 64bit signed integer        |
 | float         | double                 | 4            | no                   | Fixed-size 32bit floating point number |
 | double        | double                 | 8            | no                   | Fixed-size 64bit floating point number |
-| char[]        | String                 | variable     | no                   | String of characters (max size 2^31)   |
-| uint8_t[]     | java.nio.ByteBuffer    | variable     | no                   | Raw ByteBuffer                         |
-| int8_t[]      | java.nio.ByteBuffer    | variable     | no                   | Raw ByteBuffer                         |
+| char[]        | String                 | variable     | no                   | String of characters (max size 2^31)<sup>1</sup>   |
+| uint8_t[]     | java.nio.ByteBuffer    | variable     | no                   | Raw ByteBuffer<sup>2</sup>             |
+| int8_t[]      | java.nio.ByteBuffer    | variable     | no                   | Raw ByteBuffer<sup>2</sup>             |
 
-There is no primitive type `char` available. If you need to read a single 1-byte character you can use `char[1]` instead.
+<sup>1</sup> There is no primitive type `char` available. If you need to read a single 1-byte character you can use `char[1]` instead.  
+
+<sup>2</sup> When a field is mapped to a  `java.nio.ByteBuffer`, the underlying buffer stored in the struct is a 
+slice of the original buffer passed into the `read(java.nio.ByteBuffer)` method, and NOT a copy. Hence, the fields' buffer stays only 
+valid until you deallocate the original buffer. This is done for performance reasons to avoid reading potential large amounts of
+unstructured/binary data until it is explicitly requested.
 
 ## Advanced Data Types (Structs & Enums)
 
@@ -166,7 +172,7 @@ Variable-sized structures contain at least one array field which dimension is de
 ```C++
 struct BString { // no getSizeOf()
   uint32_t  length   sizeOf(value);
-  char      value[]  encoding("UCS-2") null-terminated;
+  char      value[]  encoding("UTF-16LE") null-terminated;
 }
 ```
 In the given example no explicit dimension of field `value` is provided. Instead the field `length` is marked with the `sizeOf` keyword indicating that it's value will provide the size of the overall array `value` in bytes. You can also use the `countOf` keyword to provide the count of elements an array will contain, e.g.
@@ -428,6 +434,53 @@ enum SomeEnum : uint8_t {
 }
 ```
 You can NOT define default values for fields within a bitfield, though.
+
+Note that default values are only used during default construction of the structures. A default value is NOT returned if the read operation did not yield any value from the underlying buffer, e.g.
+```
+struct SomeStruct {
+  char str[] = "my default";
+}
+```
+
+```Java
+ByteBuffer buffer = ByteBuffer.wrap(new byte[]{});
+SomeStruct struct = SomeStruct.read(buffer);
+
+assertEquals("", struct.getStr());
+```
+
+```Java
+SomeStruct struct = new SomeStruct();
+
+assertEquals("my default", struct.getStr());
+```
+
+You can also assign default values to arrays of primitives, e.g.
+```
+struct SomeStruct {
+  uint8_t  int8[3]  = { 1, 0x02, 3 };
+  uint16_t int16[3] = { 0x45, 2, 3 };
+  uint32_t int32[3] = { 7, 8, 9 };
+  uint64_t int64[3] = { 0x20, 0x21, 0x22 };
+  float    f[3]     = { 7.534, 1.4, 3.2 };
+  double   d[3]     = { 9.75142476, 0.0, 7.7777 }
+}
+```
+
+## Constants
+Constants are fields that have a default value and are marked as `const`, e.g.
+```
+struct SomeStruct {
+  uint8_t magic[4] const = { 0x50, 0x4b, 0x01, 0x02 };
+}
+```
+Once a field is marked as `const` only the corresponding getter method will be generated and you won't be able to 
+override the fields' value. Furthermore, during the read operation of the structure, the value read from the underlying 
+buffer will be compared with the expected default value. If the values don't match, an `java.io.IOException` will be thrown.
+
+Typical use cases for constants are magic or signature fields within structures.
+
+Constants are NOT supported on structures, enums, bitfields or enum fields (unlike default values).
 
 ## Plugin configuration
 

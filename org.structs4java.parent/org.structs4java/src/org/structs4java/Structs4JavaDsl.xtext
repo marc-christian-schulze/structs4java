@@ -91,25 +91,46 @@ ComplexTypeMember:
 
 IntegerMember:
 	(comments += SL_COMMENT)*
-	typename=INTEGER_TYPE name=ID 
-	(array=ArrayDimension)?
+	typename=INTEGER_TYPE name=ID
 	(
 		('sizeof' '(' sizeof=[Member] ')')? &
 		('sizeof' '(' sizeofThis?='this' ')')? &
 		('countof' '(' countof=[Member] ')')?
 	)
 	('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')?
+	(constant='const')?
 	('=' defaultValue=LONG)?
 	';'
+	|
+	(comments += SL_COMMENT)*
+    typename=INTEGER_TYPE name=ID
+    array=ArrayDimension
+    (
+        ('sizeof' '(' sizeof=[Member] ')')? &
+        ('sizeof' '(' sizeofThis?='this' ')')? &
+        ('countof' '(' countof=[Member] ')')?
+    )
+    ('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')?
+    (constant='const')?
+    ('=' defaultValues=IntInitializerList)?
+    ';'
 ;
 
 FloatMember:
 	(comments += SL_COMMENT)*
-	typename=FLOAT_TYPE name=ID 
-	(array=ArrayDimension)?
+	typename=FLOAT_TYPE name=ID
 	('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')?
+	(constant='const')?
 	('=' defaultValue=FLOAT)?
 	';'
+	|
+	(comments += SL_COMMENT)*
+    typename=FLOAT_TYPE name=ID
+    array=ArrayDimension
+    ('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')?
+    (constant='const')?
+    ('=' defaultValues=FloatInitializerList)?
+    ';'
 ;
 
 StringMember:
@@ -120,12 +141,22 @@ StringMember:
 	('padding' '(' padding=LONG ( ',' 'using' '=' using=LONG )? ')')?
 	('filler' '(' filler=LONG ')')?
 	(nullTerminated='null-terminated')?
+	(constant='const')?
 	('=' defaultValue=STRING)?
 	';'
 ;
 
 ArrayDimension:
 	{ArrayDimension} '[' (dimension=LONG)? ']'
+;
+
+IntInitializerList:
+    {IntInitializerList}
+    '{' items+=LONG (',' items+=LONG)* '}'
+;
+
+FloatInitializerList:
+    '{' items+=FLOAT (',' items+=FLOAT)* '}'
 ;
 
 QualifiedName:

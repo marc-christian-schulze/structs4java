@@ -30,7 +30,6 @@ public class ZipFileWritingTest {
         // first we create and write the local file header
         long positionOfLocalFileHeader = buffer.position();
         LocalFileHeader fhFile = new LocalFileHeader();
-        fhFile.setSignature(ByteBuffer.wrap(new byte[]{ 0x50, 0x4b, 0x03, 0x04 }));
         fhFile.setFileName("example.txt");
         fhFile.setCompressedSizeInBytes(fileData.length);
         fhFile.setUncompressedSizeInBytes(fileData.length);
@@ -42,7 +41,6 @@ public class ZipFileWritingTest {
         // now we need to create the central directory header
         long positionOfFirstCentralDirectoryHeader = buffer.position();
         CentralDirectoryFileHeader cdfh = new CentralDirectoryFileHeader();
-        cdfh.setSignature(ByteBuffer.wrap(new byte[]{ 0x50, 0x4b, 0x01, 0x02 }));
         cdfh.setFileName("example.txt");
         cdfh.setCrc32OfUncompressedData(crc32);
         cdfh.setCompressedSizeInBytes(fileData.length);
@@ -52,7 +50,6 @@ public class ZipFileWritingTest {
 
         // finally, we need to write the closing end of central directory header
         EndOfCentralDirectoryRecord eocdr = new EndOfCentralDirectoryRecord();
-        eocdr.setSignature(ByteBuffer.wrap(new byte[]{ 0x50, 0x4b, 0x05, 0x06 }));
         eocdr.setOffsetOfStartOfCentralDirectory(positionOfFirstCentralDirectoryHeader);
         eocdr.setNumberOfCentralDirectoryRecordsOnThisDisk(1);
         eocdr.setTotalNumberOfCentralDirectoryRecords(1);

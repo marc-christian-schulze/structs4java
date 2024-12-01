@@ -15,6 +15,8 @@ import org.structs4java.structs4JavaDsl.EnumDeclaration
 import org.structs4java.structs4JavaDsl.BitfieldMember
 import org.structs4java.structs4JavaDsl.BitfieldEntry
 
+import java.util.stream.Collectors
+
 /**
  * Generates code from your model files on save.
  * 
@@ -382,14 +384,27 @@ class StructGenerator {
 							java.nio.ByteBuffer slice = buf.slice();
 							slice.order(buf.order());
 							slice.limit((int)«tempVarForMember(findMemberDefiningSizeOf(m))»);
+							«IF isConst(m)»
+							«readerMethodName(m)»(slice, true);
+							«ELSE»
 							obj.«setterName(m)»(«readerMethodName(m)»(slice, true));
+							«ENDIF»
+
 							buf.position(buf.position() + (int)«tempVarForMember(findMemberDefiningSizeOf(m))»);
 						}
 						«ELSE»
-						obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)«tempVarForMember(findMemberDefiningSizeOf(m))»));
+						«IF isConst(m)»
+						«readerMethodName(m)»(buf, partialRead, (int)«tempVarForMember(findMemberDefiningSizeOf(m))»);
+                        «ELSE»
+                        obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)«tempVarForMember(findMemberDefiningSizeOf(m))»));
+                        «ENDIF»
 						«ENDIF»
 					«ELSEIF findMemberDefiningCountOf(m) !== null»
-						obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)«tempVarForMember(findMemberDefiningCountOf(m))»));
+					    «IF isConst(m)»
+					    «readerMethodName(m)»(buf, partialRead, (int)«tempVarForMember(findMemberDefiningCountOf(m))»);
+                        «ELSE»
+                        obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)«tempVarForMember(findMemberDefiningCountOf(m))»));
+                        «ENDIF»
 					«ELSE»
 						«IF m.isBitfield()»
 							«IF m.isArray()»
@@ -400,9 +415,9 @@ class StructGenerator {
 								long value = «readerMethodName(m)»(buf, partialRead);
 								«FOR entry : (m as BitfieldMember).entries»
 									«IF entry.type !== null»
-									obj.«setterName(entry)»(«javaType(entry.type)».fromValue((value & «computeBitmaskFor(entry)») >>> «computeBitsToShift(entry)»));
+                                    obj.«setterName(entry)»(«javaType(entry.type)».fromValue((value & «computeBitmaskFor(entry)») >>> «computeBitsToShift(entry)»));
 									«ELSEIF entry.typename == "boolean"»
-									obj.«setterName(entry)»(((value & «computeBitmaskFor(entry)») >>> «computeBitsToShift(entry)») != 0);
+                                    obj.«setterName(entry)»(((value & «computeBitmaskFor(entry)») >>> «computeBitsToShift(entry)») != 0);
 									«ELSE»
 									obj.«setterName(entry)»((value & «computeBitmaskFor(entry)») >>> «computeBitsToShift(entry)»);
 									«ENDIF»
@@ -411,13 +426,25 @@ class StructGenerator {
 							«ENDIF»	
 						«ELSEIF m.isArray() && !m.isString() && m.isGreedy()»
 							«IF struct.isSelfSized()»
-							obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)(structEndPosition - buf.position())));
+							«IF isConst(m)»
+							«readerMethodName(m)»(buf, partialRead, (int)(structEndPosition - buf.position()));
+                            «ELSE»
+                            obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)(structEndPosition - buf.position())));
+                            «ENDIF»
 							«ELSE»
 							// greedy member
-							obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)(buf.limit() - buf.position())));
+							«IF isConst(m)»
+							«readerMethodName(m)»(buf, partialRead, (int)(buf.limit() - buf.position()));
+                            «ELSE»
+                            obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)(buf.limit() - buf.position())));
+                            «ENDIF»
 							«ENDIF»
 						«ELSE»
-							obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead));
+						    «IF isConst(m)»
+						    «readerMethodName(m)»(buf, partialRead);
+                            «ELSE»
+                            obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead));
+                            «ENDIF»
 						«ENDIF»
 					«ENDIF»
 				«ENDIF»
@@ -558,7 +585,7 @@ class StructGenerator {
 			FloatMember: m.name
 			StringMember: m.name
 			ComplexTypeMember: m.name
-			BitfieldMember: attributeName(m as BitfieldMember)
+			BitfieldMember: attributeName(m)
 			default: "<anonymous>"		
 		}
 	}
@@ -599,21 +626,27 @@ class StructGenerator {
 			IntegerMember: readerMethodForIntegerMember(m)
 			FloatMember: readerMethodForFloatMember(m)
 			StringMember: readerMethodForStringMember(m)
-			BitfieldMember: readerMethodForBitfieldMember(m as BitfieldMember)
+			BitfieldMember: readerMethodForBitfieldMember(m)
 		}
 	}
 	
 	def getDefiningStruct(Member m) {
 		return m.eContainer as StructDeclaration;
 	}
+
+	def getDefaultValues(Member m) {
+        if(m instanceof IntegerMember) return m.defaultValues.items
+        if(m instanceof FloatMember) return m.defaultValues.items
+        return null
+    }
 	
 	def readerMethodForArrayMember(Member m) '''
-	private static java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> «m.readerMethodName()»(java.nio.ByteBuffer buf, boolean partialRead«IF findMemberDefiningCountOf(m) != null», long countof«ENDIF») throws java.io.IOException {
+	private static java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> «m.readerMethodName()»(java.nio.ByteBuffer buf, boolean partialRead«IF findMemberDefiningCountOf(m) !== null», long countof«ENDIF») throws java.io.IOException {
 		java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»> lst = new java.util.ArrayList<«m.nativeTypeName().native2JavaType().box()»>();
 
 		try {
 		«IF dimensionOf(m) == 0»
-		«IF findMemberDefiningCountOf(m) != null»
+		«IF findMemberDefiningCountOf(m) !== null»
         for(long i = 0; i < countof; ++i) {
             lst.add(«readerMethodName(m)»«arrayPostfix(m)»(buf, partialRead));
         }
@@ -633,9 +666,15 @@ class StructGenerator {
 			}
 		}
 
+		«IF isConst(m)»
+		«FOR i : 0 ..< getDefaultValues(m).size»
+		if(lst.get(«i») != «getDefaultValues(m).get(i)») throw new java.io.IOException("Expected constant '«getDefaultValues(m).get(i)»' but got '" + lst.get(«i») + "'.");
+		«ENDFOR»
+		«ENDIF»
+
 		return lst;
 	}
-	
+
 	«readerMethodForPrimitive(m)»
 	'''
 	
@@ -658,6 +697,17 @@ class StructGenerator {
 				buf.position(buf.position() + «m.padding» - bytesOverlap);				
 			}
 			«ENDIF»
+
+			«IF isConst(m)»
+			«FOR i : 0 ..< getDefaultValues(m).size»
+			{
+			    int actual = buffer.get(«i») & 0xFF;
+                if(actual != «getDefaultValues(m).get(i)») throw new java.io.IOException("Expected constant '«getDefaultValues(m).get(i)»' but got '" + actual + "' at offset «i».");
+            }
+            «ENDFOR»
+            buffer.position(0);
+			«ENDIF»
+
 			return buffer; 
 		}
 	'''
@@ -721,6 +771,11 @@ class StructGenerator {
 			buf.position(buf.position() + «m.padding» - 8);
 			«ENDIF»
 			«ENDIF»
+
+			«IF isConst(m) && !m.isArray()»
+            if(value != «m.defaultValue») throw new java.io.IOException("Expected constant '«m.defaultValue»' but got '" + value + "'.");
+            «ENDIF»
+
 			return value;
 		}
 	'''
@@ -785,12 +840,18 @@ class StructGenerator {
 			buf.position(buf.position() + «m.padding» - 8);
 			«ENDIF»
 			«ENDIF»
+
+			«IF isConst(m) && !m.isArray()»
+            if(value != «m.defaultValue») throw new java.io.IOException("Expected constant '«m.defaultValue»' but got '" + value + "'.");
+            «ENDIF»
+
 			return value;
 		}
 	'''
 
 	def readerMethodForStringMember(StringMember m) '''
 		private static String «m.readerMethodName()»(java.nio.ByteBuffer buf, boolean partialRead«IF dimensionOf(m) == 0 && findMemberDefiningSizeOf(m) !== null», «attributeJavaType(findMemberDefiningSizeOrCountOf(m))» sizeof«ENDIF») throws java.io.IOException {
+			String value = null;
 			«IF dimensionOf(m) == 0 && findMemberDefiningSizeOf(m) === null»
 			java.io.ByteArrayOutputStream tmp = new java.io.ByteArrayOutputStream();
 			int zerosRead = 0;
@@ -814,7 +875,7 @@ class StructGenerator {
 					buf.position(buf.position() + «m.padding» - bytesOverlap);				
 				}
 				«ENDIF»
-				return new String(tmp.toByteArray(), 0, tmp.size() - zerosRead, "«encodingOf(m)»");
+				value = new String(tmp.toByteArray(), 0, tmp.size() - zerosRead, "«encodingOf(m)»");
 				«ELSE»
 
 				byte[] tmp = new byte[(int)sizeof];
@@ -827,11 +888,11 @@ class StructGenerator {
 				}
 				«ENDIF»
 
-				«IF m.getNullTerminated() == null»
-				return new String(tmp, 0, (int)sizeof, "«encodingOf(m)»");
+				«IF m.getNullTerminated() === null»
+				value = new String(tmp, 0, (int)sizeof, "«encodingOf(m)»");
 				«ELSE»
 				int terminatingZeros = "\0".getBytes("«encodingOf(m)»").length;
-				return new String(tmp, 0, (int)(sizeof - terminatingZeros), "«encodingOf(m)»");
+				value = new String(tmp, 0, (int)(sizeof - terminatingZeros), "«encodingOf(m)»");
 				«ENDIF»
 
 				«ENDIF»
@@ -857,7 +918,7 @@ class StructGenerator {
 				«IF m.isPadded() && (dimensionOf(m) % m.padding) > 0»
 				buf.position(buf.position() + «m.padding - (dimensionOf(m) % m.padding)»);
 				«ENDIF»
-				return new String(tmp, 0, len, "«encodingOf(m)»");
+				value = new String(tmp, 0, len, "«encodingOf(m)»");
 			«ENDIF»
 			} catch(java.io.UnsupportedEncodingException e) {
 				throw new java.io.IOException(e);
@@ -867,9 +928,15 @@ class StructGenerator {
 				if(!partialRead) {
 					throw e;
 				}
-				return new String(tmp.toByteArray(), 0, tmp.size() - zerosRead, "«encodingOf(m)»");
+				value = new String(tmp.toByteArray(), 0, tmp.size() - zerosRead, "«encodingOf(m)»");
 			}
 			«ENDIF»
+
+			«IF isConst(m)»
+            if(!"«m.defaultValue»".equals(value)) throw new java.io.IOException("Expected constant '«m.defaultValue»' but got '" + value + "'.");
+            «ENDIF»
+
+			return value;
 		}
 	'''
 	
@@ -941,7 +1008,7 @@ class StructGenerator {
 		«ENDFOR»
 	'''
 	
-	def hasSizeOfOrCountOfAttribute(Member m) {
+    def hasSizeOfOrCountOfAttribute(Member m) {
 		return m.hasSizeOfAttribute() || m.hasCountOfAttribute()
 	}
 	
@@ -1365,7 +1432,7 @@ class StructGenerator {
 			«IF findMemberDefiningSizeOf(m) === null»
 			buf.put("\0".getBytes("«encodingOf(m)»"));
 			«ELSE»
-			«IF m.getNullTerminated() != null»
+			«IF m.getNullTerminated() !== null»
 			buf.put("\0".getBytes("«encodingOf(m)»"));
 			«ENDIF»
 			«ENDIF»
@@ -1411,7 +1478,7 @@ class StructGenerator {
 	def fields(StructDeclaration struct) '''
 		«FOR m : struct.members»
 		«IF m instanceof BitfieldMember»
-			«field(m as BitfieldMember)»
+			«field(m)»
 		«ELSE»
 			«field(m)»
 		«ENDIF»
@@ -1421,7 +1488,7 @@ class StructGenerator {
 	def getters(StructDeclaration struct) '''
 		«FOR m : struct.members»
 		«IF m instanceof BitfieldMember»
-			«getter(m as BitfieldMember)»
+			«getter(m)»
 		«ELSE»
 			«getter(m)»
 		«ENDIF»
@@ -1430,13 +1497,35 @@ class StructGenerator {
 
 	def setters(StructDeclaration struct) '''
 		«FOR m : struct.nonTransientMembers()»
+		«IF !isConst(m)»
 		«IF m instanceof BitfieldMember»
-			«setter(m as BitfieldMember)»
+			«setter(m)»
 		«ELSE»
 			«setter(m)»
 		«ENDIF»
+		«ENDIF»
 		«ENDFOR»
 	'''
+
+	def isConst(Member m) {
+	    if(m instanceof ComplexTypeMember) {
+	        return false
+	    }
+
+	    if(m instanceof IntegerMember) {
+	        return m.constant !== null
+	    }
+
+	    if(m instanceof FloatMember) {
+            return m.constant !== null
+        }
+
+        if(m instanceof StringMember) {
+            return m.constant !== null
+        }
+
+        return false
+	}
 
 	def field(Member m) '''
 		«printComments(m)»
@@ -1509,7 +1598,7 @@ class StructGenerator {
 	    switch (m) {
             ComplexTypeMember: {
                 if(m.type instanceof EnumDeclaration) {
-                    if(m.defaultValue == null) {
+                    if(m.defaultValue === null) {
                         return "null"
                     }
                     return attributeJavaType(m) + "." + m.defaultValue.name
@@ -1525,8 +1614,17 @@ class StructGenerator {
 	def defaultConstruct(Member m) {
 	    if(m.isArray()) {
 
-	        if(doesAttributeJavaTypeMapToByteBuffer(m)) {
-	            return "java.nio.ByteBuffer.wrap(new byte[]{})"
+	        if(m instanceof IntegerMember) {
+	            if(doesAttributeJavaTypeMapToByteBuffer(m)) {
+
+                    if(m.defaultValues === null) {
+                        return "java.nio.ByteBuffer.wrap(new byte[]{})"
+                    }
+
+                    val initList = m.defaultValues.items.join(", ")
+
+                    return "java.nio.ByteBuffer.wrap(new byte[]{" + initList + "})"
+	            }
 	        }
 
 	        if(m instanceof StringMember) {
@@ -1535,6 +1633,17 @@ class StructGenerator {
 
             val nativeType = nativeTypeName(m)
             val javaType = native2JavaType(nativeType)
+
+            if(m instanceof IntegerMember) {
+                if(m.defaultValues !== null) {
+                    return "new java.util.ArrayList<" + box(javaType) + ">(java.util.Arrays.<Long>asList(" + m.defaultValues.items.stream().map(v | v + "L").collect(Collectors.joining(", ")) + "))"
+                }
+            } else if(m instanceof FloatMember) {
+                if(m.defaultValues !== null) {
+                    return "new java.util.ArrayList<" + box(javaType) + ">(java.util.Arrays.<Double>asList(" + m.defaultValues.items.join(', ') + "))"
+                }
+            }
+
 	        return "new java.util.ArrayList<" + box(javaType) + ">()"
 	    }
 
@@ -1552,7 +1661,7 @@ class StructGenerator {
 
         if(m instanceof ComplexTypeMember) {
 	        if(m.type instanceof EnumDeclaration) {
-	            if(m.defaultValue == null) {
+	            if(m.defaultValue === null) {
 	                return "null"
 	            }
                 return attributeJavaType(m) + "." + m.defaultValue.name
@@ -1582,9 +1691,6 @@ class StructGenerator {
 	}
 
 	def doesAttributeJavaTypeMapToByteBuffer(Member m) {
-	    val nativeType = nativeTypeName(m)
-        val javaType = native2JavaType(nativeType)
-
         if (!isArray(m)) {
             return false
         }

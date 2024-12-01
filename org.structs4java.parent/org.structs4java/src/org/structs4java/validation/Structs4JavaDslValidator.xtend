@@ -5,6 +5,7 @@ package org.structs4java.validation
 
 import org.eclipse.xtext.validation.Check
 import org.structs4java.structs4JavaDsl.IntegerMember
+import org.structs4java.structs4JavaDsl.FloatMember
 import org.structs4java.structs4JavaDsl.Member
 import org.structs4java.structs4JavaDsl.StructDeclaration
 import org.structs4java.structs4JavaDsl.Structs4JavaDslPackage
@@ -19,7 +20,7 @@ class Structs4JavaDslValidator extends AbstractStructs4JavaDslValidator {
 	
 	@Check
 	def checkArrayDimension(Member m) {
-		if(m.array == null) {
+		if(m.array === null) {
 			return;
 		}
 		
@@ -40,11 +41,11 @@ class Structs4JavaDslValidator extends AbstractStructs4JavaDslValidator {
 			}
 			
 		} else {
-			if(getCountOfFor(m) != null) {
+			if(getCountOfFor(m) !== null) {
 				error('Either array dimension or countof must be specified but not both!', m, Structs4JavaDslPackage.Literals.MEMBER__ARRAY)
 			}
 			
-			if(getSizeOfFor(m) != null) {
+			if(getSizeOfFor(m) !== null) {
 				error('Either array dimension or sizeof must be specified but not both!', m, Structs4JavaDslPackage.Literals.MEMBER__ARRAY)
 			}
 		}
@@ -52,7 +53,7 @@ class Structs4JavaDslValidator extends AbstractStructs4JavaDslValidator {
 	
 	@Check
 	def checkArrayDimensionIsBeforeDynamicElement(Member m) {
-		if(m.array == null) {
+		if(m.array === null) {
 			return;
 		}
 		
@@ -87,13 +88,77 @@ class Structs4JavaDslValidator extends AbstractStructs4JavaDslValidator {
 	@Check
 	def disable64BitSizeOfAndCountOf(Member m) {
 		if(m instanceof IntegerMember) {
-			if(m.sizeof != null || m.countof != null || m.sizeofThis) {
+			if(m.sizeof !== null || m.countof !== null || m.sizeofThis) {
 				if(m.typename.equals("uint64_t") || m.typename.equals("int64_t")) {
 					warning('64 bit types for sizeof/countof members are not fully supported!\nThey throw a RuntimeException in case the value is larger than 2^63!', m, Structs4JavaDslPackage.Literals.INTEGER_MEMBER__TYPENAME)
 				}
 			}
 		}
 	}
+
+	@Check
+	def defaultValueInitializerListOfIntMemberDoesNotExceedArrayDimension(IntegerMember m) {
+	    if(m.array === null) {
+	        return
+	    }
+
+	    if(m.array.dimension == 0) {
+	        return
+	    }
+
+	    if(m.defaultValues === null) {
+	        return
+	    }
+
+	    if(m.array.dimension < m.defaultValues.items.size) {
+	        error("Can't fit default values (size=" + m.defaultValues.items.size + ") into fixed-sized array(size=" + m.array.dimension + ").", m, Structs4JavaDslPackage.Literals.INTEGER_MEMBER__DEFAULT_VALUES)
+	    }
+	}
+
+	@Check
+    def defaultValueInitializerListOfIntMemberDoesNotExceedArrayDimension(FloatMember m) {
+        if(m.array === null) {
+            return
+        }
+
+        if(m.array.dimension == 0) {
+            return
+        }
+
+        if(m.defaultValues === null) {
+            return
+        }
+
+        if(m.array.dimension < m.defaultValues.items.size) {
+            error("Can't fit default values (size=" + m.defaultValues.items.size + ") into fixed-sized array(size=" + m.array.dimension + ").", m, Structs4JavaDslPackage.Literals.FLOAT_MEMBER__DEFAULT_VALUES)
+        }
+    }
+
+    @Check
+    def defaultValueInitializerListOfIntMemberDoesNotExceedArrayDimension(StringMember m) {
+        if(m.array === null) {
+            return
+        }
+
+        if(m.array.dimension == 0) {
+            return
+        }
+
+        if(m.defaultValue === null) {
+            return
+        }
+
+        val encoding = if(m.encoding !== null) m.encoding else "UTF-8"
+        var lenBytes = m.defaultValue.getBytes(encoding).length
+
+        if(m.nullTerminated !== null) {
+            lenBytes += "\u0000".getBytes(encoding).length
+        }
+
+        if(m.array.dimension < lenBytes) {
+            error("Can't fit default value (size=" + lenBytes + ") into fixed-sized array(size=" + m.array.dimension + ").", m, Structs4JavaDslPackage.Literals.STRING_MEMBER__DEFAULT_VALUE)
+        }
+    }
 	
 	def getSizeOfFor(Member m) {
 		val struct = m.eContainer as StructDeclaration;

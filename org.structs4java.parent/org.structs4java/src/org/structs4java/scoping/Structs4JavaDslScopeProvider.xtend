@@ -5,10 +5,8 @@ package org.structs4java.scoping
 
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
-import org.eclipse.xtext.scoping.impl.ImportScope
 import org.structs4java.structs4JavaDsl.Structs4JavaDslPackage
 import org.structs4java.structs4JavaDsl.StructDeclaration
-import org.eclipse.xtext.scoping.Scopes
 
 /**
  * This class contains custom scoping description.

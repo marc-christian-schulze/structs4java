@@ -1,7 +1,7 @@
 package examples.zip;
 
 struct LocalFileHeader {
-    uint8_t  signature[4];
+    uint8_t  signature[4] const = { 0x50, 0x4b, 0x03, 0x04 };
     uint16_t version;
     bitfield uint16_t {
         uint16_t generalPurposeFlags : 16;
@@ -25,7 +25,7 @@ struct ExtraFieldRecord {
 }
 
 struct CentralDirectoryFileHeader {
-    uint8_t signature[4];
+    uint8_t signature[4] const = { 0x50, 0x4b, 0x01, 0x02 };
     uint16_t versionMadeBy;
     uint16_t versionNeededToExtract;
     bitfield uint16_t {
@@ -50,7 +50,7 @@ struct CentralDirectoryFileHeader {
 }
 
 struct EndOfCentralDirectoryRecord {
-    uint8_t signature[4];
+    uint8_t signature[4] const = { 0x50, 0x4b, 0x05, 0x06 };
     uint16_t diskNumber;
     uint16_t diskWhereCentralDirectoryStarts;
     uint16_t numberOfCentralDirectoryRecordsOnThisDisk;

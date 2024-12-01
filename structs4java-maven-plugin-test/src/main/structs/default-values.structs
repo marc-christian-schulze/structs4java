@@ -16,6 +16,15 @@ struct StructWithStringDefaultValue {
     char str[] = "default";
 }
 
+struct StructWithArrayDefaultValue {
+    uint8_t  int8[3] = { 1, 0x20, 3 };
+    uint16_t int16[3] = { 4, 5, 6 };
+    uint32_t int32[3] = { 7, 8, 9 };
+    uint64_t int64[3] = { 0x10, 0x11, 0x12 };
+    float  f[3] = { 1.0, 2.0, 3.0 };
+    double d[3] = { 4.0, 5.0, 6.0 };
+}
+
 enum Int8Enum : uint8_t {
     A = 0x01,
     B = 0x02,
