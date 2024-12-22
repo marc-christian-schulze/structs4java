@@ -42,6 +42,7 @@ class Structs4javaGradlePluginFunctionalTest {
             
             compileStructs {
                 structFiles = fileTree(dir: '.', include: '**/*.structs')
+                outputDirectory = file("${buildDir}/generated-sources/structs")
             }
             """);
         writeString(getStructsFile(), """
