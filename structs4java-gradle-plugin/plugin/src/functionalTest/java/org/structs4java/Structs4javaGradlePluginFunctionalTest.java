@@ -29,23 +29,38 @@ class Structs4javaGradlePluginFunctionalTest {
         return new File(projectDir, "settings.gradle");
     }
 
+    private File getStructsFile() {
+        return new File(projectDir, "example.structs");
+    }
+
     @Test void canRunTask() throws IOException {
         writeString(getSettingsFile(), "");
-        writeString(getBuildFile(),
-            "plugins {" +
-            "  id('com.github.marc-christian-schulze.structs4java')" +
-            "}");
+        writeString(getBuildFile(), """
+            plugins {
+                id('com.github.marc-christian-schulze.structs4java')
+            }
+            
+            compileStructs {
+                structFiles = fileTree(dir: '.', include: '**/*.structs')
+            }
+            """);
+        writeString(getStructsFile(), """
+            struct Example {
+            
+            }    
+            """);
 
         // Run the build
         GradleRunner runner = GradleRunner.create();
         runner.forwardOutput();
         runner.withPluginClasspath();
-        runner.withArguments("greeting");
+        runner.withArguments("compileStructs", "--info");
         runner.withProjectDir(projectDir);
         BuildResult result = runner.build();
 
         // Verify the result
-        assertTrue(result.getOutput().contains("Hello from plugin 'org.example.greeting'"));
+        assertTrue(result.getOutput().contains("Found struct file:"));
+        assertTrue(result.getOutput().contains("/example.structs"));
     }
 
     private void writeString(File file, String string) throws IOException {

@@ -20,6 +20,10 @@ dependencies {
     testImplementation(libs.junit.jupiter)
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    implementation("org.eclipse.xtext:org.eclipse.xtext.xbase:2.28.0")
+    implementation("org.eclipse.xtend:org.eclipse.xtend.core:2.28.0")
+    implementation("com.github.marc-christian-schulze.structs4java:structs4java-core:1.2.0")
 }
 
 gradlePlugin {

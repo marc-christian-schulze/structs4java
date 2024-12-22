@@ -18,6 +18,6 @@ class Structs4javaGradlePluginTest {
         project.getPlugins().apply("com.github.marc-christian-schulze.structs4java");
 
         // Verify the result
-        assertNotNull(project.getTasks().findByName("greeting"));
+        assertNotNull(project.getTasks().findByName("compileStructs"));
     }
 }
