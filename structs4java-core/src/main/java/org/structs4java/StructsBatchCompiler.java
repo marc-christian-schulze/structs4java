@@ -22,6 +22,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
 
+import com.google.inject.Injector;
 import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -63,6 +64,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import org.eclipse.xtext.util.Strings;
+import org.eclipse.xtext.validation.Issue;
 
 public class StructsBatchCompiler {
 
@@ -119,13 +122,20 @@ public class StructsBatchCompiler {
 	private boolean useCurrentClassLoaderAsParent;
 	private String outputPath;
 	private String fileEncoding;
-	private String complianceLevel = "1.5";
+	private String sourceVersion = "11";
+	private String targetVersion = "11";
 	private boolean verbose = false;
 	private String tempDirectory = System.getProperty("java.io.tmpdir");
 	private boolean deleteTempDirectory = true;
 	private List<File> tempFolders = Lists.newArrayList();
 	private boolean writeTraceFiles = true;
 	private ClassLoader currentClassLoader = getClass().getClassLoader();
+
+	public StructsBatchCompiler() {
+		Injector injector = new MavenStructs4JavaDslStandaloneSetupGenerated().createInjectorAndDoEMFRegistration();
+		injector.injectMembers(this);
+		setResourceSet(injector.getInstance(XtextResourceSet.class));
+	}
 
 	public void setCurrentClassLoader(ClassLoader currentClassLoader) {
 		this.currentClassLoader = currentClassLoader;
@@ -209,8 +219,20 @@ public class StructsBatchCompiler {
 		this.structSourceRoot = structSourceRoot;
 	}
 
-	protected String getComplianceLevel() {
-		return complianceLevel;
+	protected String getSourceVersion() {
+		return sourceVersion;
+	}
+
+	protected String getTargetVersion() {
+		return targetVersion;
+	}
+
+	public void setSourceVersion(String version) {
+		sourceVersion = version;
+	}
+
+	public void setTargetVersion(String version) {
+		targetVersion = version;
 	}
 
 	public void setVerbose(boolean verbose) {
@@ -320,7 +342,8 @@ public class StructsBatchCompiler {
 			commandLine.add("-cp \"" + concat(File.pathSeparator, getClassPathEntries()) + "\"");
 		}
 		commandLine.add("-d \"" + classDirectory.toString() + "\"");
-		commandLine.add("-" + getComplianceLevel());
+		commandLine.add("-source " + getSourceVersion());
+		commandLine.add("-target " + getTargetVersion());
 		commandLine.add("-proceedOnError");
 		List<String> sourceDirectories = newArrayList(getSourcePathDirectories());
 		sourceDirectories.add(tmpSourceDirectory.toString());
@@ -330,7 +353,7 @@ public class StructsBatchCompiler {
 				return "\"" + path + "\"";
 			}
 		})));
-		log.debug("invoke batch compiler with '" + concat(" ", commandLine) + "'");
+		log.debug("pre-compiling Java stubs: '" + concat(" ", commandLine) + "'");
 		return BatchCompiler.compile(concat(" ", commandLine), new PrintWriter(getDebugWriter()),
 				new PrintWriter(getDebugWriter()), null);
 	}

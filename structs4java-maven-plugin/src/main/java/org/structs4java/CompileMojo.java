@@ -12,7 +12,6 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.eclipse.emf.common.util.WrappedException;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -44,7 +43,7 @@ public class CompileMojo extends AbstractCompileMojo {
 		try {
 			classPath.addAll(getProject().getCompileClasspathElements());
 		} catch (DependencyResolutionRequiredException e) {
-			throw new WrappedException(e);
+			throw new RuntimeException(e);
 		}
 		addDependencies(classPath, getProject().getCompileArtifacts());
 		classPath.remove(getProject().getBuild().getOutputDirectory());

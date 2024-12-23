@@ -37,6 +37,15 @@
 	<build>
 		<plugins>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
+				<configuration>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
+				</configuration>
+			</plugin>
+			<plugin>
 				<groupId>com.github.marc-christian-schulze.structs4java</groupId>
 				<artifactId>structs4java-maven-plugin</artifactId>
 				<version>${project.version}</version>
@@ -48,6 +57,10 @@
 						</goals>
 					</execution>
 				</executions>
+				<configuration>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

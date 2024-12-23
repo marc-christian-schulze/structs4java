@@ -2,7 +2,6 @@ package org.structs4java;
 
 import static com.google.common.collect.Iterables.filter;
 import static com.google.common.collect.Lists.newArrayList;
-import static org.eclipse.xtext.util.Strings.concat;
 
 import java.io.File;
 import java.util.Arrays;
@@ -23,15 +22,8 @@ import org.apache.maven.toolchain.ToolchainManager;
 import org.apache.maven.toolchain.java.DefaultJavaToolChain;
 import org.codehaus.plexus.util.DirectoryScanner;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.eclipse.xtext.resource.XtextResourceSet;
 
 import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Provider;
-import org.eclipse.xtext.util.Strings;
-import org.eclipse.xtext.validation.Issue;
 
 public abstract class AbstractCompileMojo extends AbstractMojo {
 
@@ -53,10 +45,15 @@ public abstract class AbstractCompileMojo extends AbstractMojo {
 	@Parameter
 	private String[] excludes;
 
-	@Inject
-	protected MavenLog4JConfigurator log4jConfigurator;
+	@Parameter(defaultValue = "11")
+	private String source;
 
-	private Injector injector;
+	@Parameter(defaultValue = "11")
+	private String target;
+
+	private StructsBatchCompiler structsBatchCompiler;
+
+	protected MavenLog4JConfigurator log4jConfigurator;
 
 	protected MavenProject getProject() {
 		return project;
@@ -65,8 +62,8 @@ public abstract class AbstractCompileMojo extends AbstractMojo {
 	protected abstract File getStructsDirectory();
 
 	public AbstractCompileMojo() {
-		injector = new MavenStructs4JavaDslStandaloneSetupGenerated().createInjectorAndDoEMFRegistration();
-		injector.injectMembers(this);
+		log4jConfigurator = new MavenLog4JConfigurator();
+		structsBatchCompiler = new StructsBatchCompiler();
 	}
 
 	public void execute() throws MojoExecutionException {
@@ -89,7 +86,7 @@ public abstract class AbstractCompileMojo extends AbstractMojo {
 
 		List<String> compileSourceRoots = getCompileSourceRoots();
 		compileSourceRoots.remove(getOutputDirectory());
-		String classPath = concat(File.pathSeparator, getClassPath());
+		String classPath = String.join(File.pathSeparator, getClassPath());
 		project.addCompileSourceRoot(getOutputDirectory().toString());
 		compile(classPath, compileSourceRoots, getStructsDirectory().toString(), getOutputDirectory().toString());
 	}
@@ -166,7 +163,6 @@ public abstract class AbstractCompileMojo extends AbstractMojo {
 			throws MojoExecutionException {
 		StructsBatchCompiler compiler = getBatchCompiler();
 		Log log = getLog();
-		compiler.setResourceSet(injector.getInstance(XtextResourceSet.class));
 		Iterable<String> filtered = filter(sourcePaths, FILE_EXISTS);
 		log.debug("Set DeleteTempDirectory: " + false);
 		compiler.setDeleteTempDirectory(false);
@@ -175,8 +171,8 @@ public abstract class AbstractCompileMojo extends AbstractMojo {
 		String bootClassPath = getBootClassPath();
 		log.debug("Set bootClasspath: " + bootClassPath);
 		compiler.setBootClassPath(bootClassPath);
-		log.debug("Set source path: " + concat(File.pathSeparator, newArrayList(filtered)));
-		compiler.setSourcePath(concat(File.pathSeparator, newArrayList(filtered)));
+		log.debug("Set source path: " + String.join(File.pathSeparator, newArrayList(filtered)));
+		compiler.setSourcePath(String.join(File.pathSeparator, newArrayList(filtered)));
 		log.debug("Set output path: " + outputPath);
 		compiler.setOutputPath(outputPath);
 		log.debug("Set encoding: " + encoding);
@@ -185,17 +181,18 @@ public abstract class AbstractCompileMojo extends AbstractMojo {
 		compiler.setStructSourceRoot(structSourceRoot);
 		log.debug("Set writeTraceFiles: " + writeTraceFiles);
 		compiler.setWriteTraceFiles(writeTraceFiles);
+		log.debug("Set source version: " + source);
+		compiler.setSourceVersion(source);
+		log.debug("Set target version: " + target);
+		compiler.setTargetVersion(target);
 
 		if (!compiler.compile()) {
 			throw new MojoExecutionException("Compilation of structs sources failed.");
 		}
 	}
 
-	@Inject
-	private Provider<StructsBatchCompiler> structsBatchCompilerProvider;
-
 	protected StructsBatchCompiler getBatchCompiler() {
-		return structsBatchCompilerProvider.get();
+		return structsBatchCompiler;
 	}
 
 	protected static final Predicate<String> FILE_EXISTS = new Predicate<String>() {
