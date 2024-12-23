@@ -513,26 +513,6 @@ public class StructsBatchCompiler {
 		return resource.getContents().get(0);
 	}
 
-	protected ResourceSetBasedResourceDescriptions getResourceDescriptions(ResourceSet resourceSet) {
-		ResourceSetBasedResourceDescriptions resourceDescriptions = resourceSetDescriptionsProvider.get();
-		resourceDescriptions.setContext(resourceSet);
-		resourceDescriptions.setRegistry(IResourceServiceProvider.Registry.INSTANCE);
-		return resourceDescriptions;
-	}
-
-	protected StructsFile getStructsFile(Resource resource) {
-		XtextResource xtextResource = (XtextResource) resource;
-		IParseResult parseResult = xtextResource.getParseResult();
-		if (parseResult != null) {
-			EObject model = parseResult.getRootASTElement();
-			if (model instanceof StructsFile) {
-				StructsFile structsFile = (StructsFile) model;
-				return structsFile;
-			}
-		}
-		return null;
-	}
-
 	protected List<String> getClassPathEntries() {
 		return getDirectories(classPath);
 	}
