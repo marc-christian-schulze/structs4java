@@ -4,10 +4,13 @@ import static com.google.common.collect.Iterables.filter;
 import static com.google.common.collect.Lists.newArrayList;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import edu.emory.mathcs.backport.java.util.Collections;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
@@ -17,6 +20,8 @@ import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.shared.model.fileset.FileSet;
+import org.apache.maven.shared.model.fileset.util.FileSetManager;
 import org.apache.maven.toolchain.Toolchain;
 import org.apache.maven.toolchain.ToolchainManager;
 import org.apache.maven.toolchain.java.DefaultJavaToolChain;
@@ -40,10 +45,10 @@ public abstract class AbstractCompileMojo extends AbstractMojo {
 	private boolean skip;
 
 	@Parameter
-	private String[] includes;
+	private List<String> includes;
 
 	@Parameter
-	private String[] excludes;
+	private List<String> excludes;
 
 	@Parameter(defaultValue = "11")
 	private String source;
@@ -72,9 +77,9 @@ public abstract class AbstractCompileMojo extends AbstractMojo {
 			return;
 		}
 
-		if (includes == null || includes.length == 0) {
-			includes = new String[1];
-			includes[0] = "**/*.structs";
+		if (includes == null || includes.size() == 0) {
+			includes = new ArrayList<>();
+			includes.add("**/*.structs");
 		}
 
 		if (!getStructsDirectory().exists()) {
@@ -82,13 +87,22 @@ public abstract class AbstractCompileMojo extends AbstractMojo {
 			return;
 		}
 
+		FileSet structFileSet = new FileSet();
+		structFileSet.setIncludes(includes);
+		structFileSet.setExcludes(excludes);
+		structFileSet.setDirectory(getStructsDirectory().getAbsolutePath());
+
+		FileSetManager fsm = new FileSetManager();
+		// returns the array of matching filenames, relative to the basedir of the file-set.
+		String[] structFiles = fsm.getIncludedFiles(structFileSet);
+
 		log4jConfigurator.configureLog4j(getLog());
 
 		List<String> compileSourceRoots = getCompileSourceRoots();
 		compileSourceRoots.remove(getOutputDirectory());
 		String classPath = String.join(File.pathSeparator, getClassPath());
 		project.addCompileSourceRoot(getOutputDirectory().toString());
-		compile(classPath, compileSourceRoots, getStructsDirectory().toString(), getOutputDirectory().toString());
+		compile(classPath, compileSourceRoots, Arrays.stream(structFiles).map(relativePath -> new File(getStructsDirectory(), relativePath)).collect(Collectors.toList()), getOutputDirectory().toString());
 	}
 
 	protected abstract List<String> getCompileSourceRoots();
@@ -159,7 +173,7 @@ public abstract class AbstractCompileMojo extends AbstractMojo {
 		return "";
 	}
 
-	protected void compile(String classPath, List<String> sourcePaths, String structSourceRoot, String outputPath)
+	protected void compile(String classPath, List<String> sourcePaths, List<File> structFiles, String outputPath)
 			throws MojoExecutionException {
 		StructsBatchCompiler compiler = getBatchCompiler();
 		Log log = getLog();
@@ -177,8 +191,8 @@ public abstract class AbstractCompileMojo extends AbstractMojo {
 		compiler.setOutputPath(outputPath);
 		log.debug("Set encoding: " + encoding);
 		compiler.setFileEncoding(encoding);
-		log.debug("Set structSourceRoot: " + structSourceRoot);
-		compiler.setStructSourceRoot(structSourceRoot);
+		log.debug("Set structFiles: " + structFiles);
+		compiler.setStructFiles(structFiles);
 		log.debug("Set writeTraceFiles: " + writeTraceFiles);
 		compiler.setWriteTraceFiles(writeTraceFiles);
 		log.debug("Set source version: " + source);

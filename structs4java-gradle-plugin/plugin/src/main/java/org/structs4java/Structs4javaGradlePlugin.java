@@ -9,8 +9,8 @@ import org.gradle.api.Task;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.plugins.JavaPlugin;
-import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.api.plugins.JavaPluginExtension;
 
 import com.android.build.gradle.AppPlugin;
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension;
@@ -26,7 +26,7 @@ public class Structs4javaGradlePlugin implements Plugin<Project> {
 
         taskProvider.configure(compileStructs -> {
             compileStructs.outputDirectory.value(project.getLayout().getBuildDirectory().dir("generated/main/java").get());
-            compileStructs.structFiles = project.getLayout().getProjectDirectory().dir("src/main/structs").getAsFile().toString();
+            compileStructs.structFiles.setDir(project.getLayout().getProjectDirectory().dir("src/main/structs").getAsFile().toString()).include("**/*.structs");
             compileStructs.fileEncoding.set("UTF-8");
             compileStructs.source.set("17");
             compileStructs.target.set("17");
@@ -44,14 +44,16 @@ public class Structs4javaGradlePlugin implements Plugin<Project> {
 
         } else {
             project.getPlugins().withType(JavaPlugin.class, javaPlugin -> {
-                JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
-                SourceSet mainSourceSet = javaConvention.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME);
+                JavaPluginExtension javaExtension = project.getExtensions().getByType(JavaPluginExtension.class);
+                SourceSet mainSourceSet = javaExtension.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME);
                 mainSourceSet.getJava().srcDir(taskProvider.get().getOutputDirectory());
             });
 
             project.afterEvaluate(p -> {
                 project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
                     javaCompile.dependsOn("compileStructs");
+                    taskProvider.get().classPath.set(javaCompile.getClasspath().getAsPath());
+                    //javaCompile.getSource().
                 });
             });
         }

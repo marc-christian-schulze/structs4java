@@ -17,11 +17,12 @@ import java.util.List;
 
 public class CompileStructsTask extends DefaultTask {
 
-    String structFiles;
+    ConfigurableFileTree structFiles = getProject().getObjects().fileTree();
     DirectoryProperty outputDirectory = getProject().getObjects().directoryProperty();
     Property<String> fileEncoding = getProject().getObjects().property(String.class);
     Property<String> source = getProject().getObjects().property(String.class);
     Property<String> target = getProject().getObjects().property(String.class);
+    Property<String> classPath = getProject().getObjects().property(String.class);
     Property<Boolean> writeTraceFiles = getProject().getObjects().property(Boolean.class);
     Property<Boolean> deleteTempDirectory = getProject().getObjects().property(Boolean.class);
 
@@ -35,13 +36,16 @@ public class CompileStructsTask extends DefaultTask {
     public Property<String> getTarget() { return target; }
 
     @Input
+    public Property<String> getClassPath() { return classPath; }
+
+    @Input
     public Property<Boolean> getWriteTraceFiles() { return writeTraceFiles; }
 
     @Input
     public Property<Boolean> getDeleteTempDirectory() { return deleteTempDirectory; }
 
     @InputFiles
-    public String getStructFiles() { // ConfigurableFileTree
+    public ConfigurableFileTree getStructFiles() { // ConfigurableFileTree
         return structFiles;
     }
 
@@ -56,7 +60,8 @@ public class CompileStructsTask extends DefaultTask {
 
         getLogger().debug("deleteTempDirectory = " + getDeleteTempDirectory().get());
         compiler.setDeleteTempDirectory(getDeleteTempDirectory().get());
-        compiler.setClassPath("");
+        getLogger().debug("classPath = " + classPath.get());
+        compiler.setClassPath(classPath.get());
         compiler.setBootClassPath("");
         compiler.setSourcePath("");
         getLogger().debug("outputDirectory = " + getOutputDirectory().getAsFile().get().toString());
@@ -64,7 +69,7 @@ public class CompileStructsTask extends DefaultTask {
         getLogger().debug("fileEncoding = " + fileEncoding.get());
         compiler.setFileEncoding(fileEncoding.get());
         getLogger().debug("structFiles = " + structFiles);
-        compiler.setStructSourceRoot(structFiles);
+        compiler.setStructFiles(new ArrayList<>(structFiles.getFiles()));
         getLogger().debug("writeTraceFiles = " + getWriteTraceFiles().get());
         compiler.setWriteTraceFiles(getWriteTraceFiles().get());
         getLogger().debug("source = " + getSource().get());

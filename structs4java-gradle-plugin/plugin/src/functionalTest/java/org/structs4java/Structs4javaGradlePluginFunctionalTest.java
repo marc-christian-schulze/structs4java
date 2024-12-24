@@ -35,8 +35,18 @@ class Structs4javaGradlePluginFunctionalTest {
         return dir;
     }
 
+    private File getJavaSrcDirectory() {
+        File dir = new File(projectDir, "src/main/java");
+        dir.mkdirs();
+        return dir;
+    }
+
     private File getStructsFile() {
         return new File(getStructSrcDirectory(), "example.structs");
+    }
+
+    private File getInterfaceFile() {
+        return new File(getJavaSrcDirectory(), "SomeInterface.java");
     }
 
     @Test void canRunTask() throws IOException {
@@ -46,6 +56,10 @@ class Structs4javaGradlePluginFunctionalTest {
                 id('java')
                 id('com.github.marc-christian-schulze.structs4java')
             }
+            """);
+        writeString(getInterfaceFile(), """
+            interface SomeInterface {
+            }  
             """);
         writeString(getStructsFile(), """
             package something;

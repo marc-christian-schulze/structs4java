@@ -114,7 +114,7 @@ public class StructsBatchCompiler {
 	private Writer debugWriter;
 	private String sourcePath;
 	private String classPath;
-	private String structSourceRoot;
+	private List<File> structFiles;
 	/**
 	 * @since 2.7
 	 */
@@ -215,8 +215,8 @@ public class StructsBatchCompiler {
 		this.sourcePath = sourcePath;
 	}
 
-	public void setStructSourceRoot(String structSourceRoot) {
-		this.structSourceRoot = structSourceRoot;
+	public void setStructFiles(List<File> structFiles) {
+		this.structFiles = structFiles;
 	}
 
 	protected String getSourceVersion() {
@@ -290,30 +290,18 @@ public class StructsBatchCompiler {
 
 	protected ResourceSet loadStructsFiles(final ResourceSet resourceSet) {
 		encodingProvider.setDefaultEncoding(getFileEncoding());
-		final NameBasedFilter nameBasedFilter = new NameBasedFilter();
-		nameBasedFilter.setExtension(fileExtensionProvider.getPrimaryFileExtension());
-		PathTraverser pathTraverser = new PathTraverser();
-		List<String> sourcePathDirectories = getStructsSourcePathDirectories();
-		Multimap<String, URI> pathes = pathTraverser.resolvePathes(sourcePathDirectories, new Predicate<URI>() {
-			public boolean apply(URI input) {
-				boolean matches = nameBasedFilter.matches(input);
-				return matches;
-			}
-		});
-		for (String src : pathes.keySet()) {
-			URI baseDir = URI.createFileURI(src + "/");
 
+		for (File src : structFiles) {
+			URI baseDir = URI.createFileURI(src.getParent());
 			String identifier = Joiner.on("_").join(baseDir.segments());
 			URI platformResourceURI = URI.createPlatformResourceURI(identifier + "/", true);
 
 			resourceSet.getURIConverter().getURIMap().put(platformResourceURI, baseDir);
 
-			for (URI uri : pathes.get(src)) {
-				URI uriToUse = uri.replacePrefix(baseDir, platformResourceURI);
-				log.info("loading structs file '" + uri.toFileString() + "'");
-				resourceSet.getResource(uri, true);
-			}
+			log.info("loading structs file '" + src + "'");
+			resourceSet.getResource(URI.createFileURI(src.getAbsolutePath()), true);
 		}
+
 		return resourceSet;
 	}
 
@@ -549,10 +537,6 @@ public class StructsBatchCompiler {
 
 	protected List<String> getSourcePathDirectories() {
 		return getDirectories(sourcePath);
-	}
-
-	protected List<String> getStructsSourcePathDirectories() {
-		return getDirectories(structSourceRoot);
 	}
 
 	protected List<String> getDirectories(String path) {
