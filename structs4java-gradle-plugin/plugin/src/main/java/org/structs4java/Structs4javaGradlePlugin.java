@@ -12,6 +12,9 @@ import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.plugins.JavaPluginExtension;
 
+import java.util.stream.Collectors;
+import java.io.File;
+
 import com.android.build.gradle.AppPlugin;
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension;
 
@@ -28,8 +31,8 @@ public class Structs4javaGradlePlugin implements Plugin<Project> {
             compileStructs.outputDirectory.value(project.getLayout().getBuildDirectory().dir("generated/main/java").get());
             compileStructs.structFiles.setDir(project.getLayout().getProjectDirectory().dir("src/main/structs").getAsFile().toString()).include("**/*.structs");
             compileStructs.fileEncoding.set("UTF-8");
-            compileStructs.source.set("17");
-            compileStructs.target.set("17");
+            compileStructs.source.set("11");
+            compileStructs.target.set("11");
             compileStructs.deleteTempDirectory.set(false);
             compileStructs.writeTraceFiles.set(false);
         });
@@ -43,6 +46,7 @@ public class Structs4javaGradlePlugin implements Plugin<Project> {
             });
 
         } else {
+
             project.getPlugins().withType(JavaPlugin.class, javaPlugin -> {
                 JavaPluginExtension javaExtension = project.getExtensions().getByType(JavaPluginExtension.class);
                 SourceSet mainSourceSet = javaExtension.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME);
@@ -53,8 +57,14 @@ public class Structs4javaGradlePlugin implements Plugin<Project> {
                 project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
                     javaCompile.dependsOn("compileStructs");
                     taskProvider.get().classPath.set(javaCompile.getClasspath().getAsPath());
-                    //javaCompile.getSource().
+                    taskProvider.get().sourcePath.set(javaCompile.getSource().getFiles().stream()
+                            .map(f -> f.getParent())
+                            .map(Object::toString)
+                            .distinct()
+                            .collect(Collectors.joining(File.pathSeparator))
+                    );
                 });
+
             });
         }
     }

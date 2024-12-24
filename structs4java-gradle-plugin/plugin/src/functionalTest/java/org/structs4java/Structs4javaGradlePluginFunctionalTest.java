@@ -46,7 +46,8 @@ class Structs4javaGradlePluginFunctionalTest {
     }
 
     private File getInterfaceFile() {
-        return new File(getJavaSrcDirectory(), "SomeInterface.java");
+        new File(getJavaSrcDirectory(), "something").mkdirs();
+        return new File(getJavaSrcDirectory(), "something/SomeInterface.java");
     }
 
     @Test void canRunTask() throws IOException {
@@ -58,13 +59,15 @@ class Structs4javaGradlePluginFunctionalTest {
             }
             """);
         writeString(getInterfaceFile(), """
+            package something;
+            
             interface SomeInterface {
             }  
             """);
         writeString(getStructsFile(), """
             package something;
             
-            struct Example {
+            struct Example implements SomeInterface {
                 uint32_t anInt;
             }    
             """);
@@ -73,7 +76,7 @@ class Structs4javaGradlePluginFunctionalTest {
         GradleRunner runner = GradleRunner.create();
         runner.forwardOutput();
         runner.withPluginClasspath();
-        runner.withArguments("compileJava", "--info");
+        runner.withArguments("compileJava", "--debug");
         runner.withProjectDir(projectDir);
         BuildResult result = runner.build();
 

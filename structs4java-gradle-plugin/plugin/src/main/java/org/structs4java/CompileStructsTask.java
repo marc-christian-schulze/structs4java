@@ -23,6 +23,7 @@ public class CompileStructsTask extends DefaultTask {
     Property<String> source = getProject().getObjects().property(String.class);
     Property<String> target = getProject().getObjects().property(String.class);
     Property<String> classPath = getProject().getObjects().property(String.class);
+    Property<String> sourcePath = getProject().getObjects().property(String.class);
     Property<Boolean> writeTraceFiles = getProject().getObjects().property(Boolean.class);
     Property<Boolean> deleteTempDirectory = getProject().getObjects().property(Boolean.class);
 
@@ -37,6 +38,9 @@ public class CompileStructsTask extends DefaultTask {
 
     @Input
     public Property<String> getClassPath() { return classPath; }
+
+    @Input
+    public Property<String> getSourcePath() { return sourcePath; }
 
     @Input
     public Property<Boolean> getWriteTraceFiles() { return writeTraceFiles; }
@@ -63,12 +67,13 @@ public class CompileStructsTask extends DefaultTask {
         getLogger().debug("classPath = " + classPath.get());
         compiler.setClassPath(classPath.get());
         compiler.setBootClassPath("");
-        compiler.setSourcePath("");
+        getLogger().debug("sourcePath = " + sourcePath.get());
+        compiler.setSourcePath(sourcePath.get());
         getLogger().debug("outputDirectory = " + getOutputDirectory().getAsFile().get().toString());
         compiler.setOutputPath(getOutputDirectory().getAsFile().get().toString());
         getLogger().debug("fileEncoding = " + fileEncoding.get());
         compiler.setFileEncoding(fileEncoding.get());
-        getLogger().debug("structFiles = " + structFiles);
+        getLogger().debug("structFiles = " + structFiles.getFiles());
         compiler.setStructFiles(new ArrayList<>(structFiles.getFiles()));
         getLogger().debug("writeTraceFiles = " + getWriteTraceFiles().get());
         compiler.setWriteTraceFiles(getWriteTraceFiles().get());
