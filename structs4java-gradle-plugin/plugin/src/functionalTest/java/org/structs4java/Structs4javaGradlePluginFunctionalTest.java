@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * A simple functional test for the 'org.example.greeting' plugin.
  */
 class Structs4javaGradlePluginFunctionalTest {
-    @TempDir
+    @TempDir(cleanup = org.junit.jupiter.api.io.CleanupMode.NEVER)
     File projectDir;
 
     private File getBuildFile() {
@@ -29,25 +29,29 @@ class Structs4javaGradlePluginFunctionalTest {
         return new File(projectDir, "settings.gradle");
     }
 
+    private File getStructSrcDirectory() {
+        File dir = new File(projectDir, "src/main/structs");
+        dir.mkdirs();
+        return dir;
+    }
+
     private File getStructsFile() {
-        return new File(projectDir, "example.structs");
+        return new File(getStructSrcDirectory(), "example.structs");
     }
 
     @Test void canRunTask() throws IOException {
         writeString(getSettingsFile(), "");
         writeString(getBuildFile(), """
             plugins {
+                id('java')
                 id('com.github.marc-christian-schulze.structs4java')
-            }
-            
-            compileStructs {
-                structFiles = fileTree(dir: '.', include: '**/*.structs')
-                outputDirectory = file("${buildDir}/generated-sources/structs")
             }
             """);
         writeString(getStructsFile(), """
-            struct Example {
+            package something;
             
+            struct Example {
+                uint32_t anInt;
             }    
             """);
 
@@ -55,13 +59,15 @@ class Structs4javaGradlePluginFunctionalTest {
         GradleRunner runner = GradleRunner.create();
         runner.forwardOutput();
         runner.withPluginClasspath();
-        runner.withArguments("compileStructs", "--info");
+        runner.withArguments("compileJava", "--info");
         runner.withProjectDir(projectDir);
         BuildResult result = runner.build();
 
         // Verify the result
-        assertTrue(result.getOutput().contains("Found struct file:"));
+        assertTrue(result.getOutput().contains("loading structs file"));
         assertTrue(result.getOutput().contains("/example.structs"));
+        assertTrue(new File(projectDir + "/build/generated/main/java/something/Example.java").isFile());
+        assertTrue(new File(projectDir + "/build/classes/java/main/something/Example.class").isFile());
     }
 
     private void writeString(File file, String string) throws IOException {

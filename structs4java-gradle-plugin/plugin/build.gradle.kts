@@ -5,14 +5,20 @@
  * For more details on writing Custom Plugins, please refer to https://docs.gradle.org/8.12/userguide/custom_plugins.html in the Gradle documentation.
  */
 
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+
 plugins {
     // Apply the Java Gradle plugin development plugin to add support for developing Gradle plugins
     `java-gradle-plugin`
 }
 
 repositories {
+    mavenLocal()
     // Use Maven Central for resolving dependencies.
     mavenCentral()
+
+    maven(url = "../../.m2")
+    google()
 }
 
 dependencies {
@@ -21,9 +27,9 @@ dependencies {
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-    implementation("org.eclipse.xtext:org.eclipse.xtext.xbase:2.28.0")
-    implementation("org.eclipse.xtend:org.eclipse.xtend.core:2.28.0")
-    implementation("com.github.marc-christian-schulze.structs4java:structs4java-core:1.2.0")
+    implementation("com.github.marc-christian-schulze.structs4java:structs4java-core:1.0.54-SNAPSHOT")
+
+    implementation("com.android.tools.build:gradle-api:8.1.2")
 }
 
 gradlePlugin {
@@ -46,6 +52,10 @@ val functionalTest by tasks.registering(Test::class) {
     testClassesDirs = functionalTestSourceSet.output.classesDirs
     classpath = functionalTestSourceSet.runtimeClasspath
     useJUnitPlatform()
+    testLogging.events("failed")
+    testLogging.exceptionFormat = TestExceptionFormat.FULL
+    testLogging.showExceptions = true
+    testLogging.showCauses = true
 }
 
 gradlePlugin.testSourceSets.add(functionalTestSourceSet)
@@ -58,4 +68,8 @@ tasks.named<Task>("check") {
 tasks.named<Test>("test") {
     // Use JUnit Jupiter for unit tests.
     useJUnitPlatform()
+}
+
+tasks.withType<JavaCompile> {
+    options.release = 17
 }
