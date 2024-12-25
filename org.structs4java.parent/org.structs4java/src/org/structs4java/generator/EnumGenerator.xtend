@@ -117,7 +117,7 @@ class EnumGenerator {
 	}
 
 	def packageDeclaration(StructsFile structsFile) '''
-		«IF !structsFile.name.empty»
+		«IF structsFile.name !== null && !structsFile.name.empty»
 			package «structsFile.name»;
 		«ENDIF»
 	'''

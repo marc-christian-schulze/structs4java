@@ -1,0 +1,9 @@
+// default package
+
+struct DidNotCompileInThePast {
+
+}
+
+enum DidNotCompileEither : uint16_t {
+    A = 42
+}

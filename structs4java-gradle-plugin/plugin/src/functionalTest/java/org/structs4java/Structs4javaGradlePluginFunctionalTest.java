@@ -76,7 +76,7 @@ class Structs4javaGradlePluginFunctionalTest {
         GradleRunner runner = GradleRunner.create();
         runner.forwardOutput();
         runner.withPluginClasspath();
-        runner.withArguments("compileJava", "--debug");
+        runner.withArguments("compileJava", "--info");
         runner.withProjectDir(projectDir);
         BuildResult result = runner.build();
 
