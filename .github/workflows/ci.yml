@@ -37,4 +37,4 @@ jobs:
         run: mvn clean install -Dmaven.repo.local=./.m2 -Declipse.p2.mirrors=false
 
     - name: Build with Gradle
-      run: ./structs4java-gradle-plugin/gradlew build
+      run: cd ./structs4java-gradle-plugin && ./gradlew build
