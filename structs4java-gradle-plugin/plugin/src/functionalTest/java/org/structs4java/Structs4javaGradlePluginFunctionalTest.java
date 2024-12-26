@@ -15,7 +15,7 @@ import org.junit.jupiter.api.io.TempDir;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * A simple functional test for the 'org.example.greeting' plugin.
+ * A simple functional test for the 'com.github.marc-christian-schulze.structs4java' plugin.
  */
 class Structs4javaGradlePluginFunctionalTest {
     @TempDir(cleanup = org.junit.jupiter.api.io.CleanupMode.NEVER)

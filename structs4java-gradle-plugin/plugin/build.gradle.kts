@@ -11,7 +11,6 @@ plugins {
     // Apply the Java Gradle plugin development plugin to add support for developing Gradle plugins
     `java-gradle-plugin`
 
-    signing
     id("com.gradle.plugin-publish") version "1.3.0"
 }
 
@@ -37,7 +36,7 @@ dependencies {
 
 gradlePlugin {
     // Define the plugin
-    val greeting by plugins.creating {
+    val structs4java by plugins.creating {
         id = "com.github.marc-christian-schulze.structs4java"
         implementationClass = "org.structs4java.Structs4javaGradlePlugin"
     }
@@ -75,12 +74,4 @@ tasks.named<Test>("test") {
 
 tasks.withType<JavaCompile> {
     options.release = 17
-}
-
-signing {
-    setRequired({
-        gradle.taskGraph.hasTask("publish")
-    })
-    useGpgCmd()
-    sign(publishing.publications)
 }

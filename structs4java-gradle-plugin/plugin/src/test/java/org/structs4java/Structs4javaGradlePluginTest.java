@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * A simple unit test for the 'org.example.greeting' plugin.
+ * A simple unit test for the 'com.github.marc-christian-schulze.structs4java' plugin.
  */
 class Structs4javaGradlePluginTest {
     @Test void pluginRegistersATask() {
