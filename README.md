@@ -29,6 +29,14 @@ Add the plugin to your maven build:
 </plugin>
 ```
 
+Add the plugin to your gradle build:
+```Gradle
+plugins {
+  id('java')
+  id('com.github.marc-christian-schulze.structs4java')
+}
+```
+
 Define some structures you would like to read/write in a `*.structs` file under `src/main/structs`, e.g. `FileFormat.structs`:
 ```C++
 package com.mycompany.projectx;
