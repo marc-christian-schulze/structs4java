@@ -489,6 +489,10 @@ Below is a full example configuration, including the default values, of the plug
 <configuration>
   <!-- if 'skip' is set to true the plugin execution is skipped -->
   <skip>false</skip>
+  <!-- Source version of the Java files -->
+  <source>17</source>
+  <!-- Target version of the Java files -->
+  <target>17</target>
   <!-- Path where the code generator shall search for *.structs files as input -->
   <structsDirectory>${basedir}/src/main/structs</structsDirectory>
   <!-- Path where the code generator shall output the Java files to-->

@@ -1470,7 +1470,7 @@ class StructGenerator {
 	}
 
 	def packageDeclaration(StructsFile structsFile) '''
-		«IF !structsFile.name.empty»
+		«IF structsFile.name !== null && !structsFile.name.empty»
 			package «structsFile.name»;
 		«ENDIF»
 	'''
@@ -1771,7 +1771,7 @@ class StructGenerator {
 
 	def javaType(ComplexTypeDeclaration type) {
 		val pkg = type.eContainer as StructsFile
-		if (pkg !== null && !pkg.name.empty) {
+		if (pkg !== null && pkg.name !== null && !pkg.name.empty) {
 			return pkg.name + "." + type.name
 		}
 		return type.name
