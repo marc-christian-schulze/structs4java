@@ -10,6 +10,9 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 plugins {
     // Apply the Java Gradle plugin development plugin to add support for developing Gradle plugins
     `java-gradle-plugin`
+
+    signing
+    id("com.gradle.plugin-publish") version "1.3.0"
 }
 
 repositories {
@@ -27,7 +30,7 @@ dependencies {
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-    implementation("com.github.marc-christian-schulze.structs4java:structs4java-core:1.0.54-SNAPSHOT")
+    implementation("com.github.marc-christian-schulze.structs4java:structs4java-core:${project.version}")
 
     implementation("com.android.tools.build:gradle-api:8.1.2")
 }
@@ -72,4 +75,12 @@ tasks.named<Test>("test") {
 
 tasks.withType<JavaCompile> {
     options.release = 17
+}
+
+signing {
+    setRequired({
+        gradle.taskGraph.hasTask("publish")
+    })
+    useGpgCmd()
+    sign(publishing.publications)
 }
