@@ -39,6 +39,11 @@ gradlePlugin {
     val structs4java by plugins.creating {
         id = "com.github.marc-christian-schulze.structs4java"
         implementationClass = "org.structs4java.Structs4javaGradlePlugin"
+        website.set("https://github.com/marc-christian-schulze/structs4java")
+        vcsUrl.set("https://github.com/marc-christian-schulze/structs4java.git")
+        displayName = "Structs4Java Gradle Plugin"
+        description = "Structs4Java is a code generator based on C/C++ structures."
+        tags = listOf("Java", "Gradle", "plugin", "structs")
     }
 }
 
