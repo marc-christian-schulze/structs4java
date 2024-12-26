@@ -64,5 +64,5 @@ jobs:
         env:
           GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PORTAL_PUBLISH_KEY }}
           GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PORTAL_PUBLISH_SECRET }}
-        run: cd structs4java-gradle-plugin && ./gradlew publishPlugins -Pversion=${{ github.event.release.tag_name }} -Porg.gradle.configuration-cache=false
+        run: cd structs4java-gradle-plugin && ./gradlew publishPlugins -Dgradle.publish.key=$GRADLE_PUBLISH_KEY -Dgradle.publish.secret=$GRADLE_PUBLISH_SECRET -Pversion=${{ github.event.release.tag_name }} -Porg.gradle.configuration-cache=false
 
