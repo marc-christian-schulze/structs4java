@@ -33,7 +33,7 @@ Add the plugin to your gradle build:
 ```Gradle
 plugins {
   id('java')
-  id('com.github.marc-christian-schulze.structs4java')
+  id('io.github.marc-christian-schulze.structs4java.structs4java-gradle-plugin')
 }
 ```
 
