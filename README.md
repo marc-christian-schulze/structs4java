@@ -2,6 +2,7 @@
 [![master](https://github.com/marc-christian-schulze/structs4java/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/marc-christian-schulze/structs4java/actions/workflows/ci.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.marc-christian-schulze.structs4java/structs4java-maven-plugin
 )](https://central.sonatype.com/search?q=g:com.github.marc-christian-schulze.structs4java&smo=true)
+[![Gradle Plugin Portal Version](https://img.shields.io/gradle-plugin-portal/v/io.github.marc-christian-schulze.structs4java.structs4java-gradle-plugin)](https://plugins.gradle.org/plugin/io.github.marc-christian-schulze.structs4java.structs4java-gradle-plugin)
 [![license](https://img.shields.io/github/license/marc-christian-schulze/structs4java.svg?maxAge=3600)](https://github.com/marc-christian-schulze/structs4java/blob/master/LICENSE)
 
 Structs4Java is a code generator that is based on structure definitions very similiar to C/C++ but with some subtle differences. Unlike in C/C++, 
