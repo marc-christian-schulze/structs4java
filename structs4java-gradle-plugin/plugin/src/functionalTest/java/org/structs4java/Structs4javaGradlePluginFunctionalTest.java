@@ -55,7 +55,7 @@ class Structs4javaGradlePluginFunctionalTest {
         writeString(getBuildFile(), """
             plugins {
                 id('java')
-                id('com.github.marc-christian-schulze.structs4java')
+                id('io.github.marc-christian-schulze.structs4java.structs4java-gradle-plugin')
             }
             """);
         writeString(getInterfaceFile(), """
