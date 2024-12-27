@@ -15,7 +15,7 @@ class Structs4javaGradlePluginTest {
     @Test void pluginRegistersATask() {
         // Create a test project and apply the plugin
         Project project = ProjectBuilder.builder().build();
-        project.getPlugins().apply("com.github.marc-christian-schulze.structs4java");
+        project.getPlugins().apply("io.github.marc-christian-schulze.structs4java.structs4java-gradle-plugin");
 
         // Verify the result
         assertNotNull(project.getTasks().findByName("compileStructs"));
