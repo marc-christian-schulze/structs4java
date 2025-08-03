@@ -22,30 +22,18 @@ public class AbstractTest {
 			buffer.put((byte)0xFF);
 		}
 		buffer.position(0);
-		
-		System.out.println("------------------------- NEW TESTCASE ------------------------------");
-		System.out.println("Buffer before:");
-		dumpBuffer();
 	}
-	
-	@After
-	public void after() {
-		System.out.println("Buffer after:");
-		dumpBuffer();
-	}
-	
-	public void dumpBuffer() {
-		dumpBuffer(buffer);
-	}
-	
-	private void dumpBuffer(ByteBuffer buf) {
+
+	private String dumpBuffer(ByteBuffer buf) {
+		StringBuilder str = new StringBuilder();
 		for(int i = 0; i < buf.limit(); ++i) {
-			System.out.print(String.format("%02X ", buf.get(i)));
+			str.append(String.format("%02X ", buf.get(i)));
 			if(i % 32 == 31) {
-				System.out.println();
+				str.append("\n");
 			}
 		}
-		System.out.println();
+		str.append("\n");
+		return str.toString();
 	}
 	
 	public SimpleStructure createSimpleStruct() {
@@ -73,11 +61,12 @@ public class AbstractTest {
 		a.position(0);
 		b.position(0);
 		if(!a.equals(b)) {
-			System.out.println("Expected:");
-			dumpBuffer(a);
-			System.out.println("Actual:");
-			dumpBuffer(b);
-			Assert.fail("ByteBuffers are not equal!");
+			StringBuilder str = new StringBuilder();
+			str.append("Expected:\n");
+			str.append(dumpBuffer(a));
+			str.append("Actual:\n");
+			str.append(dumpBuffer(b));
+			Assert.fail("ByteBuffers are not equal!\n" + str);
 		}
 	}
 }

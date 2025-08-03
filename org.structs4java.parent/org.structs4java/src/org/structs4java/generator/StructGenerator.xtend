@@ -138,6 +138,16 @@ class StructGenerator {
 	«FOR comment : member.comments»
 	* «comment.substring(2).trim()»
 	«ENDFOR»
+	«IF member.hasSizeOfAttribute()»
+	«IF (member as IntegerMember).sizeofThis»
+    * Note that this field defines the size of this structure. Therefore, this getter does only return a non-zero value after the structure has been read from a ByteBuffer!
+    «ELSE»
+    * Note that this field defines the size of the field «attributeName((member as IntegerMember).sizeof)». Therefore, this getter does only return a non-zero value after the structure has been read from a ByteBuffer!
+    «ENDIF»
+    «ENDIF»
+    «IF member.hasCountOfAttribute()»
+    * Note that this field defines the count of the field «attributeName((member as IntegerMember).countof)». Therefore, this getter does only return a non-zero value after the structure has been read from a ByteBuffer!
+    «ENDIF»
 	*/
 	'''
 	
@@ -340,8 +350,7 @@ class StructGenerator {
 				throw new java.nio.BufferUnderflowException();
 			}
 			«IF struct.isSelfSized()»
-			long structBeginPosition = buf.position();
-			long structEndPosition = -1;
+			int structBeginPosition = buf.position();
 			«ENDIF»
 			
 			«struct.name» obj = new «struct.name»();
@@ -350,16 +359,17 @@ class StructGenerator {
 			«FOR m : struct.members»
 				«IF m.hasSizeOfOrCountOfAttribute()»
 					«IF (m as IntegerMember).sizeofThis»
-						structEndPosition = structBeginPosition + «readerMethodName(m)»(buf, partialRead);
+					{
+						int sizeOfThis = (int)«readerMethodName(m)»(buf, partialRead);
+						int bytesAlreadyRead = buf.position() - structBeginPosition;
+						int newLimit = sizeOfThis - bytesAlreadyRead;
+						java.nio.ByteOrder order = buf.order();
+						buf = buf.slice();
+                        buf.order(order);
+                        buf.limit(newLimit);
+                        obj.«attributeName(m)» = sizeOfThis;
+                    }
 					«ELSE»
-						«IF struct.isSelfSized()»
-							if(buf.position() == structEndPosition) {
-								return obj;
-							}
-							if(buf.position() > structEndPosition) {
-								throw new java.io.IOException(String.format("Read beyond the memory region of the struct [%d,%d) definition by %d bytes", structBeginPosition, structEndPosition, buf.position() - structEndPosition));
-							}
-						«ENDIF»
 						«attributeJavaType(m)» «tempVarForMember(m)» = «readerMethodName(m)»(buf, partialRead);
 						«IF m.is64BitType()»
 						if(«tempVarForMember(m)» > «Math.pow(2, 31) - 1» || «tempVarForMember(m)» < 0) {
@@ -369,15 +379,6 @@ class StructGenerator {
 						obj.«attributeName(m)» = «tempVarForMember(m)»;
 					«ENDIF»
 				«ELSE»
-					«IF struct.isSelfSized()»
-						if(buf.position() == structEndPosition) {
-							return obj;
-						}
-						if(structEndPosition != -1 && buf.position() > structEndPosition) {
-							throw new java.io.IOException(String.format("Read beyond the memory region of the struct [%d,%d) definition by %d bytes", structBeginPosition, structEndPosition, buf.position() - structEndPosition));
-						}
-					«ENDIF»
-					
 					«IF findMemberDefiningSizeOf(m) !== null»
 						«IF m instanceof ComplexTypeMember»
 						{
@@ -423,21 +424,6 @@ class StructGenerator {
 									«ENDIF»
 								«ENDFOR»
 							}
-							«ENDIF»	
-						«ELSEIF m.isArray() && !m.isString() && m.isGreedy()»
-							«IF struct.isSelfSized()»
-							«IF isConst(m)»
-							«readerMethodName(m)»(buf, partialRead, (int)(structEndPosition - buf.position()));
-                            «ELSE»
-                            obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)(structEndPosition - buf.position())));
-                            «ENDIF»
-							«ELSE»
-							// greedy member
-							«IF isConst(m)»
-							«readerMethodName(m)»(buf, partialRead, (int)(buf.limit() - buf.position()));
-                            «ELSE»
-                            obj.«setterName(m)»(«readerMethodName(m)»(buf, partialRead, (int)(buf.limit() - buf.position())));
-                            «ENDIF»
 							«ENDIF»
 						«ELSE»
 						    «IF isConst(m)»
@@ -686,11 +672,20 @@ class StructGenerator {
 	}
 	
 	def readerMethodForByteBuffer(IntegerMember m) '''
-		private static java.nio.ByteBuffer «readerMethodName(m)»(java.nio.ByteBuffer buf, boolean partialRead«IF dimensionOf(m) == 0», long sizeof«ENDIF») throws java.io.IOException {
+		private static java.nio.ByteBuffer «readerMethodName(m)»(java.nio.ByteBuffer buf, boolean partialRead«IF findMemberDefiningSizeOrCountOf(m) !== null», long sizeof«ENDIF») throws java.io.IOException {
 			java.nio.ByteBuffer buffer = buf.slice();
 			buffer.order(buf.order());
-			buffer.limit(«IF dimensionOf(m) == 0»(int)sizeof«ELSE»«dimensionOf(m)»«ENDIF»);
-			buf.position(buf.position() + «IF dimensionOf(m) == 0»((int)sizeof)«ELSE»«dimensionOf(m)»«ENDIF»);
+			«IF findMemberDefiningSizeOrCountOf(m) !== null»
+			buffer.limit((int)sizeof);
+			buf.position(buf.position() + (int)sizeof);
+			«ELSE»
+			«IF dimensionOf(m) > 0»
+			buf.position(buf.position() + «dimensionOf(m)»);
+			«ELSE»
+			buf.position(buf.position() + buf.remaining());
+			«ENDIF»
+			«ENDIF»
+
 			«IF m.isPadded()»
 			int bytesOverlap = (buffer.limit() % «m.padding»);
 			if(bytesOverlap > 0) {
@@ -951,6 +946,10 @@ class StructGenerator {
 		return "write" + attributeName(m).toFirstUpper;
 	}
 
+	def isByteBuffer(Member m) {
+        return m.isArray() && m instanceof IntegerMember && (m as IntegerMember).typename == "uint8_t";
+    }
+
 	def writerMethodForStruct(StructDeclaration struct) '''
 		public void write(java.nio.ByteBuffer buf) throws java.io.IOException {
 			«IF struct.isSelfSized()»
@@ -965,12 +964,13 @@ class StructGenerator {
 						int positionof__«attributeName(m)» = buf.position();
 						«writerMethodName(m)»(buf);
 						
-						«IF m.isArray() && m instanceof IntegerMember && (m as IntegerMember).typename == "uint8_t"»
+						«IF m.isByteBuffer()»
 						«attributeJavaType(m.findMemberDefiningSizeOrCountOf())» «attributeName(m.findMemberDefiningSizeOrCountOf())» = «attributeName(m)».limit();
+						«ELSEIF m.findMemberDefiningSizeOf() !== null»
+						«attributeJavaType(m.findMemberDefiningSizeOf())» «attributeName(m.findMemberDefiningSizeOf())» = («attributeJavaType(m.findMemberDefiningSizeOf())»)(buf.position() - positionof__«attributeName(m)»);
 						«ELSE»
-						«attributeJavaType(m.findMemberDefiningSizeOrCountOf())» «attributeName(m.findMemberDefiningSizeOrCountOf())» = («attributeJavaType(m.findMemberDefiningSizeOrCountOf())»)(buf.position() - positionof__«attributeName(m)»);
+						«attributeJavaType(m.findMemberDefiningCountOf())» «attributeName(m.findMemberDefiningCountOf())» = «attributeName(m)».size();
 						«ENDIF»
-						
 						
 						positionof__«attributeName(m)» = buf.position();
 						buf.position(positionof__«attributeName(m.findMemberDefiningSizeOrCountOf())»);

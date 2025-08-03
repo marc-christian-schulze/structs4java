@@ -1,0 +1,31 @@
+package org.structs4java.greedy;
+
+struct Address {
+  char     street[2];
+  char     city[2];
+  char     zipCode[2];
+}
+
+struct GreedyPerson {
+  char     name[5];
+  int16_t  age;
+  Address  address[];  // greedy array of complex type
+}
+
+struct GreedyPersonUsingCountOf {
+  char     name[5];
+  int16_t  numAddresses countof(address);
+  Address  address[];  // greedy array of complex type
+}
+
+struct GreedyPersonUsingSizeOf {
+  char     name[5];
+  int16_t  sizeAddresses sizeof(address);
+  Address  address[];  // greedy array of complex type
+}
+
+struct GreedyPersonUsingSizeOfThis {
+  char     name[5];
+  int16_t  thisSize sizeof(this);
+  Address  address[];  // greedy array of complex type
+}
