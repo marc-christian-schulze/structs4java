@@ -547,6 +547,174 @@ public class RegressionTest extends AbstractTest {
 		
 		assertEqualBuffers(buffer, outBuffer);
 	}
+
+	@Test
+	public void testGreedyArrayOfComplexType() throws IOException {
+		byte[] testData = new byte[]{ //
+				'N', 'a', 'm', 'e', '.', // Person::name
+				5, 0, // Person::age
+				// greedy array of Address (2 items)
+				'S', '1', // Address::street
+				'c', '1', // Address::city
+				'z', '1', // Address::zipCode,
+				'S', '2', // Address::street
+				'c', '2', // Address::city
+				'z', '2' // Address::zipCode,
+		};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		org.structs4java.greedy.GreedyPerson p = org.structs4java.greedy.GreedyPerson.read(buffer);
+
+		Assert.assertEquals("Name.", p.getName());
+		Assert.assertEquals(5, p.getAge());
+		Assert.assertEquals(2, p.getAddress().size());
+		Assert.assertEquals("S1", p.getAddress().get(0).getStreet());
+		Assert.assertEquals("c1", p.getAddress().get(0).getCity());
+		Assert.assertEquals("z1", p.getAddress().get(0).getZipCode());
+		Assert.assertEquals("S2", p.getAddress().get(1).getStreet());
+		Assert.assertEquals("c2", p.getAddress().get(1).getCity());
+		Assert.assertEquals("z2", p.getAddress().get(1).getZipCode());
+
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		p.write(outBuffer);
+
+		assertEqualBuffers(buffer, outBuffer);
+	}
+
+	@Test
+	public void testGreedyArrayOfComplexTypeUsingCountOf() throws IOException {
+		byte[] testData = new byte[]{ //
+				'N', 'a', 'm', 'e', '.', // Person::name
+				2, 0, // Person::numAddresses
+				// greedy array of Address (2 items)
+				'S', '1', // Address::street
+				'c', '1', // Address::city
+				'z', '1', // Address::zipCode,
+				'S', '2', // Address::street
+				'c', '2', // Address::city
+				'z', '2' // Address::zipCode,
+		};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		org.structs4java.greedy.GreedyPersonUsingCountOf p = org.structs4java.greedy.GreedyPersonUsingCountOf.read(buffer);
+
+		Assert.assertEquals("Name.", p.getName());
+		Assert.assertEquals(2, p.getNumAddresses());
+		Assert.assertEquals(2, p.getAddress().size());
+		Assert.assertEquals("S1", p.getAddress().get(0).getStreet());
+		Assert.assertEquals("c1", p.getAddress().get(0).getCity());
+		Assert.assertEquals("z1", p.getAddress().get(0).getZipCode());
+		Assert.assertEquals("S2", p.getAddress().get(1).getStreet());
+		Assert.assertEquals("c2", p.getAddress().get(1).getCity());
+		Assert.assertEquals("z2", p.getAddress().get(1).getZipCode());
+
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		p.write(outBuffer);
+
+		assertEqualBuffers(buffer, outBuffer);
+
+		// now, let's construct the same
+		org.structs4java.greedy.GreedyPersonUsingCountOf p2 = new org.structs4java.greedy.GreedyPersonUsingCountOf();
+		p2.setName("Name.");
+		p2.getAddress().add(new org.structs4java.greedy.Address());
+		p2.getAddress().add(new org.structs4java.greedy.Address());
+		p2.getAddress().get(0).setStreet("S1");
+		p2.getAddress().get(0).setCity("c1");
+		p2.getAddress().get(0).setZipCode("z1");
+		p2.getAddress().get(1).setStreet("S2");
+		p2.getAddress().get(1).setCity("c2");
+		p2.getAddress().get(1).setZipCode("z2");
+		outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		p2.write(outBuffer);
+		assertEqualBuffers(buffer, outBuffer);
+	}
+
+	@Test
+	public void testGreedyArrayOfComplexTypeUsingSizeOf() throws IOException {
+		byte[] testData = new byte[]{ //
+				'N', 'a', 'm', 'e', '.', // Person::name
+				12, 0, // Person::sizeAddresses
+				// greedy array of Address (2 items)
+				'S', '1', // Address::street
+				'c', '1', // Address::city
+				'z', '1', // Address::zipCode,
+				'S', '2', // Address::street
+				'c', '2', // Address::city
+				'z', '2' // Address::zipCode,
+		};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		org.structs4java.greedy.GreedyPersonUsingSizeOf p = org.structs4java.greedy.GreedyPersonUsingSizeOf.read(buffer);
+
+		Assert.assertEquals("Name.", p.getName());
+		Assert.assertEquals(12, p.getSizeAddresses());
+		Assert.assertEquals(2, p.getAddress().size());
+		Assert.assertEquals("S1", p.getAddress().get(0).getStreet());
+		Assert.assertEquals("c1", p.getAddress().get(0).getCity());
+		Assert.assertEquals("z1", p.getAddress().get(0).getZipCode());
+		Assert.assertEquals("S2", p.getAddress().get(1).getStreet());
+		Assert.assertEquals("c2", p.getAddress().get(1).getCity());
+		Assert.assertEquals("z2", p.getAddress().get(1).getZipCode());
+
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		p.write(outBuffer);
+
+		assertEqualBuffers(buffer, outBuffer);
+
+		// now, let's construct the same
+		org.structs4java.greedy.GreedyPersonUsingSizeOf p2 = new org.structs4java.greedy.GreedyPersonUsingSizeOf();
+		p2.setName("Name.");
+		p2.getAddress().add(new org.structs4java.greedy.Address());
+		p2.getAddress().add(new org.structs4java.greedy.Address());
+		p2.getAddress().get(0).setStreet("S1");
+		p2.getAddress().get(0).setCity("c1");
+		p2.getAddress().get(0).setZipCode("z1");
+		p2.getAddress().get(1).setStreet("S2");
+		p2.getAddress().get(1).setCity("c2");
+		p2.getAddress().get(1).setZipCode("z2");
+		outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		p2.write(outBuffer);
+		assertEqualBuffers(buffer, outBuffer);
+	}
+
+	@Test
+	public void testGreedyArrayOfComplexTypeUsingSizeOfThis() throws IOException {
+		byte[] testData = new byte[]{ //
+				'N', 'a', 'm', 'e', '.', // Person::name
+				19, 0, // Person::thisSize
+				// greedy array of Address (2 items)
+				'S', '1', // Address::street
+				'c', '1', // Address::city
+				'z', '1', // Address::zipCode,
+				'S', '2', // Address::street
+				'c', '2', // Address::city
+				'z', '2' // Address::zipCode,
+		};
+		ByteBuffer buffer = ByteBuffer.wrap(testData);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		org.structs4java.greedy.GreedyPersonUsingSizeOfThis p = org.structs4java.greedy.GreedyPersonUsingSizeOfThis.read(buffer);
+
+		Assert.assertEquals("Name.", p.getName());
+		Assert.assertEquals(19, p.getThisSize());
+		Assert.assertEquals(2, p.getAddress().size());
+		Assert.assertEquals("S1", p.getAddress().get(0).getStreet());
+		Assert.assertEquals("c1", p.getAddress().get(0).getCity());
+		Assert.assertEquals("z1", p.getAddress().get(0).getZipCode());
+		Assert.assertEquals("S2", p.getAddress().get(1).getStreet());
+		Assert.assertEquals("c2", p.getAddress().get(1).getCity());
+		Assert.assertEquals("z2", p.getAddress().get(1).getZipCode());
+
+		ByteBuffer outBuffer = ByteBuffer.allocate(testData.length);
+		outBuffer.order(buffer.order());
+		p.write(outBuffer);
+
+		assertEqualBuffers(buffer, outBuffer);
+	}
 	
 	@Test
 	public void testNullTerminatedStringBug() throws IOException {
